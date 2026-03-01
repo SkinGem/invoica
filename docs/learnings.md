@@ -5,6 +5,35 @@ This file captures hard-won lessons from building and operating the 13-agent orc
 
 ---
 
+## 0. Deployment Architecture — CRITICAL (Read First)
+
+### Hetzner Server Is Now Self-Deploying (2026-03-01)
+
+`git-autodeploy` runs every 5 minutes via PM2 cron on the Hetzner server.
+It polls GitHub, pulls new commits automatically, and restarts affected services.
+
+**What this means for agents:**
+- Committing to `main` on GitHub is sufficient to deploy — **no manual `git pull` on the server needed**
+- Backend fixes: commit → auto-deploys within 5 minutes
+- `telegram-bot.ts` fixes: commit → auto-restarts within 5 minutes
+- `ecosystem.config.js` changes: still require manual `pm2 reload` on server (logged as WARNING by autodeploy)
+
+### Deployment Map (authoritative)
+
+| What changed | How it deploys | Time |
+|-------------|----------------|------|
+| `website/` or `app/` | Vercel auto-deploy on push to main | ~1 min |
+| `docs-site/` | Mintlify auto-deploy on push to main | ~2 min |
+| `backend/` | git-autodeploy cron on Hetzner | ~5 min |
+| `scripts/telegram-bot.ts` | git-autodeploy cron on Hetzner | ~5 min |
+| `scripts/heartbeat-daemon.ts` | Picks up on next hourly cron fire | ~60 min max |
+| `ecosystem.config.js` | **Manual only** — alert owner | Manual |
+| `agents/` YAML/prompts | openclaw-gateway reads on next restart | Next restart |
+
+**Never tell the owner "it's deployed" until the commit is on GitHub main.**
+
+---
+
 ## 1. MiniMax M2.5 — Token & Capability Limits
 
 ### Output Truncation (~4500 tokens max)

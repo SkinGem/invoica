@@ -206,6 +206,18 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
+      name: "git-autodeploy",
+      script: "./scripts/git-autodeploy.sh",
+      interpreter: "bash",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "*/5 * * * *",
+      error_file: "/home/invoica/apps/Invoica/logs/autodeploy-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/autodeploy-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
       name: "bizdev-weekly",
       script: "./scripts/run-bizdev.ts",
       interpreter: "node",
