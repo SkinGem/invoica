@@ -164,5 +164,41 @@ module.exports = {
       out_file: "/home/invoica/apps/Invoica/logs/ceo-review-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
+    {
+      name: "cfo-weekly",
+      script: "./scripts/run-cfo.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "0 7 * * 1",
+      args: "weekly-report",
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json"
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/cfo-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/cfo-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
+      name: "bizdev-weekly",
+      script: "./scripts/run-bizdev.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "0 6 * * 0",
+      args: "opportunity-scan",
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json"
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/bizdev-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/bizdev-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
   ]
 };

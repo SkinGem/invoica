@@ -1830,6 +1830,9 @@ ONLY output the JSON array. No markdown, no explanation.`;
     writeFileSync(sprintFile, JSON.stringify({ tasks: this.tasks }, null, 2));
     log(c.green, `\nSprint state saved to ${sprintFile}`);
 
+    // 9. Post-sprint: PM2 reload backend + smoke test
+    await postSprintSmokeTest();
+
     // Final summary
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     log(c.bold, '\n╔══════════════════════════════════════════════════════════╗');
@@ -1844,6 +1847,82 @@ ONLY output the JSON array. No markdown, no explanation.`;
     log(c.magenta, `  CMO reports: ${cmoReports ? 'loaded' : 'none'}`);
     log(c.blue,  `  Total time: ${elapsed}s`);
     log(c.gray,  `  Pipeline: CEO → MiniMax code → Dual review (Claude+Codex) → CEO resolves conflicts → CTO → CMO/Grok → Post-sprint analysis → Daily report`);
+  }
+}
+
+// ===== Post-sprint smoke test =====
+
+async function httpGet(url: string, timeoutMs = 8000): Promise<{ status: number; ok: boolean }> {
+  return new Promise((resolve) => {
+    const parsed = new URL(url);
+    const lib = parsed.protocol === 'https:' ? https : http;
+    const req = lib.get({ hostname: parsed.hostname, port: parseInt(parsed.port || (parsed.protocol === 'https:' ? '443' : '80')), path: parsed.pathname }, (res) => {
+      res.resume(); // drain body
+      resolve({ status: res.statusCode || 0, ok: (res.statusCode || 0) < 400 });
+    });
+    req.on('error', () => resolve({ status: 0, ok: false }));
+    req.setTimeout(timeoutMs, () => { req.destroy(); resolve({ status: 0, ok: false }); });
+  });
+}
+
+async function sendTelegramAlert(message: string): Promise<void> {
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId   = process.env.TELEGRAM_CHAT_ID;
+  if (!botToken || !chatId) return;
+  try {
+    await httpPost('https://api.telegram.org/bot' + botToken + '/sendMessage', {
+      'Content-Type': 'application/json',
+    }, JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'Markdown' }), 10000);
+  } catch {}
+}
+
+async function postSprintSmokeTest(): Promise<void> {
+  log(c.magenta, '\n--- Phase 9: Post-Sprint PM2 Reload + Smoke Test ---');
+
+  // 9a. Reload backend via PM2
+  try {
+    log(c.cyan, '  Reloading PM2 backend...');
+    execSync('pm2 reload backend --update-env', { timeout: 30000, stdio: 'pipe' });
+    log(c.green, '  ✅ PM2 backend reloaded');
+  } catch (e: any) {
+    log(c.yellow, `  ⚠️  PM2 reload failed (may not be running in PM2): ${e.message}`);
+  }
+
+  // 9b. Wait for backend to come up
+  await new Promise(r => setTimeout(r, 5000));
+
+  // 9c. Smoke test key endpoints
+  const backendBase = process.env.BACKEND_URL || 'http://localhost:3001';
+  const endpoints = [
+    { name: 'health',      url: `${backendBase}/v1/health` },
+    { name: 'invoices',    url: `${backendBase}/v1/invoices?limit=1` },
+    { name: 'settlements', url: `${backendBase}/v1/settlements?limit=1` },
+  ];
+
+  const results: Array<{ name: string; status: number; ok: boolean }> = [];
+  for (const ep of endpoints) {
+    const result = await httpGet(ep.url);
+    results.push({ name: ep.name, ...result });
+    const icon = result.ok ? '✅' : '🔴';
+    log(result.ok ? c.green : c.red, `  ${icon} ${ep.name}: HTTP ${result.status || 'timeout'}`);
+  }
+
+  const failed = results.filter(r => !r.ok);
+  if (failed.length > 0) {
+    const failList = failed.map(r => `• ${r.name}: HTTP ${r.status || 'timeout'}`).join('\n');
+    log(c.red, `\n  🔴 ${failed.length}/${endpoints.length} smoke tests FAILED`);
+    await sendTelegramAlert(
+      `🔴 *Post-Sprint Smoke Test FAILED*\n\n` +
+      `${failed.length}/${endpoints.length} endpoints down after sprint:\n${failList}\n\n` +
+      `Run \`pm2 logs backend\` to investigate.`
+    );
+  } else {
+    log(c.green, `\n  ✅ All ${endpoints.length} smoke tests passed`);
+    await sendTelegramAlert(
+      `✅ *Post-Sprint Smoke Test Passed*\n\n` +
+      `All ${endpoints.length} endpoints healthy after sprint.\n` +
+      results.map(r => `• ${r.name}: HTTP ${r.status}`).join('\n')
+    );
   }
 }
 

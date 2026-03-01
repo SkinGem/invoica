@@ -14,6 +14,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
+import { execSync } from 'child_process';
 
 const ROOT = path.resolve(__dirname, '..');
 const HEALTH_FILE = path.join(ROOT, 'health.json');
@@ -467,13 +468,38 @@ async function heartbeat(): Promise<void> {
   }
 
   if (staleServices.length > 0) {
-    const lines = staleServices.map(s => {
-      const ago = s.hoursAgo !== null ? `${s.hoursAgo}h ago` : 'never/no log';
-      return `  • *${s.name}*: last success ${ago} (threshold ${s.staleThresholdHours}h)`;
-    }).join('\n');
-    const telegramMsg = `🚨 *Invoica Service Alert*\n\n${staleServices.length} cron service(s) appear stale:\n${lines}\n\n_Fix: ssh invoica@server + pm2 logs <name> + pm2 restart <name>_`;
-    appendAudit(`[ALERT] Stale cron services: ${staleServices.map(s => s.name).join(', ')}`);
-    console.log(`[Heartbeat] 🚨 Stale services detected — sending Telegram alert`);
+    // Self-healing: attempt PM2 restart for each stale service before alerting
+    const autoRestarted: string[] = [];
+    const stillStale: typeof staleServices = [];
+
+    for (const svc of staleServices) {
+      try {
+        console.log(`[Heartbeat] 🔄 Auto-restarting stale service: ${svc.name}`);
+        execSync(`pm2 restart ${svc.name}`, { timeout: 15000, stdio: 'pipe' });
+        autoRestarted.push(svc.name);
+        appendAudit(`[SELF_HEAL] Auto-restarted stale service: ${svc.name}`);
+        console.log(`[Heartbeat] ✅ Restarted: ${svc.name}`);
+      } catch (restartErr: any) {
+        console.log(`[Heartbeat] ❌ Failed to restart ${svc.name}: ${restartErr.message}`);
+        stillStale.push(svc);
+      }
+    }
+
+    // Always notify — but distinguish auto-healed from persistent failures
+    const restarted = autoRestarted.length > 0
+      ? `\n\n✅ *Auto-restarted* (${autoRestarted.length}): ${autoRestarted.join(', ')}`
+      : '';
+    const persistent = stillStale.length > 0
+      ? '\n\n🛑 *Still stale after restart* — manual fix needed:\n' +
+        stillStale.map(s => {
+          const ago = s.hoursAgo !== null ? `${s.hoursAgo}h ago` : 'never/no log';
+          return `  • *${s.name}*: last success ${ago} (threshold ${s.staleThresholdHours}h)`;
+        }).join('\n')
+      : '';
+
+    const telegramMsg = `⚡ *Invoica Self-Heal* — ${staleServices.length} stale service(s)${restarted}${persistent}`;
+    appendAudit(`[ALERT] Stale cron services: ${staleServices.map(s => s.name).join(', ')} | Auto-restarted: ${autoRestarted.join(', ') || 'none'}`);
+    console.log(`[Heartbeat] Self-heal complete — restarted: ${autoRestarted.length}, still stale: ${stillStale.length}`);
     await sendTelegram(telegramMsg);
   }
 
