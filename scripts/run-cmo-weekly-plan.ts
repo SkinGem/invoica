@@ -3,9 +3,9 @@
  * run-cmo-weekly-plan.ts — CMO Sunday Weekly Content Plan Generator
  *
  * Every Sunday at 06:00 UTC:
- *   1. CMO (Claude) researches X trends via Grok + git log + market reports
+ *   1. CMO (Manus AI) researches X trends via Grok + git log + market reports
  *   2. Generates a full week of post-ready X content (Mon–Sun, 3 slots/day)
- *   3. CTO (MiniMax) reviews technical accuracy of all posts
+ *   3. CTO (MiniMax → Claude fallback) reviews technical accuracy of all posts
  *   4. CEO (Claude) reviews brand voice + strategic alignment of full plan
  *   5. If approved → status: "approved", saved, Telegram alert to owner
  *   6. If rejected after 2 attempts → status: "needs-revision", owner notified for manual review
@@ -21,6 +21,25 @@ import * as path from 'path';
 import * as https from 'https';
 import { execSync } from 'child_process';
 import 'dotenv/config';
+import { ManusClient } from './lib/manus-client';
+
+// ── Cron guard: prevent PM2 reload from triggering this script off-schedule ──
+(function checkCronGuard() {
+  const _guardFile = require('path').join(process.cwd(), 'logs', 'cron-guard-cmo-weekly-plan.json');
+  const _minMs = 160 * 60 * 60 * 1000;
+  try {
+    const _last = require('fs').existsSync(_guardFile)
+      ? JSON.parse(require('fs').readFileSync(_guardFile, 'utf-8')).lastRun
+      : 0;
+    if (Date.now() - new Date(_last).getTime() < _minMs) {
+      const _ago = Math.round((Date.now() - new Date(_last).getTime()) / 3600000);
+      console.log(`[CronGuard] cmo-weekly-plan: last run ${_ago}h ago (min interval 160h) — skipping`);
+      process.exit(0);
+    }
+  } catch { /* first run or stale guard */ }
+  // NOTE: last-run timestamp is updated only on SUCCESSFUL completion (in main())
+})();
+
 
 const ROOT       = process.cwd();
 const CMO_REPORTS = path.join(ROOT, 'reports', 'cmo');
@@ -123,7 +142,11 @@ async function callClaude(system: string, user: string, maxTokens = 4000): Promi
     'x-api-key': process.env.ANTHROPIC_API_KEY!,
     'anthropic-version': '2023-06-01',
   }, body);
-  return JSON.parse(raw).content?.[0]?.text || '';
+  let parsed: any;
+  try { parsed = JSON.parse(raw); } catch { throw new Error('Claude API returned non-JSON: ' + raw.slice(0, 200)); }
+  if (parsed.error) throw new Error('Claude API error: ' + (parsed.error.message || JSON.stringify(parsed.error)));
+  if (!parsed.content?.[0]?.text) throw new Error('Claude API returned no content. Raw: ' + raw.slice(0, 300));
+  return parsed.content[0].text;
 }
 
 // ── MiniMax API (CTO) ──────────────────────────────────────────────────────────
@@ -143,8 +166,53 @@ async function callMinimax(system: string, user: string, maxTokens = 800): Promi
   return JSON.parse(raw).choices?.[0]?.message?.content || '';
 }
 
+
+// ── CTO Shipped Features Report ──────────────────────────────────────────────
+// The CTO compiles a concise report of everything shipped in the last 7 days
+// so the CMO has accurate context for the weekly content plan.
+function getCtoShippedReport(): string {
+  const CTO_REPORTS = path.join(ROOT, 'reports', 'cto');
+  const lines: string[] = [];
+
+  // 1. Git log (last 7 days)
+  try {
+    const commits = execSync(
+      `git -C ${ROOT} log --oneline --since="7 days ago" --no-merges --format="%ai %s" 2>/dev/null | head -25`,
+      { encoding: 'utf-8', timeout: 8000 }
+    ).trim();
+    if (commits) lines.push('## Commits (last 7 days)\n' + commits);
+  } catch { /* ignore */ }
+
+  // 2. Files changed
+  try {
+    const files = execSync(
+      `git -C ${ROOT} diff --name-only HEAD~15 HEAD 2>/dev/null | grep -E '\.(ts|tsx|sql|py)$' | grep -v 'test\|spec\|\.d\.' | sort -u | head -30`,
+      { encoding: 'utf-8', timeout: 8000 }
+    ).trim();
+    if (files) lines.push('## Changed Files\n' + files);
+  } catch { /* ignore */ }
+
+  // 3. Latest CTO post-sprint analysis
+  const postSprintPath = path.join(CTO_REPORTS, 'latest-post-sprint-analysis.md');
+  if (fs.existsSync(postSprintPath)) {
+    const content = fs.readFileSync(postSprintPath, 'utf-8');
+    // Extract shipped features section
+    const shipped = content.slice(0, 2000);
+    lines.push('## CTO Post-Sprint Analysis (latest)\n' + shipped);
+  }
+
+  // 4. Latest CTO verify-implementations (what was actually verified as working)
+  const verifyPath = path.join(CTO_REPORTS, 'latest-verify-implementations.md');
+  if (fs.existsSync(verifyPath)) {
+    const vContent = fs.readFileSync(verifyPath, 'utf-8').slice(0, 1000);
+    lines.push('## CTO Verified Implementations\n' + vContent);
+  }
+
+  return lines.join('\n\n') || '(No CTO report available — use git commits only)';
+}
+
 // ── Context gathering ─────────────────────────────────────────────────────────
-function gatherContext(): { soul: string; recentCommits: string; marketWatch: string; shippedFeatures: string } {
+function gatherContext(): { soul: string; recentCommits: string; marketWatch: string; shippedFeatures: string; ctoShippedReport: string } {
   const soul = fs.existsSync(SOUL_FILE) ? fs.readFileSync(SOUL_FILE, 'utf-8').slice(0, 1500) : '';
 
   let recentCommits = '';
@@ -158,7 +226,10 @@ function gatherContext(): { soul: string; recentCommits: string; marketWatch: st
   const marketWatch = fs.existsSync(marketWatchPath)
     ? fs.readFileSync(marketWatchPath, 'utf-8').slice(0, 1500) : '';
 
-  return { soul, recentCommits, shippedFeatures, marketWatch };
+  // CTO report: what was actually verified/shipped this week
+  const ctoShippedReport = getCtoShippedReport();
+
+  return { soul, recentCommits, shippedFeatures, marketWatch, ctoShippedReport };
 }
 
 // ── Generate weekly plan ──────────────────────────────────────────────────────
@@ -179,7 +250,79 @@ async function generatePlan(weekStart: string, dates: string[], xTrends: string,
     ? `\n\n⚠️ CEO REJECTED PREVIOUS VERSION. Fix every issue:\n${ceoFeedback}\n\nRewrite the entire plan addressing these points.`
     : '';
 
-  const raw = await callClaude(
+  // CMO uses Manus AI for plan generation (as per agent architecture)
+  // Manus is an autonomous research agent — give it the full context in one prompt
+  const manusClient = new ManusClient({});
+  let raw: string;
+  const manusPrompt = `You are the CMO of Invoica (invoica.ai) — the Financial OS for AI Agents.
+Your task: generate a weekly X/Twitter content plan for the X agent to execute.
+
+CRITICAL CONTENT RULES:
+- Updates posts: ONLY features already merged+deployed (from git commits). NEVER roadmap/future.
+- No fabricated metrics: no invented percentages, counts, latency numbers.
+- No ETAs or "coming soon" for unshipped work.
+- All tweets ≤ 280 characters. Dense, specific, developer-native voice.
+- No hashtags. No engagement bait ("What do you think?").
+- Accounts to watch: max 5. Engagement must be educational, not promotional spam.
+
+BRAND VOICE: Technical founder who ships real infrastructure. Think Stripe's early Twitter.
+
+Return ONLY valid JSON (no explanation, no markdown) matching this exact schema:
+{
+  "strategy_note": "1-2 sentences on this week's theme",
+  "accounts_to_watch": [
+    { "handle": "@handle", "topic": "what to watch for", "engagement_angle": "exact educational point to make" }
+  ],
+  "days": {
+    "YYYY-MM-DD": {
+      "educational": { "tweets": ["≤280 char tweet"], "image_path": null, "topic_summary": "what this teaches" },
+      "updates": { "tweets": ["≤280 char tweet"], "image_path": null, "topic_summary": "what shipped feature" },
+      "vision": { "tweets": ["tweet1", "optional tweet2"], "image_path": null, "topic_summary": "what vision angle" }
+    }
+  }
+}
+
+## Invoica Context
+${ctx.soul.slice(0, 800)}
+
+## CTO Verified Shipped Features (last 7 days — USE THESE for updates posts, not anything else)
+${ctx.ctoShippedReport.slice(0, 3000)}
+
+## Recent Commits (14 days)
+${ctx.recentCommits || '(no commits found)'}
+
+## Changed Files
+${ctx.shippedFeatures || '(unavailable)'}
+
+## Market Intelligence
+${ctx.marketWatch.slice(0, 800)}
+
+## X/Twitter Current Trends (use for educational + vision angle)
+${xTrends.slice(0, 1500)}
+
+## Week to Plan
+Week start (Monday): ${weekStart}
+Dates: ${dates.join(', ')}
+
+Write post-ready content for ALL 7 days × 3 slots = 21 posts total.
+Vary topics across the week. Don't repeat the same angle twice.
+Updates posts must name specific shipped features from git commits above.${feedbackBlock}
+
+IMPORTANT INSTRUCTIONS FOR OUTPUT FORMAT:
+- Do NOT use tools to write files
+- Do NOT create documents or sandboxes
+- Do NOT provide a preamble or acknowledgment
+- Your ENTIRE and ONLY output must be the raw JSON object
+- Start your response with { and end with }
+- No markdown, no code fences, no explanation before or after the JSON`;
+  try {
+    const manusResult = await manusClient.executeTask({ prompt: manusPrompt });
+    raw = manusResult.output;
+    log(`Manus task completed in ${Math.round(manusResult.durationMs / 1000)}s (${manusResult.pollAttempts} polls)`);
+    log(`Manus raw output preview: ${raw.slice(0, 200).replace(/\n/g, " ")}`);
+  } catch (e: any) {
+    log(`Manus failed (${e.message}) — falling back to Claude for CMO plan generation`);
+    raw = await callClaude(
     `You are the CMO of Invoica — the Financial OS for AI Agents (@invoica_ai).
 You produce a structured weekly X/Twitter content plan for the X agent to execute.
 
@@ -211,10 +354,13 @@ Return ONLY valid JSON (no markdown wrapper) matching this exact schema:
     `## Invoica Context
 ${ctx.soul.slice(0, 800)}
 
-## Recent Shipped Features (last 14 days — use these for updates posts)
+## CTO Verified Shipped Features (last 7 days — USE THESE for updates posts, not anything else)
+${ctx.ctoShippedReport.slice(0, 3000)}
+
+## Recent Commits (14 days)
 ${ctx.recentCommits || '(no commits found)'}
 
-## Changed Files (shipped code)
+## Changed Files
 ${ctx.shippedFeatures || '(unavailable)'}
 
 ## Market Intelligence
@@ -230,12 +376,46 @@ Dates: ${dates.join(', ')}
 Write post-ready content for ALL 7 days × 3 slots = 21 posts total.
 Vary topics across the week. Don't repeat the same angle twice.
 Updates posts must name specific shipped features from git commits above.${feedbackBlock}`
-  );
+    , 6000);
+  }
 
-  // Parse JSON
-  const match = raw.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('CMO failed to return valid JSON plan');
-  const parsed = JSON.parse(match[0]);
+  // Parse JSON — handle markdown code fences and extract largest JSON object
+  let planJson = raw;
+  // Strip markdown code fences if present
+  const fenceMatch = planJson.match(/```(?:json)?\n?([\s\S]*?)```/);
+  if (fenceMatch) planJson = fenceMatch[1];
+  // Find outermost JSON object (from first { to last })
+  const start = planJson.indexOf('{');
+  const end = planJson.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('CMO failed to return valid JSON plan');
+  let parsed: any;
+  try {
+    parsed = JSON.parse(planJson.slice(start, end + 1));
+  } catch (e: any) {
+    throw new Error('CMO returned malformed JSON: ' + e.message + ' — raw: ' + planJson.slice(start, start + 200));
+  }
+
+  // Post-process: clean up Manus research artifacts
+  const cleanTweet = (t: string) => t
+    .replace(/\s*\[\d+(?:,\s*\d+)*\]/g, '')  // strip [1], [1, 3, 4] citation refs
+    .replace(/\s+/g, ' ')
+    .trim();
+  const cleanImagePath = (p: string | null) => {
+    if (!p) return null;
+    // Only allow actual image paths (not source code files)
+    if (/\.(tsx?|jsx?|sql|md|json|sh)$/i.test(p)) return null;
+    if (/^(frontend|backend|scripts|src|docs)\//.test(p)) return null;
+    return p;
+  };
+  const cleanedDays: Record<string, DayPlan> = {};
+  for (const [date, day] of Object.entries(parsed.days || {})) {
+    const d = day as DayPlan;
+    cleanedDays[date] = {
+      educational: { ...d.educational, tweets: (d.educational?.tweets || []).map(cleanTweet), image_path: cleanImagePath(d.educational?.image_path ?? null) },
+      updates:     { ...d.updates,     tweets: (d.updates?.tweets     || []).map(cleanTweet), image_path: cleanImagePath(d.updates?.image_path     ?? null) },
+      vision:      { ...d.vision,      tweets: (d.vision?.tweets      || []).map(cleanTweet), image_path: cleanImagePath(d.vision?.image_path      ?? null) },
+    };
+  }
 
   return {
     week_start: weekStart,
@@ -244,7 +424,7 @@ Updates posts must name specific shipped features from git commits above.${feedb
     strategy_note: parsed.strategy_note || '',
     status: 'draft',
     accounts_to_watch: parsed.accounts_to_watch || [],
-    days: parsed.days || {},
+    days: cleanedDays,
   };
 }
 
@@ -256,7 +436,17 @@ async function ctoReview(plan: WeeklyPlan): Promise<ReviewResult> {
     Object.entries(day).map(([slot, content]) => `[${date} ${slot}] ${content.tweets.join(' | ')}`)
   ).join('\n');
 
-  const text = await callMinimax(
+  // CTO uses MiniMax with Claude fallback (MiniMax may be temporarily out of credits)
+  const callCtoReview = async (sys: string, usr: string, maxT = 600): Promise<string> => {
+    try { return await callMinimax(sys, usr, maxT); } catch (e: any) {
+      if (e.message?.includes('balance') || e.message?.includes('insufficient') || !e.message) {
+        log('CTO (MiniMax) credits low — falling back to Claude for CTO review');
+        return callClaude(sys, usr, maxT);
+      }
+      throw e;
+    }
+  };
+  const text = await callCtoReview(
     `You are the CTO of Invoica. Review the weekly X/Twitter content plan for technical accuracy.
 Check: correct x402 protocol facts, accurate EIP-712 details, correct Base/USDC info, valid UK VAT/EU VAT facts, accurate API endpoint names.
 Reject if: any technical claim is wrong or misleading. Approve if all technical facts are accurate or post is non-technical.
@@ -280,7 +470,17 @@ async function ceoReview(plan: WeeklyPlan): Promise<ReviewResult> {
     `**VIS**: ${day.vision.tweets.join(' | ')}`
   ).join('\n\n');
 
-  const text = await callClaude(
+  // CEO uses Claude when available, falls back to MiniMax if credits exhausted
+  const callCeoReview = async (sys: string, usr: string, maxT = 600): Promise<string> => {
+    try { return await callClaude(sys, usr, maxT); } catch (e: any) {
+      if (e.message?.includes('credit') || e.message?.includes('billing')) {
+        log('CEO (Claude) credits low — falling back to MiniMax for CEO review');
+        return callMinimax(sys, usr, maxT);
+      }
+      throw e;
+    }
+  };
+  const text = await callCeoReview(
     `You are the CEO of Invoica. You are reviewing the CMO's weekly X/Twitter content plan.
 Your approval is the official order to the X agent to execute this plan.
 
@@ -327,7 +527,7 @@ async function main(): Promise<void> {
 
   log('Researching X trends via Grok...');
   const xTrends = await researchTrends();
-  log('Gathering project context (commits, reports)...');
+  log('Gathering project context: CTO shipped features + commits + market watch...');
   const ctx = gatherContext();
 
   let plan: WeeklyPlan | undefined;
@@ -376,6 +576,16 @@ async function main(): Promise<void> {
   if (!fs.existsSync(CMO_REPORTS)) fs.mkdirSync(CMO_REPORTS, { recursive: true });
   fs.writeFileSync(outputFile, JSON.stringify(plan, null, 2));
   log(`Plan saved: ${outputFile} (status: ${plan.status})`);
+  // Update cron guard only when plan is approved (allow re-runs on needs-revision)
+  try {
+    const guardFile = path.join(ROOT, 'logs', 'cron-guard-cmo-weekly-plan.json');
+    if (plan.status === 'approved') {
+      fs.writeFileSync(guardFile, JSON.stringify({ lastRun: new Date().toISOString(), status: 'approved' }));
+    } else {
+      // Remove guard so operator can re-trigger manually
+      if (fs.existsSync(guardFile)) fs.unlinkSync(guardFile);
+    }
+  } catch { /* non-fatal */ }
 
   // Telegram notification
   const totalPosts = Object.keys(plan.days).length * 3;
