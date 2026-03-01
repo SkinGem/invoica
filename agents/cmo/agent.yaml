@@ -47,20 +47,23 @@ outputs:
   - Communication plan: reports/cmo/communication-plan.md
   - Content calendar: reports/cmo/content-calendar.md
 schedule:
-  daily: market-watch
-  weekly: strategy-report
+  sunday_0600_utc: weekly-content-plan   # Full week of X posts + branded images
+  daily_0800_utc: market-watch
+  monday_0700_utc: strategy-report
   on_demand:
-    - brand-review
     - product-proposal
-    - x-admin-design
     - website-audit
+  retired:
+    - brand-review       # Brand is established — docs/brand-guidelines.md is stable
+    - x-admin-design     # X Admin Agent is live and spec is complete
 
 autonomous_authority:
   text_content: full
   engagement: full
-  media_content: propose_only (Owner approves)
+  weekly_content_plan: full              # CMO owns the content plan fully
+  media_content: full                    # CMO produces branded images autonomously
   strategy_changes: ceo_approval
-company_name: "NEXUS COLLECTIVE"
+company_name: "Invoica"
 
 # POST-MVP: Website & Documentation Ownership (Effective Feb 18, 2026)
 website_ownership:
