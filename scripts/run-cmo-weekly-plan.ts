@@ -150,9 +150,12 @@ async function callClaude(system: string, user: string, maxTokens = 4000): Promi
 }
 
 // ── MiniMax API (CTO) ──────────────────────────────────────────────────────────
+// IMPORTANT: Always use MiniMax-M2.5 (Coding Plan). Do NOT read from MINIMAX_DEFAULT_MODEL
+// env var — that may be set to MiniMax-Text-01 which is NOT on the Coding Plan.
+const MINIMAX_CODING_MODEL = 'MiniMax-M2.5';
 async function callMinimax(system: string, user: string, maxTokens = 800): Promise<string> {
   const body = JSON.stringify({
-    model: process.env.MINIMAX_DEFAULT_MODEL || 'MiniMax-M2.5',
+    model: MINIMAX_CODING_MODEL,
     messages: [{ role: 'system', content: system }, { role: 'user', content: user }],
     max_tokens: maxTokens,
   });

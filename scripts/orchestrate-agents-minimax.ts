@@ -6,6 +6,22 @@ import * as https from 'https';
 import * as http from 'http';
 import 'dotenv/config';
 
+// ===== x402 LLM Client (agent wallets spend USDC for each LLM call) =====
+// Lazy import — falls back to direct MiniMax API if x402 endpoint is unavailable
+let _x402CodeCall: ((agent: string, sys: string, user: string) => Promise<string>) | null = null;
+async function getX402Client() {
+  if (_x402CodeCall !== null) return _x402CodeCall;
+  try {
+    const mod = await import('./lib/x402-llm-client');
+    _x402CodeCall = mod.x402CodeCall;
+    log(c.green, '[x402] Agent wallet payment client loaded — agents will spend USDC per task');
+  } catch {
+    _x402CodeCall = async () => { throw new Error('x402 client unavailable'); };
+    log(c.yellow, '[x402] Client not available — will use direct MiniMax API');
+  }
+  return _x402CodeCall;
+}
+
 // ===== Types =====
 
 interface AgentTask {
@@ -193,17 +209,48 @@ IMPORTANT:
 - Each code block MUST start with "// filepath: <path>"
 - Generate ALL listed files, do not skip any`;
 
-    log(c.gray, `  -> Sending to MiniMax (model: ${model})...`);
+    // ── Try x402 payment path first (agent wallet spends USDC) ──────────────
+    // If the inference endpoint is unavailable, fall back to direct MiniMax API
     const startTime = Date.now();
-    const response = await callMiniMax(model, this.systemPrompt, userPrompt);
+    let output: string;
 
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    const tokens = response.usage?.total_tokens || 'unknown';
-    log(c.gray, `  -> Response received in ${elapsed}s (${tokens} tokens)`);
+    const agentWalletName = this.name.replace('backend-', '').replace('-', ''); // e.g. 'backend-core' → 'code'
+    const walletMap: Record<string, string> = {
+      'backendcore': 'code', 'backendtax': 'code', 'backendledger': 'code',
+      'frontend': 'code', 'devops': 'code', 'security': 'code',
+      'core': 'code', 'tax': 'code', 'ledger': 'code',
+    };
+    const walletAgent = walletMap[agentWalletName] || 'code';
+    const x402Available = process.env.X402_SELLER_WALLET && process.env.INFERENCE_API_URL !== 'disabled';
 
-    const output = response.choices?.[0]?.message?.content;
+    if (x402Available) {
+      try {
+        log(c.gray, `  -> Routing via x402 (wallet: ${walletAgent}, model: MiniMax-M2.5)...`);
+        const x402 = await getX402Client();
+        output = await x402(walletAgent, this.systemPrompt, userPrompt);
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        log(c.green, `  -> x402 response in ${elapsed}s [${walletAgent} wallet spent 0.001 USDC]`);
+      } catch (x402Err: any) {
+        log(c.yellow, `  -> x402 failed (${x402Err.message.slice(0, 80)}) — falling back to direct MiniMax API`);
+        // Fall through to direct API below
+        const response = await callMiniMax(model, this.systemPrompt, userPrompt);
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        const tokens = response.usage?.total_tokens || 'unknown';
+        log(c.gray, `  -> Direct MiniMax response in ${elapsed}s (${tokens} tokens)`);
+        output = response.choices?.[0]?.message?.content || '';
+      }
+    } else {
+      // x402 not configured — use direct MiniMax API
+      log(c.gray, `  -> Sending to MiniMax directly (model: ${model})...`);
+      const response = await callMiniMax(model, this.systemPrompt, userPrompt);
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      const tokens = response.usage?.total_tokens || 'unknown';
+      log(c.gray, `  -> Response received in ${elapsed}s (${tokens} tokens)`);
+      output = response.choices?.[0]?.message?.content || '';
+    }
+
     if (!output) {
-      throw new Error('Empty response from MiniMax API');
+      throw new Error('Empty response from LLM');
     }
 
     // Extract code blocks with filepath comments
