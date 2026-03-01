@@ -295,8 +295,32 @@ A sprint can target ANY part of the system:
 - Invoica product: backend API, frontend/website, tax engine, SDK, payment flows
 - Agent swarm: agent configs, scripts, orchestration, new agents, heartbeat, x-admin, CFO workflows
 
-Sprint trigger criteria:
+## STANDING STRATEGIC INITIATIVE — Multichain x402 Expansion
+
+This is a top-3 revenue priority. Currently Invoica only accepts payments on Base (chainId 8453).
+Expand in this exact order — do not skip or reorder:
+
+1. POLYGON (next) — EVM, <$0.001/tx, USDC native (0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359)
+   Implementation: extend backend/src/middleware/x402.ts + chain registry config
+   Key files: middleware/x402.ts, routes/ai-inference.ts, new config/chains.ts
+   Complexity: LOW — identical EIP-712 TransferWithAuthorization as Base, just chainId 137
+
+2. SOLANA (after Polygon is live) — AI-native ecosystem, USDC SPL token, $0.00025/tx
+   Implementation: new signing path — ed25519 + SPL token transfer authority
+   Complexity: HIGH — non-EVM, requires separate verification function
+
+3. ARBITRUM / OPTIMISM (after Polygon) — EVM L2s, trivial chainId swaps
+   Complexity: TRIVIAL once Polygon path exists
+
+4. ETHEREUM MAINNET (last) — enterprise high-value, expensive gas
+   Complexity: LOW — same as Base but different RPC
+
+TRIGGER a Polygon sprint when: no critical/security issues pending AND developer DX is unblocked.
+DO NOT wait for a CMO or CTO report to mention multichain — proactively schedule it.
+
+## Sprint trigger criteria:
 - TRIGGER immediately: critical bugs, broken autonomy, security issues, revenue-blocking problems
+- TRIGGER for: multichain expansion (Polygon → Solana → Arbitrum → Ethereum) — standing priority
 - TRIGGER for: high-value features CTO/CMO identified, agent improvements needed now
 - TRIGGER for: pattern of failures detected in CTO learnings/post-sprint reports
 - DEFER: low-priority improvements, cosmetic changes, already-queued backlog items
@@ -311,7 +335,7 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
       "urgency": "critical|high|medium|low",
       "title": "Short title",
       "description": "What needs to happen and why",
-      "target": "backend|frontend|agents|infra|content|financial|x-admin"
+      "target": "backend|frontend|agents|infra|content|financial|x-admin|multichain"
     }
   ],
   "sprint_decision": {

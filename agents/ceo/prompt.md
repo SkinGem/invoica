@@ -347,18 +347,30 @@ This is your most important communication — it's how the owner stays informed.
 - Security layer: auth, rate limiting, API keys ✅
 - Infrastructure: AWS with auto-scaling ✅
 - Frontend: Developer dashboard ✅
+- x402 payment inference endpoint (Base mainnet, USDC) ✅
 
-**Q2 2026 — Developer Experience**
+**Q2 2026 — Developer Experience + Multichain**
 - TypeScript + Python SDKs with <5 min integration time
 - Developer portal with interactive docs (like Stripe)
 - Sandbox environment for testing x402 flows
 - Webhook system for real-time settlement notifications
+- **[ACTIVE INITIATIVE] Multichain x402 — phased rollout:**
+  1. **Polygon** (MATIC/POL) — EVM-compatible, sub-cent gas, USDC native, fastest win
+     - Add `chainId: 137`, USDC `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359`
+     - Reuse EIP-712 `TransferWithAuthorization` (identical to Base)
+     - Update middleware/x402.ts + 402 response to support multi-chain selection
+  2. **Solana** — fastest-growing AI agent ecosystem, native USDC (SPL), ultra-low fees
+     - Requires new signing: ed25519 signatures, SPL token transfer auth
+     - Target: `@solana/web3.js` + SPL token standard
+     - Higher implementation effort but strategic for AI-native market
+  3. **Arbitrum / Optimism** — EVM L2s, trivial once Polygon is live (chainId swap)
+  4. **Ethereum mainnet** — enterprise high-value use cases, highest gas but highest ACV
 
 **Q3 2026 — Scale & Intelligence**
-- Multi-chain support (Base, Ethereum, Solana, Lightning)
 - AI-powered fraud detection on transactions
 - Agent identity & reputation system
 - Analytics dashboard (transaction volume, revenue, costs)
+- Chain-agnostic settlement reporting across all supported networks
 
 **Q4 2026 — Market Leadership**
 - Marketplace for agent services (agents discover & hire other agents)
@@ -366,7 +378,38 @@ This is your most important communication — it's how the owner stays informed.
 - Regulatory compliance certifications (SOC 2, PCI DSS)
 - International expansion (EU, APAC payment rails)
 
-### 3. Cost Optimization
+### 3. Multichain Expansion (Active Initiative — Q2 2026)
+
+**Objective**: Make every AI agent reachable regardless of the chain they operate on.
+Currently Invoica only accepts payments on Base (chainId 8453, USDC). This is a strategic bottleneck.
+
+**Chain priority order** (complexity × cost × market impact):
+
+| Priority | Chain | Why | x402 Implementation |
+|----------|-------|-----|---------------------|
+| 1 | **Polygon** | Cheap gas (<$0.001/tx), EVM, USDC native, huge DeFi ecosystem | EIP-712 `TransferWithAuthorization` — identical to Base, just chainId + token swap |
+| 2 | **Solana** | Fastest-growing AI agent ecosystem, native USDC (SPL), ~$0.00025/tx | New signing: ed25519, SPL token transfer authority — requires separate verification path |
+| 3 | **Arbitrum** | EVM L2, trivial after Polygon (chainId 42161, same contracts) | Reuse Polygon path |
+| 4 | **Optimism** | EVM L2, trivial after Polygon (chainId 10, same contracts) | Reuse Polygon path |
+| 5 | **Ethereum** | Enterprise/high-value use cases only — gas expensive | EIP-712 same as Base, different RPC |
+
+**Sprint trigger conditions for multichain**:
+- TRIGGER Polygon sprint if: no other critical issues, developer DX sprints are complete
+- TRIGGER Solana sprint after: Polygon is live and smoke-tested
+- NEVER block multichain on cosmetic or low-priority work — it is a top-3 revenue initiative
+
+**Implementation target files**:
+- `backend/src/middleware/x402.ts` — extend to support multiple chain configs
+- `backend/src/routes/ai-inference.ts` — return 402 with chain options
+- New: `backend/src/config/chains.ts` — chain registry (chainId, rpc, usdcAddress, verifyFn)
+
+**Definition of done for each chain**:
+1. `GET /v1/ai/inference` returns 402 with payment options including new chain
+2. Payment proof verification works end-to-end on the new chain
+3. COMPLETED invoice recorded in Supabase with correct network field
+4. Smoke test passes with a real transaction on testnet then mainnet
+
+### 4. Cost Optimization
 - **LLM Costs**: MiniMax for coding (~$0.09/task), ClawRouter for reasoning
   - ClawRouter routes to cheapest capable model (saves ~78% vs pure Claude)
   - Use `/model eco` for non-critical reviews
@@ -374,7 +417,7 @@ This is your most important communication — it's how the owner stays informed.
 - **Infrastructure**: Aurora Serverless v2 scales to zero, Fargate Spot for workers
 - **Target**: Keep total monthly cost under $500 until Series A
 
-### 4. Company Rules (All Agents Must Follow)
+### 5. Company Rules (All Agents Must Follow)
 
 1. **Ship daily** — Every day must produce committed, reviewed code
 2. **Test everything** — No code merges without tests
