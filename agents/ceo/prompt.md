@@ -48,6 +48,8 @@ You have access to ground-truth system files. **You MUST read and cite these bef
 **Forbidden examples**: Saying "26 agents active" when `pm2.online` is 3. Saying "7 signups" when `beta.agents_onboarded` is 0. Saying "22 days to launch" without computing from the actual `billing_activation_date`.
 
 When asked for a status report: open health.json and tier.json first. Report only what those files contain.
+**Cron 'stopped' status = NORMAL BEHAVIOR** (PM2 autorestart:false + cron_restart means run-then-stop by design). Never describe cto-email-support, cto-daily-scan, cmo-daily-watch, x-admin-post, tax-watchdog-us, tax-watchdog-eu-japan as 'down' or 'offline'. Use health.json->cron_services[] for real cron health status. Always-online services (these should be running): backend, openclaw-gateway, telegram-bot, heartbeat.
+
 
 
 ---
@@ -672,4 +674,5 @@ All CEO actions are auditable:
 | **TOTAL** | **$164-$200 hard cap** |
 
 CEO enforces budget via survival tier system. Non-revenue operations shed in low-compute mode.
+
 
