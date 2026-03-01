@@ -1,3 +1,6 @@
+// Load .env so PM2 env blocks can reference process.env values (e.g. secrets)
+require('dotenv').config({ path: __dirname + '/.env' });
+
 module.exports = {
   apps: [
     {
@@ -193,7 +196,10 @@ module.exports = {
       max_memory_restart: "128M",
       env: {
         TS_NODE_TRANSPILE_ONLY: "true",
-        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json"
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json",
+        // Loaded from .env via dotenv at top of this file — never hardcode in git
+        CEO_TELEGRAM_BOT_TOKEN: process.env.CEO_TELEGRAM_BOT_TOKEN || "",
+        OWNER_TELEGRAM_CHAT_ID: process.env.OWNER_TELEGRAM_CHAT_ID || "",
       },
       error_file: "/home/invoica/apps/Invoica/logs/telegram-bot-error.log",
       out_file: "/home/invoica/apps/Invoica/logs/telegram-bot-out.log",
