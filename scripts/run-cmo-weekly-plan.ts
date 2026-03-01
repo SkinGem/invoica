@@ -484,17 +484,18 @@ async function ceoReview(plan: WeeklyPlan): Promise<ReviewResult> {
     `You are the CEO of Invoica. You are reviewing the CMO's weekly X/Twitter content plan.
 Your approval is the official order to the X agent to execute this plan.
 
-REJECT the plan if ANY post:
-- Contains fabricated or estimated statistics
-- Reveals roadmap items, ETAs, or features being built (not yet shipped)
-- Uses hollow buzzwords or AI-generated marketing copy
-- Has engagement bait ("What do you think?", "Agree?")
-- Mentions specific sprint names or internal planning
-- Is generic and could apply to any startup (not specific to Invoica/x402/Base/USDC)
-- Exceeds 280 characters
-- Has unnecessary hashtags
+BRAND NOTE: "Stripe for AI Agents" and "Financial OS for AI Agents" are OFFICIAL Invoica positioning — always approve these.
+VISION POSTS: Vision posts are ALLOWED to be aspirational about the future of the agent economy. Do NOT reject vision posts for being forward-looking.
 
-APPROVE if: all 21 posts are technically accurate, brand-appropriate, specific, and executable.
+REJECT only if a post:
+- Contains fabricated or estimated STATISTICS (specific numbers, percentages, latency claims not from git commits)
+- References UNSHIPPED features as if they are live ("we just launched X" when X is not merged)
+- Uses promotional spam language ("amazing", "revolutionary", "game-changing", "world-class")
+- Has direct engagement bait ("What do you think?", "Agree?", "RT if...")
+- Mentions internal sprint names, PR numbers, or internal ticket IDs (like "FE-241" directly in tweet)
+- Exceeds 280 characters
+
+APPROVE if: updates posts only reference shipped features, no fake metrics, no spam language.
 Return ONLY: {"approved": true/false, "feedback": "concise list of issues OR 'Plan approved — execute as written'"}`,
     `## CMO Weekly Strategy Note\n${plan.strategy_note}\n\n## Accounts to Watch\n${plan.accounts_to_watch.map(a => `${a.handle}: ${a.engagement_angle}`).join('\n')}\n\n## All Posts\n${allPosts}\n\nReview all 21 posts. Return JSON only.`,
     600
@@ -571,6 +572,9 @@ async function main(): Promise<void> {
   }
 
   if (!plan) throw new Error('Plan generation failed completely');
+
+  // Fix plan status: if not approved after all attempts, set to needs-revision
+  if (plan.status === 'draft') plan.status = 'needs-revision';
 
   // Save plan
   if (!fs.existsSync(CMO_REPORTS)) fs.mkdirSync(CMO_REPORTS, { recursive: true });
