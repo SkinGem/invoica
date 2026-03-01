@@ -1,5 +1,6 @@
 // Load .env so PM2 env blocks can reference process.env values (e.g. secrets)
-require('dotenv').config({ path: __dirname + '/.env' });
+// Wrapped in try-catch: dotenv may not be installed in CI or other environments
+try { require('dotenv').config({ path: __dirname + '/.env' }); } catch (e) {}
 
 module.exports = {
   apps: [
