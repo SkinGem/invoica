@@ -294,6 +294,93 @@ function rotateBy<T>(arr: T[]): T {
   return arr[doy % arr.length];
 }
 
+// ── CMO Weekly Content Plan ──────────────────────────────────────────────────
+// Reads reports/cmo/weekly-content-plan-YYYY-MM-DD.json (Monday of current week)
+// Returns today's pre-written content for a given slot, or null if not available.
+
+interface CmoPlanSlot {
+  tweets: string[];
+  image_path: string | null;
+  topic_summary?: string;
+}
+
+interface CmoDayPlan {
+  educational?: CmoPlanSlot;
+  updates?: CmoPlanSlot;
+  vision?: CmoPlanSlot;
+}
+
+interface CmoWeeklyPlan {
+  week_start: string;
+  week_end: string;
+  prepared_at?: string;
+  strategy_note?: string;
+  accounts_to_watch?: Array<{ handle: string; topic: string; engagement_angle: string }>;
+  days: Record<string, CmoDayPlan>;
+}
+
+function getMondayOfCurrentWeek(): string {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const diff = day === 0 ? -6 : 1 - day; // days back to Monday
+  const monday = new Date(now);
+  monday.setUTCDate(now.getUTCDate() + diff);
+  return monday.toISOString().slice(0, 10);
+}
+
+function loadCmoPlan(): CmoWeeklyPlan | null {
+  const monday = getMondayOfCurrentWeek();
+  const planPath = path.join(ROOT, 'reports', 'cmo', `weekly-content-plan-${monday}.json`);
+  if (!fs.existsSync(planPath)) {
+    console.log(`  [cmo-plan] No plan found for week of ${monday} — will generate content on-the-fly`);
+    return null;
+  }
+  try {
+    const plan = JSON.parse(fs.readFileSync(planPath, 'utf-8')) as CmoWeeklyPlan;
+    // ONLY use plans approved by both CTO and CEO
+    if ((plan as any).status !== 'approved') {
+      console.log(`  [cmo-plan] Plan for ${monday} exists but status="${(plan as any).status}" — not yet approved by CTO+CEO. Falling back to generation.`);
+      return null;
+    }
+    console.log(`  [cmo-plan] ✅ Loaded CEO-approved weekly plan: ${planPath}`);
+    return plan;
+  } catch (e: any) {
+    console.log(`  [cmo-plan] Failed to parse plan: ${e.message}`);
+    return null;
+  }
+}
+
+function getCmoDaySlot(plan: CmoWeeklyPlan, slotKey: string): CmoPlanSlot | null {
+  const today = new Date().toISOString().slice(0, 10);
+  const dayPlan = plan.days[today];
+  if (!dayPlan) {
+    console.log(`  [cmo-plan] No plan entry for today (${today})`);
+    return null;
+  }
+  const slot = dayPlan[slotKey as keyof CmoDayPlan];
+  if (!slot || !slot.tweets || slot.tweets.length === 0) {
+    console.log(`  [cmo-plan] No ${slotKey} slot in today's plan`);
+    return null;
+  }
+  return slot;
+}
+
+async function loadCmoImage(imagePath: string | null): Promise<Buffer | null> {
+  if (!imagePath) return null;
+  const absPath = path.join(ROOT, imagePath);
+  if (!fs.existsSync(absPath)) {
+    console.log(`  [cmo-plan] Image not found: ${imagePath}`);
+    return null;
+  }
+  try {
+    const buf = fs.readFileSync(absPath);
+    console.log(`  [cmo-plan] Loaded CMO image: ${imagePath} (${Math.round(buf.length / 1024)}KB)`);
+    return buf;
+  } catch {
+    return null;
+  }
+}
+
 async function generateEducationalPost(ceoFeedback?: string) {
   const topic = rotateBy([
     'latest developments in the agentic economy: AI agents transacting autonomously in 2026',
@@ -526,28 +613,55 @@ async function main() {
 
     console.log(`\n[x-admin] Processing: ${slot.label}`);
 
-    // Generate content — up to 3 attempts, feeding CEO feedback back each retry
-    const MAX_ATTEMPTS = 3;
+    // ── Step 1: Try CMO weekly content plan first ────────────────────────────
+    const cmoWeeklyPlan = loadCmoPlan();
     let gen: { tweets: string[]; imagePrompt: string; technical: boolean } | undefined;
     let ceoApproved = false;
+    let cmoImageBuf: Buffer | null = null;
+
+    if (cmoWeeklyPlan) {
+      const cmoSlot = getCmoDaySlot(cmoWeeklyPlan, slot.key);
+      if (cmoSlot) {
+        console.log(`  [cmo-plan] Using pre-written content: "${cmoSlot.topic_summary || slot.key}"`);
+        gen = { tweets: cmoSlot.tweets, imagePrompt: '', technical: slot.technical };
+        cmoImageBuf = await loadCmoImage(cmoSlot.image_path);
+
+        // CEO review on CMO-prepared content (still enforced)
+        console.log(`  → CEO review (CMO plan content)...`);
+        const ceo = await ceoReview(gen.tweets, slot.label);
+        console.log(`  CEO: ${ceo.approved ? '✅' : '❌'} ${ceo.feedback}`);
+        if (ceo.approved) {
+          ceoApproved = true;
+        } else {
+          console.log(`  ⚠️ CMO plan content rejected by CEO — falling back to generation`);
+          saveRejected(`${slot.key}-cmo-plan`, gen.tweets, `CEO rejected CMO plan: ${ceo.feedback}`);
+          gen = undefined;
+        }
+      }
+    }
+
+    // ── Step 2: Fallback — generate content if no CMO plan or CEO rejected it ─
+    const MAX_ATTEMPTS = 3;
     let lastCeoFeedback: string | undefined;
 
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      try {
-        console.log(`  → Generating content (attempt ${attempt}/${MAX_ATTEMPTS})...`);
-        if (slot.key === 'educational') gen = await generateEducationalPost(lastCeoFeedback);
-        else if (slot.key === 'updates')  gen = await generateUpdatesPost(lastCeoFeedback);
-        else                              gen = await generateVisionPost(lastCeoFeedback);
-      } catch (e: any) { console.log(`  ❌ Generation error: ${e.message}`); break; }
+    if (!ceoApproved) {
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+          console.log(`  → Generating content (attempt ${attempt}/${MAX_ATTEMPTS})...`);
+          if (slot.key === 'educational') gen = await generateEducationalPost(lastCeoFeedback);
+          else if (slot.key === 'updates')  gen = await generateUpdatesPost(lastCeoFeedback);
+          else                              gen = await generateVisionPost(lastCeoFeedback);
+        } catch (e: any) { console.log(`  ❌ Generation error: ${e.message}`); break; }
 
-      console.log(`  → CEO review (attempt ${attempt})...`);
-      const ceo = await ceoReview(gen.tweets, slot.label);
-      console.log(`  CEO: ${ceo.approved ? '✅' : '❌'} ${ceo.feedback}`);
+        console.log(`  → CEO review (attempt ${attempt})...`);
+        const ceo = await ceoReview(gen!.tweets, slot.label);
+        console.log(`  CEO: ${ceo.approved ? '✅' : '❌'} ${ceo.feedback}`);
 
-      if (ceo.approved) { ceoApproved = true; break; }
+        if (ceo.approved) { ceoApproved = true; break; }
 
-      saveRejected(`${slot.key}-attempt${attempt}`, gen.tweets, `CEO: ${ceo.feedback}`);
-      lastCeoFeedback = ceo.feedback;
+        saveRejected(`${slot.key}-attempt${attempt}`, gen!.tweets, `CEO: ${ceo.feedback}`);
+        lastCeoFeedback = ceo.feedback;
+      }
     }
 
     if (!ceoApproved || !gen) {
@@ -563,11 +677,14 @@ async function main() {
       if (!cto.approved) { saveRejected(slot.key, gen.tweets, `CTO: ${cto.feedback}`); continue; }
     }
 
-    // CMO images only — DALL-E self-generation disabled (2026-03-01)
-    // All visuals must be produced by the CMO agent and be Invoica-branded with logo.
-    // Post text-only until CMO provides an approved image in reports/invoica-x-admin/images/.
-    const mediaId: string | null = null;
-    console.log(`  → Image: text-only post (CMO must supply branded images — DALL-E disabled)`);
+    // CMO images only — use pre-produced branded image from weekly plan, or post text-only
+    let mediaId: string | null = null;
+    if (cmoImageBuf) {
+      console.log(`  → Uploading CMO branded image (${Math.round(cmoImageBuf.length / 1024)}KB)...`);
+      mediaId = await uploadImageToX(cmoImageBuf);
+    } else {
+      console.log(`  → No CMO image available — posting text-only (DALL-E disabled)`);
+    }
 
     // Publish
     console.log(`  → Publishing ${gen.tweets.length > 1 ? `thread (${gen.tweets.length} tweets)` : 'tweet'}...`);
