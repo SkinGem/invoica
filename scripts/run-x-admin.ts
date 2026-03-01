@@ -448,6 +448,8 @@ REJECT posts that:
 - Feel like AI-generated marketing copy rather than authentic founder/builder voice
 - Reference product capabilities Invoica doesn't clearly have yet, without framing as roadmap/vision
 - Include unnecessary hashtags (#) that look spammy
+- CONTAIN FABRICATED OR ESTIMATED METRICS — any number (percentage, count, latency, reliability) that cannot be traced to a real git commit, a file in reports/, or externally cited research. Examples of BANNED invented stats: "99.97% reliability", "847 webhook calls", "3x faster", "50ms latency". If the number cannot be verified, the post must be rejected.
+- REVEAL ROADMAP OR FORWARD-LOOKING PLANS — any mention of what is being built, planned sprints, ETAs, or timelines for unshipped features. Only shipped, deployed, verified features may be mentioned. "March sprint locked", "ETA: 3 weeks", "coming soon: CFO agent", "multichain expansion planned" are all grounds for immediate rejection.
 
 APPROVE posts that:
 - Are specific and grounded: reference real technology (x402 protocol, EIP-712, Base network, USDC settlement, VAT reverse charge, etc.)
@@ -561,11 +563,11 @@ async function main() {
       if (!cto.approved) { saveRejected(slot.key, gen.tweets, `CTO: ${cto.feedback}`); continue; }
     }
 
-    // CMO: generate branded image
-    console.log(`  → CMO generating image (DALL-E 3): "${gen.imagePrompt.slice(0, 60)}..."`);
-    const imgBuf = await generateBrandedImage(gen.imagePrompt);
-    let mediaId: string | null = null;
-    if (imgBuf) mediaId = await uploadImageToX(imgBuf);
+    // CMO images only — DALL-E self-generation disabled (2026-03-01)
+    // All visuals must be produced by the CMO agent and be Invoica-branded with logo.
+    // Post text-only until CMO provides an approved image in reports/invoica-x-admin/images/.
+    const mediaId: string | null = null;
+    console.log(`  → Image: text-only post (CMO must supply branded images — DALL-E disabled)`);
 
     // Publish
     console.log(`  → Publishing ${gen.tweets.length > 1 ? `thread (${gen.tweets.length} tweets)` : 'tweet'}...`);
