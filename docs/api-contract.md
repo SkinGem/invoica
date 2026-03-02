@@ -48,6 +48,28 @@ DELETE /v1/api-keys/:id
 Health check — returns API status and uptime
 **Auth:** None
 
+## Invoices
+
+### `POST /`
+POST /
+**Auth:** None
+
+### `GET /`
+GET /
+**Auth:** None
+
+### `GET /:id`
+GET /:id
+**Auth:** None
+
+### `PATCH /:id`
+PATCH /:id
+**Auth:** None
+
+### `DELETE /:id`
+DELETE /:id
+**Auth:** None
+
 ## Ledger
 
 ### `POST /v1/ledger/send-verification`

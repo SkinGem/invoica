@@ -64,6 +64,51 @@
   },
   {
     "method": "POST",
+    "path": "/",
+    "description": "POST /",
+    "auth": "None",
+    "tags": [
+      "invoices"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/",
+    "description": "GET /",
+    "auth": "None",
+    "tags": [
+      "invoices"
+    ]
+  },
+  {
+    "method": "GET",
+    "path": "/:id",
+    "description": "GET /:id",
+    "auth": "None",
+    "tags": [
+      "invoices"
+    ]
+  },
+  {
+    "method": "PATCH",
+    "path": "/:id",
+    "description": "PATCH /:id",
+    "auth": "None",
+    "tags": [
+      "invoices"
+    ]
+  },
+  {
+    "method": "DELETE",
+    "path": "/:id",
+    "description": "DELETE /:id",
+    "auth": "None",
+    "tags": [
+      "invoices"
+    ]
+  },
+  {
+    "method": "POST",
     "path": "/v1/ledger/send-verification",
     "description": "Send email verification for ledger access",
     "auth": "None",
