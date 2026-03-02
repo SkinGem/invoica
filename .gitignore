@@ -16,3 +16,4 @@ x402-evm/*-keypair.json
 x402-test/node_modules/
 x402-test/.env
 x402-test/*-keypair.json
+reports/invoica-x-admin/daily-state.json

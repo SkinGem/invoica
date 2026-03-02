@@ -38,6 +38,7 @@ if (process.env.INVOICA_X_BEARER_TOKEN)        process.env.X_BEARER_TOKEN       
 const ROOT         = path.resolve(__dirname, '..');
 const REPORTS_DIR  = path.join(ROOT, 'reports', 'invoica-x-admin');
 const STATE_FILE   = path.join(REPORTS_DIR, 'daily-state.json');
+const LOCK_FILE    = path.join(REPORTS_DIR, '.x-admin.lock');
 const LOG_DIR      = path.join(REPORTS_DIR, 'logs');
 const REJECTED_DIR = path.join(REPORTS_DIR, 'drafts', 'rejected');
 const SOUL_FILE    = path.join(ROOT, 'SOUL.md');
@@ -594,6 +595,21 @@ function saveRejected(key: string, tweets: string[], reason: string) {
 async function main() {
   ensureDir(REPORTS_DIR);
   ensureDir(LOG_DIR);
+
+  // Lockfile guard — prevents two concurrent PM2 cron instances from double-posting.
+  if (fs.existsSync(LOCK_FILE)) {
+    const lockAge = Date.now() - fs.statSync(LOCK_FILE).mtimeMs;
+    if (lockAge < 20 * 60 * 1000) { // 20-min max run time
+      console.log('[x-admin] Another instance is running (lock age ' + Math.round(lockAge/1000) + 's). Exiting.');
+      process.exit(0);
+    }
+    fs.unlinkSync(LOCK_FILE); // stale lock — remove
+  }
+  fs.writeFileSync(LOCK_FILE, String(process.pid));
+  const releaseLock = () => { try { fs.unlinkSync(LOCK_FILE); } catch {} };
+  process.on('exit', releaseLock);
+  process.on('SIGINT', () => { releaseLock(); process.exit(0); });
+  process.on('SIGTERM', () => { releaseLock(); process.exit(0); });
 
   const now = new Date();
   const hourUTC = now.getUTCHours();
