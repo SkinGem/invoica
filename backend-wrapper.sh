@@ -13,6 +13,12 @@ set +a
 
 cd /home/invoica/apps/Invoica
 
+# Kill any stale process holding port 3001 before starting.
+# Prevents EADDRINUSE crash loop when PM2 restarts faster than the old
+# ts-node process releases the port.
+fuser -k 3001/tcp 2>/dev/null || true
+sleep 1
+
 exec /home/invoica/apps/Invoica/node_modules/.bin/ts-node \
   --project tsconfig.json \
   --transpile-only \
