@@ -1121,9 +1121,23 @@ async function handleUpdate(update: TelegramUpdate): Promise<void> {
 
 // ─── Wallet Monitor ───────────────────────────────────────────────────────────
 // Tracks which agents are currently in "low" state to avoid repeat alerts.
-// Only fires when a wallet transitions from OK → low (or every 30 min as reminder).
-const walletAlertState = new Map<string, { isLow: boolean; lastAlertAt: number }>();
-const ALERT_REMINDER_MS = 30 * 60 * 1000; // re-alert every 30 min if still low
+// State persisted to disk so restarts don't reset the dedup window.
+const WALLET_ALERT_STATE_FILE = path.join(ROOT, '.wallet-alert-state.json');
+const ALERT_REMINDER_MS = 4 * 60 * 60 * 1000; // re-alert every 4h (was 30min)
+
+function loadAlertState(): Map<string, { isLow: boolean; lastAlertAt: number }> {
+  try {
+    if (existsSync(WALLET_ALERT_STATE_FILE)) {
+      const raw = JSON.parse(readFileSync(WALLET_ALERT_STATE_FILE, 'utf-8'));
+      return new Map(Object.entries(raw));
+    }
+  } catch { /* ignore corrupt file */ }
+  return new Map();
+}
+function saveAlertState(state: Map<string, { isLow: boolean; lastAlertAt: number }>) {
+  try { writeFileSync(WALLET_ALERT_STATE_FILE, JSON.stringify(Object.fromEntries(state))); } catch { /* ignore */ }
+}
+const walletAlertState = loadAlertState();
 
 async function startWalletMonitor(): Promise<void> {
   const checkWallets = async () => {
@@ -1139,25 +1153,30 @@ async function startWalletMonitor(): Promise<void> {
       for (const w of wallets) {
         // Fetch live on-chain balance instead of trusting stale DB value
         let liveBalance: number;
+        let rpcOk = true;
         try {
           liveBalance = await getLiveUsdcBalance(w.address);
           // Sync DB with live balance
           await updateBalance(w.agent_name, liveBalance).catch(() => {});
         } catch {
-          liveBalance = Number(w.usdc_balance); // fall back to DB if RPC fails
+          // RPC failed — skip this wallet entirely to avoid false alerts from stale DB cache.
+          rpcOk = false;
+          liveBalance = Number(w.usdc_balance);
         }
 
         const threshold = Number(w.low_balance_threshold);
         const isCurrentlyLow = liveBalance < threshold;
         const prev = walletAlertState.get(w.agent_name) ?? { isLow: false, lastAlertAt: 0 };
 
-        // Only alert on new transition OR after reminder interval
-        const shouldAlert = isCurrentlyLow && (
+        // Only alert on new transition OR after reminder interval.
+        // Never alert if RPC failed — stale DB values cause false positives.
+        const shouldAlert = rpcOk && isCurrentlyLow && (
           !prev.isLow ||
           (Date.now() - prev.lastAlertAt) > ALERT_REMINDER_MS
         );
 
-        walletAlertState.set(w.agent_name, { isLow: isCurrentlyLow, lastAlertAt: shouldAlert ? Date.now() : prev.lastAlertAt });
+        walletAlertState.set(w.agent_name, { isLow: rpcOk ? isCurrentlyLow : prev.isLow, lastAlertAt: shouldAlert ? Date.now() : prev.lastAlertAt });
+        saveAlertState(walletAlertState);
 
         if (!shouldAlert) continue;
 
