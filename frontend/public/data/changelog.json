@@ -3,24 +3,24 @@
     "version": "1.7.0",
     "date": "2026-03-02",
     "changes": [
-      "Completed multi-chain SDK expansion — 9 new chain integration modules (CHAIN-001 through CHAIN-009) with unified x402 payment routing",
-      "Added 8 core database schema enhancements (DB-001) and 10 backend payment processing modules (PAY-001 through PAY-003, BE-010) for x402 settlement",
-      "Enhanced authentication layer with dual supervisor architecture (AUTH-002, AUTH-003) supporting agent wallet signing and ledger verification",
-      "Deployed 6+ SDK improvements (SDK-060a through SDK-062, SDK-200) improving type safety and payment serialization across all chains",
-      "Fixed critical invoiceEvents and Supabase stub issues unblocking backend startup and payment event processing",
-      "Updated frontend with dual-funnel CMO architecture (FE-020, FE-021) and Ledger page for transaction transparency"
+      "Implemented multi-chain architecture across Base, Polygon, and Solana with CHAIN-001 through CHAIN-009 endpoint suite",
+      "Released MiniMax-M2.5 powered agent orchestration with 9 core chains: AUTH-003, PAY-001/002/003, BE-110, SDK-200, DB-001",
+      "Added SDK improvements across SDK-060a through SDK-062 with enhanced type safety and payload validation",
+      "Fixed orchestrator deliverables schema mismatch and CEO hallucination issues with real system state injection",
+      "Launched git auto-deploy system — server self-deploys from GitHub every 5 minutes with pre-deploy TypeScript validation",
+      "Added Mission Control integration for centralized agent ops visibility and PM2 process management via port 3005"
     ]
   },
   {
     "version": "1.6.0",
-    "date": "2026-03-01",
+    "date": "2026-02-28",
     "changes": [
-      "Deployed autonomous post-sprint pipeline — automatic test→CTO review→Vercel deployment after each sprint completion",
-      "Added CMO weekly content plan generator with CEO approval gate and Sunday 06:00 UTC scheduling",
-      "Implemented sprint-runner PM2 cron closing CEO↔execution loop with GitHub milestone integration",
-      "Launched Mission Control ops dashboard for real-time agent visibility and PM2 process management",
-      "Added git-autodeploy — server self-deploys from GitHub every 5 minutes with pre-deploy TypeScript validation",
-      "Introduced memory-agent institutional memory system and live docs auto-generation with multi-agent context sharing"
+      "Launched autonomous post-sprint pipeline — auto-trigger test→CTO review→Vercel deploy after sprint completion",
+      "Added CTO email support monitoring on support@invoica.ai with IMAP/SMTP integration and MiniMax-powered responses",
+      "Implemented CMO weekly content plan generator with Sunday scheduling, CEO approval gates, and fallback content generation",
+      "Added full webhook CRUD operations — create, delete, toggle active/inactive with persistent storage",
+      "Replaced pricing/billing pages with beta-mode messaging throughout dashboard",
+      "Fixed Telegram deep linking for mobile/desktop detection with web.telegram.org fallback"
     ]
   },
   {
@@ -28,11 +28,11 @@
     "date": "2026-02-27",
     "changes": [
       "Added x402 agent wallet spending — agents can now autonomously spend USDC on LLM calls with configurable seller wallet",
-      "Launched multi-chain payment infrastructure supporting Base, Polygon, and Solana with unified settlement ledger",
-      "Introduced CEO Telegram bot with real execution tools (shell commands, file writes, GitHub issues, live balance checks)",
-      "Added autonomous X posting agent (@invoica_ai) with CEO + CTO review gate and content calendar",
-      "Implemented heartbeat system with hourly health checks, Telegram alerts, and dead-man's switch monitoring",
-      "Released email support monitoring for support@invoica.ai with IMAP/SMTP integration and MiniMax responses"
+      "Launched Telegram bot with /report, /pm2, /health, /sprint commands for real-time system monitoring and sprint triggering",
+      "Implemented autonomous X posting agent (@invoica_ai) with content calendar, CEO + CTO review gates, and scheduled post automation",
+      "Added CEO Telegram bot with tool execution capabilities — /update, /pull, /sprint commands with real git and GitHub issue creation",
+      "Fixed critical backend crash loop caused by missing lib/prisma.ts and port conflicts on restart",
+      "Implemented live USDC balance monitoring across multiple RPC nodes with multi-wallet support and low-balance alerts"
     ]
   },
   {
