@@ -13,7 +13,7 @@
       ]
     },
     "acceptance_criteria": "getChain('base'), getChain('polygon'), getChain('arbitrum') all return valid ChainConfig objects. getChain('unknown') throws.",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "id": "CHAIN-002",
@@ -21,7 +21,9 @@
     "agent": "backend-core",
     "type": "feature",
     "priority": "high",
-    "dependencies": ["CHAIN-001"],
+    "dependencies": [
+      "CHAIN-001"
+    ],
     "context": "Add chain field to the invoices and settlements database tables (CEO issue #42 - multi-chain support).\n\nCreate a Supabase migration file at supabase/migrations/20260301000001_add_chain_support.sql that:\n1. Adds column: ALTER TABLE invoices ADD COLUMN IF NOT EXISTS chain VARCHAR(20) NOT NULL DEFAULT 'base';\n2. Adds column: ALTER TABLE settlements ADD COLUMN IF NOT EXISTS chain VARCHAR(20) NOT NULL DEFAULT 'base';\n3. Adds column: ALTER TABLE settlements ADD COLUMN IF NOT EXISTS chain_id INTEGER;\n4. Adds index: CREATE INDEX IF NOT EXISTS idx_invoices_chain ON invoices(chain);\n5. Adds index: CREATE INDEX IF NOT EXISTS idx_settlements_chain ON settlements(chain);\n6. Adds a comment: COMMENT ON COLUMN invoices.chain IS 'Blockchain network: base, polygon, arbitrum';\n\nAlso update backend/src/routes/invoices.ts: in the POST /v1/invoices route, read req.body.chain (default 'base') and include it in the insert. Add validation: if chain is provided and not in ['base','polygon','arbitrum'], return 400 with error 'Unsupported chain'.",
     "deliverables": {
       "code": [
