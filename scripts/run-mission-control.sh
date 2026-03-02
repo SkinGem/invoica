@@ -31,12 +31,16 @@ set -a
 source "$MC_DIR/.env"
 set +a
 
-echo "[MissionControl] $(date -u +"%Y-%m-%dT%H:%M:%SZ") Starting on port ${PORT:-3010}..."
+export PORT="${MC_PORT:-3005}"
+echo "[MissionControl] $(date -u +"%Y-%m-%dT%H:%M:%SZ") Starting on port ${PORT}..."
 
 cd "$MC_DIR"
 
-# Use pnpm if available, fall back to npx
-if command -v pnpm &>/dev/null; then
+# Use standalone server.js if available (output: standalone build)
+# Falls back to pnpm start for non-standalone builds
+if [ -f ".next/standalone/server.js" ]; then
+  exec node .next/standalone/server.js
+elif command -v pnpm &>/dev/null; then
   exec pnpm start
 else
   exec npx --yes pnpm start

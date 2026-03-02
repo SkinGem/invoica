@@ -315,7 +315,7 @@ module.exports = {
     {
       // Mission Control — self-hosted AI agent ops dashboard (builderz-labs/mission-control)
       // Next.js + SQLite. No external deps. Runs permanently on port 3010.
-      // Access: ssh -L 3010:localhost:3010 invoica@<server> then open http://localhost:3010
+      // Access: ssh -L 3005:localhost:3005 invoica@<server> then open http://localhost:3005
       // Setup (first time only): bash scripts/setup-mission-control.sh
       name: "mission-control",
       script: "./scripts/run-mission-control.sh",
