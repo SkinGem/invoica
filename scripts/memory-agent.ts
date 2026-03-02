@@ -469,6 +469,32 @@ Format: dense markdown bullet points. No fluff. Max 300 words.`,
   if (isNewDay && NOW.getHours() >= 5) {
     // Generate from yesterday's log (only after 05:00 UTC so the log is complete)
     await generateDailyContinuity();
+
+    // ── Trigger docs regeneration once per day (after continuity brief) ──────
+    // Scans git log + backend routes → updates JSON data files → pushes → Vercel redeploys
+    log('Triggering daily docs regeneration (post continuity brief)...');
+    try {
+      const result = spawnSync('node', [
+        '-r', 'ts-node/register',
+        path.join(ROOT, 'scripts', 'generate-docs.ts'),
+      ], {
+        cwd: ROOT,
+        env: {
+          ...process.env,
+          TS_NODE_TRANSPILE_ONLY: 'true',
+          TS_NODE_PROJECT: path.join(ROOT, 'tsconfig.json'),
+        },
+        timeout: 180_000,
+        stdio: 'inherit',
+      });
+      if (result.status !== 0) {
+        log(`[docs-trigger] generate-docs.ts exited with code ${result.status}`);
+      } else {
+        log('Daily docs regeneration complete → Vercel deploying updated docs');
+      }
+    } catch (e: any) {
+      log(`[docs-trigger] Failed to spawn generate-docs.ts: ${e.message}`);
+    }
   }
 
   // ── 5. Update long-term memory (every 6 hours or on significant events) ─

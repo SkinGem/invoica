@@ -1,47 +1,77 @@
-import React from 'react';
+'use client';
+import apiData from '../../../public/data/api-reference.json';
 
-const endpoints = [
-  { method: 'POST', path: '/invoices', description: 'Create a new invoice' },
-  { method: 'GET', path: '/invoices', description: 'List all invoices' },
-  { method: 'GET', path: '/invoices/:id', description: 'Get invoice details' },
-  { method: 'POST', path: '/settlements', description: 'Initiate settlement' },
-  { method: 'GET', path: '/api-keys', description: 'List API keys' },
-];
+interface Endpoint {
+  method: string;
+  path: string;
+  description: string;
+  auth: string;
+  tags: string[];
+}
 
-const methodStyles = {
-  GET: 'bg-green-100 text-green-800',
-  POST: 'bg-blue-100 text-blue-800',
+const methodStyles: Record<string, string> = {
+  "GET": "bg-green-100 text-green-800",
+  "POST": "bg-blue-100 text-blue-800",
+  "PUT": "bg-yellow-100 text-yellow-800",
+  "DELETE": "bg-red-100 text-red-800",
+  "PATCH": "bg-purple-100 text-purple-800"
 };
 
 export default function ApiReferencePage() {
+  const endpoints: Endpoint[] = apiData;
+  const groups = endpoints.reduce((acc: Record<string, Endpoint[]>, ep) => {
+    const tag = ep.tags[0] || 'other';
+    if (!acc[tag]) acc[tag] = [];
+    acc[tag].push(ep);
+    return acc;
+  }, {});
+
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">API Reference</h1>
-      <p className="text-gray-600 mb-8">
-        The Countable API is a REST API that uses standard HTTP methods. All requests should be made to the base URL: <code className="bg-gray-100 px-2 py-1 rounded">https://api.invoica.dev/v1</code>
+      <h1 className="text-3xl font-bold mb-2">API Reference</h1>
+      <p className="text-sm text-gray-500 mb-4">
+        Auto-generated · {endpoints.length} endpoints · Base URL:{' '}
+        <code className="bg-gray-100 px-2 py-0.5 rounded">https://invoica.wp1.host/v1</code>
       </p>
 
-      <section>
-        <h2 className="text-2xl font-semibold mb-4">Endpoints</h2>
-        {endpoints.map((ep, i) => (
-          <div key={i} className="border rounded-lg p-4 mb-4">
-            <div className="flex items-center gap-3 mb-2">
-              <span className={`px-2 py-1 rounded text-sm font-medium ${methodStyles[ep.method as keyof typeof methodStyles]}`}>
-                {ep.method}
-              </span>
-              <span className="font-mono text-gray-800">{ep.path}</span>
-            </div>
-            <p className="text-gray-500 text-sm">{ep.description}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="mt-8">
-        <h2 className="text-2xl font-semibold mb-4">Authentication</h2>
-        <p className="text-gray-600">
-          All API requests require authentication via the <code className="bg-gray-100 px-2 py-1 rounded">X-API-Key</code> header. Include your API key in the request headers for every call.
+      <section className="mb-8 p-4 bg-blue-50 rounded-lg">
+        <h2 className="text-lg font-semibold mb-2">Authentication</h2>
+        <p className="text-sm text-gray-600">
+          Ledger endpoints require{' '}
+          <code className="bg-white px-1 rounded">X-API-Key</code> header.
+          AI inference uses x402 payment (
+          <code className="bg-white px-1 rounded">X-Payment</code> header, USDC on Base).
         </p>
       </section>
+
+      {Object.entries(groups).map(([group, eps]) => (
+        <section key={group} className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 capitalize">{group.replace(/-/g, ' ')}</h2>
+          {eps.map((ep, i) => (
+            <div key={i} className="border rounded-lg p-4 mb-3">
+              <div className="flex items-center gap-3 mb-1">
+                <span
+                  className={`px-2 py-0.5 rounded text-xs font-bold ${
+                    methodStyles[ep.method] || 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {ep.method}
+                </span>
+                <span className="font-mono text-sm text-gray-800">{ep.path}</span>
+                {ep.auth !== 'None' && (
+                  <span className="ml-auto text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+                    🔐 Auth
+                  </span>
+                )}
+              </div>
+              <p className="text-gray-500 text-sm">{ep.description}</p>
+              {ep.auth !== 'None' && (
+                <p className="text-xs text-gray-400 mt-1">Auth: {ep.auth}</p>
+              )}
+            </div>
+          ))}
+        </section>
+      ))}
     </div>
   );
 }

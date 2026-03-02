@@ -312,5 +312,27 @@ module.exports = {
       out_file: "/home/invoica/apps/Invoica/logs/memory-agent-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
+    {
+      // Docs Generator — runs daily at 04:00 UTC
+      // Scans git log + backend routes → writes changelog.json + api-reference.json
+      // → rewrites frontend pages → git push → Vercel auto-redeploys live docs
+      // Also triggered by memory-agent after each daily continuity brief
+      name: "docs-generator",
+      script: "./scripts/generate-docs.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "0 4 * * *",
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json",
+        MEMORY_DIR: "/home/invoica/memory",
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/docs-generator-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/docs-generator-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
   ]
 };
