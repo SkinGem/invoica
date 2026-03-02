@@ -246,7 +246,15 @@
         "frontend/tests/components/create-invoice-form.test.tsx"
       ]
     },
-    "status": "in_progress"
+    "status": "done",
+    "output": {
+      "files": [
+        "frontend/components/invoices/create-invoice-form.tsx",
+        "frontend/tests/components/create-invoice-form.test.tsx"
+      ],
+      "commit": "9d0cd2e",
+      "model": "MiniMax-M2.5"
+    }
   },
   {
     "id": "FE-021",
@@ -265,7 +273,7 @@
         "frontend/tests/components/stats-overview.test.tsx"
       ]
     },
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "id": "BE-010",
