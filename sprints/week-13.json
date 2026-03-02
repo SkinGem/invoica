@@ -13,14 +13,16 @@
         ],
         "tests": []
       },
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "SDK-060b",
       "agent": "backend-core",
       "type": "feature",
       "priority": "critical",
-      "dependencies": ["SDK-060a"],
+      "dependencies": [
+        "SDK-060a"
+      ],
       "context": "Add API Key management methods to the existing SDK client at sdk/typescript/src/client.ts. The InvoicaClient class ALREADY exists with these methods: getInvoice, createInvoice, getSettlement, listSettlements, listInvoices, and a private request<T> method. You must ADD three new methods to the class:\n\n(1) async createApiKey(params: CreateApiKeyParams): Promise<ApiKey> — POST /api-keys with body params\n(2) async revokeApiKey(id: string): Promise<void> — DELETE /api-keys/${id}\n(3) async listApiKeys(): Promise<ApiKeyListResponse> — GET /api-keys\n\nAdd these imports at top: import { ApiKey, CreateApiKeyParams, ApiKeyListResponse } from './types';\nKeep ALL existing code unchanged. Just add the 3 methods at the end of the class before the closing brace. Each method is 1-2 lines using this.request<T>(). Total addition: ~15 lines. No tests needed for this sub-task.",
       "deliverables": {
         "code": [
@@ -35,7 +37,9 @@
       "agent": "backend-core",
       "type": "feature",
       "priority": "critical",
-      "dependencies": ["SDK-060a"],
+      "dependencies": [
+        "SDK-060a"
+      ],
       "context": "Add Webhook CRUD methods to the existing SDK client at sdk/typescript/src/client.ts. The InvoicaClient class ALREADY exists with methods including getInvoice, createInvoice, getSettlement, listSettlements, listInvoices, createApiKey, revokeApiKey, listApiKeys, and a private request<T> method. You must ADD three new webhook management methods to the class:\n\n(1) async registerWebhook(config: WebhookRegistrationConfig): Promise<WebhookRegistration> — POST /webhooks with body config\n(2) async listWebhooks(): Promise<WebhookListResponse> — GET /webhooks\n(3) async deleteWebhook(id: string): Promise<void> — DELETE /webhooks/${id}\n\nAdd these imports at top: import { WebhookRegistrationConfig, WebhookRegistration, WebhookListResponse } from './types';\nKeep ALL existing code unchanged. Just add the 3 methods at the end of the class before the closing brace. Each method is 1-2 lines using this.request<T>(). Total addition: ~15 lines. No tests needed for this sub-task.",
       "deliverables": {
         "code": [
@@ -50,7 +54,10 @@
       "agent": "backend-core",
       "type": "feature",
       "priority": "high",
-      "dependencies": ["SDK-060b", "SDK-060c"],
+      "dependencies": [
+        "SDK-060b",
+        "SDK-060c"
+      ],
       "context": "Create a test file for the SDK client API Key and Webhook methods at sdk/typescript/tests/client-methods.test.ts. This tests the NEW methods added in SDK-060b and SDK-060c. Mock global fetch with jest.fn(). Create an InvoicaClient instance with config {apiKey: 'test-key', baseUrl: 'https://api.test.com'}.\n\nTest exactly these 6 cases:\n(1) createApiKey calls POST /api-keys with name in body\n(2) revokeApiKey calls DELETE /api-keys/{id}\n(3) listApiKeys calls GET /api-keys\n(4) registerWebhook calls POST /webhooks with config body\n(5) listWebhooks calls GET /webhooks\n(6) deleteWebhook calls DELETE /webhooks/{id}\n\nEach test: mock fetch to return Response with ok:true and json() returning a minimal valid object. Assert fetch was called with correct URL and method. Maximum 60 lines total. Import InvoicaClient from '../src/client'. Use beforeEach to reset mocks.",
       "deliverables": {
         "code": [],
@@ -65,7 +72,9 @@
       "agent": "backend-core",
       "type": "feature",
       "priority": "high",
-      "dependencies": ["SDK-060a"],
+      "dependencies": [
+        "SDK-060a"
+      ],
       "context": "Update the SDK barrel export file at sdk/typescript/src/index.ts to include the new types. The file ALREADY exports: InvoicaClient, InvoicaConfig, RequestOptions, Invoice, CreateInvoiceParams, SettlementStatus, GetSettlementParams, WebhookEventType, ApiResponse, InvoicaError, ValidationError, NotFoundError, AuthenticationError, validateParams, verifyWebhookSignature, parseWebhookEvent.\n\nADD these new type exports from './types': ApiKey, CreateApiKeyParams, ApiKeyListResponse, WebhookRegistrationConfig, WebhookRegistration, WebhookListResponse.\n\nKeep ALL existing exports. Just add the new ones to the existing types export line. The entire file should be ~8 lines total. No tests needed.",
       "deliverables": {
         "code": [
