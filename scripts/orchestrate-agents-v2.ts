@@ -394,7 +394,9 @@ class CEOAgent {
     const pending = tasks.filter(t => t.status === 'pending');
     const rejected = tasks.filter(t => t.status === 'rejected');
     log(c.magenta, `\n[ceo] Sprint progress check (${done}/${total} done)`);
-    const userPrompt = `Sprint progress update:\n- Done: ${done}/${total}\n- Pending: ${pending.map(t => t.id).join(', ') || 'none'}\n- Rejected: ${rejected.map(t => t.id).join(', ') || 'none'}\n\nTask details:\n${JSON.stringify(tasks.map(t => ({ id: t.id, status: t.status, agent: t.agent, priority: t.priority })), null, 2)}\n\nAs CEO, briefly assess:\n1. Are we on track?\n2. Any tasks to re-prioritize?\n3. Cost efficiency — are we using the right models?\n4. Any strategic adjustments needed?\n\nKeep response under 200 words.`;
+    const userPrompt = `IMPORTANT: Plain text only, no tools, no XML. Respond directly.
+
+Sprint progress update:\n- Done: ${done}/${total}\n- Pending: ${pending.map(t => t.id).join(', ') || 'none'}\n- Rejected: ${rejected.map(t => t.id).join(', ') || 'none'}\n\nTask details:\n${JSON.stringify(tasks.map(t => ({ id: t.id, status: t.status, agent: t.agent, priority: t.priority })), null, 2)}\n\nAs CEO, briefly assess:\n1. Are we on track?\n2. Any tasks to re-prioritize?\n3. Cost efficiency — are we using the right models?\n4. Any strategic adjustments needed?\n\nKeep response under 200 words.`;
     try {
       const response = await callLLM('anthropic', 'claude-sonnet-4-20250514', this.systemPrompt, userPrompt, 60000);
       const content = response.choices?.[0]?.message?.content || 'No response';
@@ -463,7 +465,9 @@ Keep response under 100 words.`;
 ${p.agent_spec ? `- NEW AGENT: name=${p.agent_spec.name}, role="${p.agent_spec.role}", llm=${p.agent_spec.llm}, trigger=${p.agent_spec.trigger}` : ''}
 `).join('\n');
 
-    const userPrompt = `The CTO has analyzed our project data and submitted ${ctoReport.proposals.length} proposal(s).
+    const userPrompt = `IMPORTANT: You have NO tools. Do NOT output XML tool calls or file-reading syntax. Respond ONLY with the JSON array. All context is in this message.
+
+The CTO has analyzed our project data and submitted ${ctoReport.proposals.length} proposal(s).
 
 ## CTO Summary
 ${ctoReport.summary}
@@ -1318,6 +1322,18 @@ class Orchestrator {
     }
     const sprint = JSON.parse(readFileSync(sprintFile, 'utf-8'));
     this.tasks = sprint.tasks || [];
+
+    // Normalize deliverables: CEO planner may emit flat string[] instead of {code,tests,docs}
+    for (const task of this.tasks) {
+      const d = (task as any).deliverables;
+      if (Array.isArray(d)) {
+        task.deliverables = {
+          code:  (d as string[]).filter((f: string) => f.indexOf("test") === -1 && f.indexOf("spec") === -1 && f.slice(-3) !== ".md"),
+          tests: (d as string[]).filter((f: string) => f.indexOf("test") !== -1 || f.indexOf("spec") !== -1),
+          docs:  (d as string[]).filter((f: string) => f.slice(-3) === ".md"),
+        };
+      }
+    }
 
     // Reset stale in_progress tasks back to pending
     for (const task of this.tasks) {
