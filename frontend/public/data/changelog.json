@@ -3,36 +3,33 @@
     "version": "1.7.0",
     "date": "2026-03-02",
     "changes": [
-      "Completed multi-chain architecture rollout — integrated CHAIN-001 through CHAIN-009 tasks for Base, Polygon, and Solana support",
-      "Delivered expanded SDK capabilities with SDK-060a through SDK-062 enhancements for improved payment processing",
-      "Finalized authentication system with AUTH-002 and AUTH-003 implementations for secure x402 transactions",
-      "Resolved orchestrator schema mismatches and fixed CEO hallucination edge cases in agent pipelines",
-      "Implemented live docs auto-generation system with data-driven changelog and API reference pages",
-      "Activated agent institutional memory via black-box memory-agent system for persistent decision context"
+      "Expand x402 to multi-chain architecture — support Base, Polygon, and Solana with CHAIN-001 through CHAIN-009 endpoints",
+      "Add institutional memory system (memory-agent) — black box persistent context for CEO and agent teams across sessions",
+      "Implement live docs auto-generation system — auto-update CHANGELOG.md and API reference from git commits daily",
+      "Launch advanced SDK features (SDK-060a through SDK-062) — enhanced wallet integration, batch operations, and streaming support",
+      "Add heartbeat watchdog with 6-hour Telegram summaries and dead-man's switch — detects PM2 process gaps and agent offline states"
     ]
   },
   {
     "version": "1.6.0",
-    "date": "2026-03-01",
+    "date": "2026-02-28",
     "changes": [
-      "Launched Mission Control integration for centralized agent operations visibility and monitoring",
-      "Implemented autonomous post-sprint pipeline — auto-trigger test→CTO review→Vercel deploy after sprints",
-      "Added CMO weekly content plan generator with CEO approval gate and Sunday 06:00 UTC scheduling",
-      "Enabled git auto-deployment system — server self-deploys from GitHub every 5 minutes with TypeScript + ecosystem CI gates",
-      "Enhanced CTO email support — added IMAP/SMTP monitoring for support@invoica.ai with AI-powered responses",
-      "Introduced heartbeat service with Telegram summaries, dead-man's switch pings, and PM2 watchdog for autonomy gap closure"
+      "Implement autonomous post-sprint CI/CD pipeline — auto-trigger tests, CTO review, and Vercel deploy after each sprint",
+      "Add CMO weekly content plan generator with CEO approval gate — Sunday 06:00 UTC recurring task via PM2",
+      "Launch Mission Control integration for real-time agent operations visibility and monitoring",
+      "Add sprint-runner PM2 cron — closes CEO↔execution loop by auto-triggering sprints and post-sprint pipelines",
+      "Strengthen pre-deploy TypeScript validation gate — catches missing files, type errors, and TS syntax issues before production"
     ]
   },
   {
     "version": "1.5.0",
     "date": "2026-02-27",
     "changes": [
-      "Added x402 agent wallet spending — agents now spend USDC on LLM calls via configured seller wallet",
-      "Launched autonomous X posting agent (@invoica_ai) with CEO + CTO review gates for all content",
-      "Implemented CEO bot with execution tools — run_shell, write_file, create_github_issue, and live system context injection",
-      "Added Telegram bot integration with /report, /pm2, /health, /sprint commands for real-time ops visibility",
-      "Fixed backend stability — added missing lib/prisma.ts and backend-wrapper.sh to eliminate 4799+ crash restarts",
-      "Introduced multichain x402 expansion with standing sprint priority for Base, Polygon, and Solana"
+      "Launch x402 agent wallet spending — agents can now spend USDC on LLM calls with configurable seller wallet",
+      "Add Telegram CEO bot with real execution tools — /report, /sprint, /pull commands + shell execution and GitHub issue creation",
+      "Implement multi-RPC balance checking for agent wallets — prevents false zero balances across network nodes",
+      "Add CTO email support monitoring via IMAP/SMTP — support@invoica.ai now routes to CTO agent for real-time response",
+      "Launch autonomous X posting agent (@invoica_ai) with CEO + CTO review gates before publishing content"
     ]
   },
   {
