@@ -61,7 +61,14 @@
         ],
         "tests": []
       },
-      "status": "in_progress"
+      "status": "done",
+      "output": {
+        "files": [
+          "sdk/typescript/src/client.ts"
+        ],
+        "commit": "0fcfe8f",
+        "model": "MiniMax-M2.5"
+      }
     },
     {
       "id": "SDK-060d",
@@ -79,7 +86,7 @@
           "sdk/typescript/tests/client-methods.test.ts"
         ]
       },
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "SDK-060e",
