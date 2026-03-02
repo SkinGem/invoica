@@ -111,7 +111,14 @@
         ],
         "tests": []
       },
-      "status": "in_progress"
+      "status": "done",
+      "output": {
+        "files": [
+          "sdk/typescript/src/index.ts"
+        ],
+        "commit": "532d5a5",
+        "model": "MiniMax-M2.5"
+      }
     },
     {
       "id": "SDK-061",
@@ -128,7 +135,7 @@
           "sdk/typescript/tests/auth.test.ts"
         ]
       },
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "SDK-062",
