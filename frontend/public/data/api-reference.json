@@ -18,9 +18,18 @@
     ]
   },
   {
+    "method": "POST",
+    "path": "/v1/api-keys",
+    "description": "Create a new API key",
+    "auth": "None",
+    "tags": [
+      "api keys"
+    ]
+  },
+  {
     "method": "GET",
-    "path": "/",
-    "description": "GET /",
+    "path": "/v1/api-keys",
+    "description": "List all API keys for the authenticated user",
     "auth": "None",
     "tags": [
       "api keys"
@@ -28,8 +37,8 @@
   },
   {
     "method": "POST",
-    "path": "/:id/rotate",
-    "description": "POST /:id/rotate",
+    "path": "/v1/api-keys/:id/rotate",
+    "description": "Rotate (regenerate) an API key",
     "auth": "None",
     "tags": [
       "api keys"
@@ -37,8 +46,8 @@
   },
   {
     "method": "DELETE",
-    "path": "/:id",
-    "description": "DELETE /:id",
+    "path": "/v1/api-keys/:id",
+    "description": "DELETE /v1/api-keys/:id",
     "auth": "None",
     "tags": [
       "api keys"

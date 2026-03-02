@@ -1,449 +1,123 @@
 {
   "tasks": [
     {
-      "id": "SDK-101b",
+      "id": "CHAIN-001",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "critical",
+      "status": "pending",
+      "dependencies": [],
+      "description": "Chain registry module",
+      "context": "Create backend/src/lib/chain-registry.ts — the single source of truth for all supported chains.\n\nThis module is the foundation for all multi-chain work. Every other component will import from here.\n\nExport:\n\n```typescript\nexport type ChainType = 'evm' | 'solana';\n\nexport interface ChainConfig {\n  id: string;           // 'base' | 'polygon' | 'solana'\n  displayName: string;\n  type: ChainType;\n  chainId: number | string;  // number for EVM, 'solana' for Solana\n  rpcUrl: string;       // from env var, fallback to public\n  usdcAddress: string;  // USDC contract address\n  explorerUrl: string;  // for tx links\n  usdcDecimals: number; // 6 for both\n}\n\nexport const CHAINS: Record<string, ChainConfig> = {\n  base: {\n    id: 'base',\n    displayName: 'Base',\n    type: 'evm',\n    chainId: 8453,\n    rpcUrl: process.env.BASE_RPC_URL || 'https://base.gateway.tenderly.co',\n    usdcAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',\n    explorerUrl: 'https://basescan.org',\n    usdcDecimals: 6,\n  },\n  polygon: {\n    id: 'polygon',\n    displayName: 'Polygon',\n    type: 'evm',\n    chainId: 137,\n    rpcUrl: process.env.POLYGON_RPC_URL || 'https://polygon-bor-rpc.publicnode.com',\n    usdcAddress: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',\n    explorerUrl: 'https://polygonscan.com',\n    usdcDecimals: 6,\n  },\n  solana: {\n    id: 'solana',\n    displayName: 'Solana',\n    type: 'solana',\n    chainId: 'solana',\n    rpcUrl: process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com',\n    usdcAddress: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',\n    explorerUrl: 'https://solscan.io',\n    usdcDecimals: 6,\n  },\n};\n\nexport function getChain(chainId: string): ChainConfig {\n  const chain = CHAINS[chainId];\n  if (!chain) throw new Error(`Unsupported chain: ${chainId}. Supported: ${Object.keys(CHAINS).join(', ')}`);\n  return chain;\n}\n\nexport function getSupportedChains(): string[] {\n  return Object.keys(CHAINS);\n}\n\nexport function isEvmChain(chainId: string): boolean {\n  return getChain(chainId).type === 'evm';\n}\n\nexport function isSolanaChain(chainId: string): boolean {\n  return getChain(chainId).type === 'solana';\n}\n```\n\nMax 70 lines. No external dependencies. Full JSDoc on all exports.",
+      "deliverables": [
+        "backend/src/lib/chain-registry.ts"
+      ]
+    },
+    {
+      "id": "CHAIN-002",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "critical",
+      "status": "pending",
+      "dependencies": ["CHAIN-001"],
+      "description": "Update Invoice routes to accept chain from registry",
+      "context": "Update backend/src/routes/invoices.ts to validate the `chain` field against the chain registry instead of the hardcoded SUPPORTED_CHAINS array.\n\nChanges:\n1. Import `getSupportedChains` from '../lib/chain-registry'\n2. Replace the hardcoded `const SUPPORTED_CHAINS = ['base', 'polygon', 'arbitrum'] as const` with dynamic validation against the registry\n3. Update `createInvoiceSchema` chain field:\n```typescript\nchain: z.string().refine(c => getSupportedChains().includes(c), {\n  message: `Chain must be one of: ${getSupportedChains().join(', ')}`\n}).default('base'),\n```\n4. In the GET /v1/invoices list endpoint, update the chain query param validation similarly\n5. Add chain info to invoice responses: include `chainDisplayName` from registry\n\nDo NOT change any other logic — just the chain validation and the response shape.\n\nKey correctness: Solana addresses are base58 (not 0x hex), so the chain registry is the authority — do not add EVM-specific address validation to invoice creation.",
+      "deliverables": [
+        "backend/src/routes/invoices.ts (updated)"
+      ]
+    },
+    {
+      "id": "CHAIN-003",
       "agent": "backend-core",
       "type": "feature",
       "priority": "high",
-      "status": "done",
-      "context": "Create an SDK request builder utility at sdk/typescript/src/request-builder.ts. This helps construct API requests. Export: (1) interface RequestConfig { method: 'GET' | 'POST' | 'PATCH' | 'DELETE'; path: string; query?: Record<string, string | number | boolean | undefined>; body?: unknown; headers?: Record<string, string>; }. (2) function buildUrl(baseUrl: string, path: string, query?: Record<string, string | number | boolean | undefined>): string — creates new URL(baseUrl + path), iterates non-undefined query entries, calls url.searchParams.set(key, String(value)), returns url.toString(). (3) function buildHeaders(apiKey: string, extra?: Record<string, string>): Record<string, string> — returns { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json', 'User-Agent': 'countable-sdk/1.0.0', ...extra }. Export the interface and both functions. Do NOT export anything else. Do NOT add input validation. Do NOT add a third function. Keep it minimal.",
-      "deliverables": {
-        "code": [
-          "sdk/typescript/src/request-builder.ts"
-        ],
-        "tests": []
-      },
-      "description": "Create SDK request builder (RequestConfig interface, buildUrl, buildHeaders) at sdk/typescript/src/request-builder.ts. ~25 lines.",
-      "constraints": "NEW file only. Export exactly 1 interface and 2 functions. No input validation. No third function. Use native URL and URLSearchParams. No external dependencies. Keep under 30 lines.",
-      "output": {
-        "files": [
-          "sdk/typescript/src/request-builder.ts"
-        ],
-        "commit": "",
-        "model": "MiniMax-M2.5",
-        "review": {
-          "verdict": "APPROVED",
-          "score": 94,
-          "summary": "Dual-approved: Claude (95/100) + Codex (92/100)",
-          "issues": [],
-          "strengths": [
-            "Exact adherence to task specification - exports only what was requested",
-            "Clean TypeScript implementation with proper type definitions",
-            "Correct URL construction logic with proper query parameter handling",
-            "Proper header building with Bearer token format",
-            "No unnecessary validation or extra functions added (follows 'keep it minimal' instruction)",
-            "No markdown code fences or syntax issues",
-            "Proper handling of undefined query values by filtering them out",
-            "Correct spread operator usage for extra headers",
-            "Follows the task spec precisely, exporting only the required interface and two functions",
-            "Clean and concise implementation of buildUrl and buildHeaders",
-            "No extraneous code or input validation added"
-          ]
-        }
-      }
+      "status": "pending",
+      "dependencies": ["CHAIN-001"],
+      "description": "EVM settlement detector",
+      "context": "Create backend/src/services/settlement/evm-detector.ts — detects USDC Transfer events on any EVM chain (Base and Polygon).\n\nThis uses raw JSON-RPC eth_getLogs to scan for USDC ERC-20 Transfer events, then matches against pending invoices.\n\n```typescript\nimport { ChainConfig } from '../../lib/chain-registry';\n\nexport interface SettlementMatch {\n  invoiceId: string;\n  txHash: string;\n  amount: number;       // in USDC (human-readable)\n  from: string;         // payer address\n  to: string;           // recipient address\n  blockNumber: number;\n  timestamp: number;    // unix seconds\n  chain: string;\n}\n\nexport class EvmSettlementDetector {\n  constructor(private chain: ChainConfig) {}\n\n  /** Scan for USDC Transfer events to a given address in block range */\n  async scanTransfersToAddress(\n    recipientAddress: string,\n    fromBlock: string | number = 'latest',\n    toBlock: string | number = 'latest'\n  ): Promise<SettlementMatch[]>;\n\n  /** Get current block number */\n  async getLatestBlock(): Promise<number>;\n\n  /** Verify a specific tx hash is a valid USDC transfer to recipient */\n  async verifyTransfer(txHash: string, expectedRecipient: string, expectedAmount: number): Promise<boolean>;\n}\n```\n\nImplementation notes:\n- Use fetch() for JSON-RPC calls (no viem/ethers dependency needed for this module)\n- USDC Transfer event topic: `0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef`\n- ABI decode: from = topic[1] last 20 bytes, to = topic[2] last 20 bytes, amount = data as uint256\n- Max 120 lines. Include JSDoc.",
+      "deliverables": [
+        "backend/src/services/settlement/evm-detector.ts"
+      ]
     },
     {
-      "id": "SDK-103",
+      "id": "CHAIN-004",
       "agent": "backend-core",
       "type": "feature",
       "priority": "high",
-      "status": "done",
-      "context": "Create a version module for the SDK at sdk/typescript/src/version.ts. This module exports the SDK version string. Export: (1) const version: string = '1.0.0'. (2) const sdkUserAgent: string = 'countable-sdk-typescript/1.0.0'. (3) function isCompatibleApiVersion(serverVersion: string): boolean — parse the major version from serverVersion (split on '.', take first element, parseInt), return true if it equals 1. That is the entire file. Do NOT add anything else.",
-      "deliverables": {
-        "code": [
-          "sdk/typescript/src/version.ts"
-        ],
-        "tests": []
-      },
-      "description": "Create SDK version module with version string, user agent, and API version check at sdk/typescript/src/version.ts. ~10 lines.",
-      "constraints": "NEW file only. Export exactly 2 constants and 1 function. No external dependencies. Keep under 15 lines.",
-      "output": {
-        "files": [
-          "sdk/typescript/src/version.ts"
-        ],
-        "commit": "",
-        "model": "MiniMax-M2.5",
-        "review": {
-          "verdict": "APPROVED",
-          "score": 98,
-          "summary": "Dual-approved: Claude (95/100) + Codex (100/100)",
-          "issues": [
-            {
-              "severity": "low",
-              "file": "sdk/typescript/src/version.ts",
-              "description": "Could add basic input validation (null/undefined check) for serverVersion parameter, but not required by spec"
-            }
-          ],
-          "strengths": [
-            "Follows task specification exactly - no extra code added",
-            "Clean TypeScript with proper type annotations",
-            "Correct implementation of version parsing logic",
-            "No markdown code fences or syntax errors",
-            "Minimal and focused - avoids overengineering",
-            "Proper parseInt usage with radix parameter",
-            "Clear function naming and logic",
-            "Exports only the required constants and function",
-            "Implementation matches the spec for parsing and checking major version",
-            "No extraneous code or syntax errors"
-          ]
-        }
-      }
+      "status": "pending",
+      "dependencies": ["CHAIN-001"],
+      "description": "Solana settlement detector",
+      "context": "Create backend/src/services/settlement/solana-detector.ts — detects USDC SPL token transfers on Solana mainnet.\n\nSolana has a completely different settlement model from EVM:\n- No event logs — use `getSignaturesForAddress` + `getTransaction` RPC calls\n- USDC is an SPL token: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v\n- Transfers go through Token Program (TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA)\n- Use the memo program to store invoice IDs (optional but enables auto-matching)\n\n```typescript\nimport { ChainConfig } from '../../lib/chain-registry';\nimport { SettlementMatch } from './evm-detector';\n\nexport class SolanaSettlementDetector {\n  constructor(private chain: ChainConfig) {}\n\n  /**\n   * Get recent SPL token transfers for a wallet address.\n   * Uses getSignaturesForAddress + getTransaction RPC calls.\n   * @param walletAddress - Base58 Solana address to scan\n   * @param limit - Max transactions to check (default: 20)\n   */\n  async getRecentUsdcTransfers(\n    walletAddress: string,\n    limit: number = 20\n  ): Promise<SettlementMatch[]>;\n\n  /**\n   * Check if a specific transaction signature is a USDC transfer to recipient.\n   * @param txSignature - Base58 transaction signature\n   * @param expectedRecipient - Expected recipient wallet (base58)\n   * @param expectedAmountUsdc - Expected amount in USDC\n   */\n  async verifyTransfer(\n    txSignature: string,\n    expectedRecipient: string,\n    expectedAmountUsdc: number\n  ): Promise<boolean>;\n\n  /** Extract memo field from a transaction (used for invoice ID matching) */\n  async extractMemo(txSignature: string): Promise<string | null>;\n}\n```\n\nRPC calls to use (all via fetch to chain.rpcUrl):\n- `getSignaturesForAddress` with `{ limit }` — returns array of {signature, slot, blockTime}\n- `getTransaction` with `{ encoding: 'jsonParsed', maxSupportedTransactionVersion: 0 }` — parse SPL token instructions\n- Look for instructions with `type: 'transferChecked'` or `type: 'transfer'` in parsed token program\n\nMax 150 lines. No external Solana dependencies (use raw JSON-RPC). Include JSDoc.",
+      "deliverables": [
+        "backend/src/services/settlement/solana-detector.ts"
+      ]
     },
     {
-      "id": "BE-190",
+      "id": "CHAIN-005",
       "agent": "backend-core",
       "type": "feature",
       "priority": "high",
-      "status": "done",
-      "context": "Create a Zod validation schemas module for API key operations at backend/src/validators/api-key-schemas.ts. Import { z } from 'zod'. Export these schemas: (1) createApiKeySchema — z.object with: name: z.string().min(1).max(100), expiresInDays: z.number().int().positive().max(365).optional(), scopes: z.array(z.enum(['invoices:read', 'invoices:write', 'settlements:read', 'webhooks:manage', 'api-keys:manage'])).optional(). (2) apiKeyQuerySchema — z.object with: limit: z.coerce.number().int().min(1).max(100).default(10), offset: z.coerce.number().int().min(0).default(0), status: z.enum(['active', 'revoked', 'expired']).optional(). (3) rotateApiKeySchema — z.object with: expiresInDays: z.number().int().positive().max(365).optional(). Export inferred types: CreateApiKeyInput, ApiKeyQuery, RotateApiKeyInput.",
-      "deliverables": {
-        "code": [
-          "backend/src/validators/api-key-schemas.ts"
-        ],
-        "tests": []
-      },
-      "description": "Create Zod validation schemas for API key create, query, and rotate at backend/src/validators/api-key-schemas.ts. ~25 lines.",
-      "constraints": "NEW file only. Only dependency is 'zod'. Export 3 schemas and 3 inferred types. Keep under 35 lines.",
-      "output": {
-        "files": [
-          "backend/src/validators/api-key-schemas.ts"
-        ],
-        "commit": "",
-        "model": "MiniMax-M2.5",
-        "review": {
-          "verdict": "APPROVED",
-          "score": 91,
-          "summary": "Dual-approved: Claude (92/100) + Codex (90/100)",
-          "issues": [
-            {
-              "severity": "low",
-              "file": "backend/src/validators/api-key-schemas.ts",
-              "description": "The scopes field has .default([]) which may not match the task spec requirement of .optional() - consider if empty array default is intended behavior"
-            }
-          ],
-          "strengths": [
-            "All required schemas (createApiKeySchema, apiKeyQuerySchema, rotateApiKeySchema) implemented correctly",
-            "Proper TypeScript type inference with exported types (CreateApiKeyInput, ApiKeyQuery, RotateApiKeyInput)",
-            "Excellent JSDoc documentation on all schemas and types",
-            "Good use of const assertions for enum arrays (API_KEY_SCOPES, API_KEY_STATUSES)",
-            "Comprehensive validation with custom error messages",
-            "Proper z.coerce.number() usage for query parameters",
-            "All validation constraints match task spec exactly (min/max values, enum options)",
-            "Clean code structure with logical grouping and constants",
-            "No hardcoded values, proper separation of concerns",
-            "Fulfills all required schema shapes and constraints",
-            "Uses Zod’s enum and coercion features appropriately",
-            "Exports inferred TypeScript types for strong typing",
-            "Includes helpful inline documentation for each schema"
-          ]
-        }
-      }
+      "status": "pending",
+      "dependencies": ["CHAIN-003", "CHAIN-004"],
+      "description": "Settlement router — dispatch by chain type",
+      "context": "Create backend/src/services/settlement/settlement-router.ts — routes settlement detection to the correct detector based on chain type.\n\nThis is the single entry point for all settlement checks. Other code only calls this module.\n\n```typescript\nimport { getChain, isEvmChain } from '../../lib/chain-registry';\nimport { EvmSettlementDetector } from './evm-detector';\nimport { SolanaSettlementDetector } from './solana-detector';\nimport { SettlementMatch } from './evm-detector';\n\n/**\n * Check for USDC payment to a recipient on any supported chain.\n * Routes to EVM or Solana detector based on chain config.\n *\n * @param chainId - Chain identifier ('base', 'polygon', 'solana')\n * @param recipientAddress - Address to check for incoming payments\n * @param options - Optional: expectedAmount, fromBlock, limit\n */\nexport async function checkSettlement(\n  chainId: string,\n  recipientAddress: string,\n  options?: {\n    expectedAmountUsdc?: number;\n    fromBlock?: number;   // EVM only\n    limit?: number;       // Solana only\n  }\n): Promise<SettlementMatch[]>;\n\n/**\n * Verify a specific transaction is a valid USDC payment.\n *\n * @param chainId - Chain identifier\n * @param txId - Transaction hash (EVM) or signature (Solana)\n * @param recipientAddress - Expected recipient\n * @param expectedAmountUsdc - Expected USDC amount\n */\nexport async function verifyPayment(\n  chainId: string,\n  txId: string,\n  recipientAddress: string,\n  expectedAmountUsdc: number\n): Promise<boolean>;\n```\n\nMax 60 lines. Keep it thin — just routing logic, no business logic. Include JSDoc.",
+      "deliverables": [
+        "backend/src/services/settlement/settlement-router.ts"
+      ]
     },
     {
-      "id": "BE-191",
+      "id": "CHAIN-006",
       "agent": "backend-core",
       "type": "feature",
       "priority": "medium",
-      "status": "done",
-      "context": "Create a correlation ID utility at backend/src/utils/correlation-id.ts. This module manages request correlation IDs for distributed tracing. Export: (1) const CORRELATION_HEADER = 'x-correlation-id' as const. (2) function generateCorrelationId(): string — return 'cid_' + Date.now().toString(36) + '_' + Math.random().toString(36).substring(2, 8). (3) function extractCorrelationId(headers: Record<string, string | string[] | undefined>): string — get value from headers[CORRELATION_HEADER], if it is a string return it, if it is an array return the first element, otherwise call generateCorrelationId(). (4) interface CorrelationContext { correlationId: string; parentId?: string; spanId?: string; }. (5) function createContext(correlationId: string, parentId?: string): CorrelationContext — return { correlationId, parentId, spanId: generateCorrelationId() }. No external dependencies.",
-      "deliverables": {
-        "code": [
-          "backend/src/utils/correlation-id.ts"
-        ],
-        "tests": []
-      },
-      "description": "Create correlation ID utility for distributed tracing at backend/src/utils/correlation-id.ts. ~25 lines.",
-      "constraints": "NEW file only. No external dependencies. Export 1 const, 3 functions, and 1 interface. Keep under 30 lines.",
-      "output": {
-        "files": [
-          "backend/src/utils/correlation-id.ts"
-        ],
-        "commit": "",
-        "model": "MiniMax-M2.5",
-        "review": {
-          "verdict": "APPROVED",
-          "score": 93,
-          "summary": "Dual-approved: Claude (95/100) + Codex (90/100)",
-          "issues": [
-            {
-              "severity": "low",
-              "file": "backend/src/utils/correlation-id.ts",
-              "description": "Missing unit tests - should include Jest tests for all exported functions"
-            }
-          ],
-          "strengths": [
-            "Perfect adherence to task specification - all 5 required exports implemented exactly as requested",
-            "Clean TypeScript with proper type annotations and no 'any' types",
-            "Excellent JSDoc documentation on all public functions and interfaces",
-            "No external dependencies as required",
-            "Proper error handling in extractCorrelationId with fallback to generation",
-            "Consistent code style and naming conventions",
-            "Efficient correlation ID generation using base36 encoding",
-            "Proper handling of header value types (string vs array)",
-            "Interface properly typed with optional fields",
-            "Follows the task spec exactly: exports CORRELATION_HEADER, generateCorrelationId, extractCorrelationId, CorrelationContext interface, and createContext.",
-            "No use of `any`; TypeScript types are explicit and strict.",
-            "Self-contained utility without external dependencies.",
-            "Clear JSDoc comments for all public functions and interfaces."
-          ]
-        }
-      }
+      "status": "pending",
+      "dependencies": ["CHAIN-001"],
+      "description": "Supabase migration: add chain column to Invoice table",
+      "context": "Add a `chain` column to the Invoice table in Supabase to record which blockchain the invoice is denominated on.\n\nCreate the file: backend/src/migrations/add_chain_to_invoice.sql\n\nContent:\n```sql\n-- Migration: Add chain field to Invoice table\n-- Sprint 10 (multi-chain architecture)\n-- Safe to run multiple times (IF NOT EXISTS)\n\nALTER TABLE \"Invoice\"\n  ADD COLUMN IF NOT EXISTS chain TEXT NOT NULL DEFAULT 'base';\n\n-- Add check constraint for supported chains\nALTER TABLE \"Invoice\"\n  DROP CONSTRAINT IF EXISTS invoice_chain_check;\n\nALTER TABLE \"Invoice\"\n  ADD CONSTRAINT invoice_chain_check\n  CHECK (chain IN ('base', 'polygon', 'solana'));\n\n-- Add index for chain-based queries\nCREATE INDEX IF NOT EXISTS idx_invoice_chain\n  ON \"Invoice\" (chain);\n\n-- Verify existing rows are defaulted correctly\nUPDATE \"Invoice\" SET chain = 'base' WHERE chain IS NULL;\n```\n\nAlso create backend/src/migrations/README.md documenting the migration process:\n- How to run: paste into Supabase SQL editor\n- Rollback: `ALTER TABLE \"Invoice\" DROP COLUMN IF EXISTS chain;`\n- Purpose: enables multi-chain invoicing (Base, Polygon, Solana)\n\nDo NOT actually run the migration — just create the files.",
+      "deliverables": [
+        "backend/src/migrations/add_chain_to_invoice.sql",
+        "backend/src/migrations/README.md"
+      ]
     },
     {
-      "id": "BE-192",
+      "id": "CHAIN-007",
+      "agent": "backend-core",
+      "type": "research",
+      "priority": "medium",
+      "status": "pending",
+      "dependencies": [],
+      "description": "RPC provider evaluation for Polygon + Solana from VPS",
+      "context": "Create docs/rpc-providers.md — an evaluation of RPC providers for Polygon and Solana that WORK from our Hetzner VPS IP.\n\nBackground: We discovered that mainnet.base.org, llamarpc.com, publicnode.com all block our VPS IP with 403. Only base.gateway.tenderly.co works for Base.\n\nTest each provider by making a live eth_call (Polygon) or getSlot (Solana) from the server.\n\nTest these providers:\n\nFor Polygon:\n- https://polygon-bor-rpc.publicnode.com\n- https://polygon.gateway.tenderly.co\n- https://gateway.tenderly.co/public/polygon\n- https://polygon.meowrpc.com\n- https://1rpc.io/matic\n\nFor Solana:\n- https://api.mainnet-beta.solana.com\n- https://solana-mainnet.rpc.extrnode.com\n- https://rpc.ankr.com/solana (needs API key — mark as such)\n\nTest command for Polygon (check CEO wallet balance via USDC contract):\n```\ncurl -sf -X POST <RPC_URL> -H 'Content-Type: application/json' \\\n  -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_blockNumber\",\"params\":[]}'\n```\n\nTest command for Solana:\n```\ncurl -sf -X POST <RPC_URL> -H 'Content-Type: application/json' \\\n  -d '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"getSlot\",\"params\":[]}'\n```\n\nDocument:\n- Which work / which return 403\n- Recommended primary + fallback for each chain\n- Any rate limits observed\n- Whether we need paid API keys (Helius for Solana is recommended if free tier insufficient)\n\nWrite this as a proper markdown doc with a results table.",
+      "deliverables": [
+        "docs/rpc-providers.md"
+      ]
+    },
+    {
+      "id": "CHAIN-008",
       "agent": "backend-core",
       "type": "feature",
       "priority": "medium",
-      "status": "done",
-      "context": "Create a pagination utility at backend/src/utils/pagination.ts. This module provides helpers for consistent API pagination. Export: (1) interface PaginationParams { limit: number; offset: number; }. (2) interface PaginatedResult<T> { data: T[]; total: number; limit: number; offset: number; hasMore: boolean; }. (3) function parsePagination(query: { limit?: string | number; offset?: string | number }, defaults?: { limit?: number; maxLimit?: number }): PaginationParams — parse limit and offset from query, clamp limit between 1 and (defaults?.maxLimit || 100), default limit to (defaults?.limit || 10), default offset to 0. (4) function paginate<T>(items: T[], total: number, params: PaginationParams): PaginatedResult<T> — return { data: items, total, limit: params.limit, offset: params.offset, hasMore: params.offset + params.limit < total }. No external dependencies.",
-      "deliverables": {
-        "code": [
-          "backend/src/utils/pagination.ts"
-        ],
-        "tests": []
-      },
-      "description": "Create pagination utility (parsePagination, paginate) at backend/src/utils/pagination.ts. ~30 lines.",
-      "constraints": "NEW file only. No external dependencies. Export 2 interfaces and 2 functions. Keep under 35 lines.",
-      "output": {
-        "files": [
-          "backend/src/utils/pagination.ts"
-        ],
-        "commit": "",
-        "model": "MiniMax-M2.5",
-        "review": {
-          "verdict": "APPROVED",
-          "score": 93,
-          "summary": "Dual-approved: Claude (95/100) + Codex (90/100)",
-          "issues": [
-            {
-              "severity": "low",
-              "file": "backend/src/utils/pagination.ts",
-              "description": "Missing unit tests - while not explicitly required by task spec, pagination utilities should have comprehensive test coverage for edge cases"
-            },
-            {
-              "severity": "low",
-              "file": "backend/src/utils/pagination.ts",
-              "description": "No unit tests provided for parsePagination and paginate functions. Consider adding Jest tests to validate expected behavior and edge cases."
-            }
-          ],
-          "strengths": [
-            "Perfect adherence to task specification - all required interfaces and functions implemented exactly as specified",
-            "Excellent TypeScript practices - proper generics, no 'any' types, strict type safety",
-            "Comprehensive input validation with proper edge case handling (null, undefined, NaN, non-finite numbers)",
-            "Clear JSDoc documentation on all public functions",
-            "Proper clamping logic for limit (1 to maxLimit) and offset (non-negative)",
-            "Clean, readable code structure with logical parameter handling",
-            "No external dependencies as required",
-            "Robust parsing logic that handles both string and number inputs gracefully",
-            "Meets all functional requirements from the spec",
-            "Pure TypeScript with no use of `any` and strict type safety",
-            "Correct parsing, defaulting, and clamping logic for limit and offset",
-            "Comprehensive JSDoc documentation on public interfaces and functions"
-          ]
-        }
-      }
+      "status": "pending",
+      "dependencies": ["CHAIN-001", "CHAIN-005"],
+      "description": "ADR: Multi-chain settlement architecture",
+      "context": "Create docs/adr/ADR-003-multi-chain-settlement.md — Architecture Decision Record documenting the multi-chain settlement design.\n\nThis captures the key decisions made in Sprint 10 so future agents have context.\n\nStructure:\n```markdown\n# ADR-003: Multi-Chain Settlement Architecture\n\n**Date**: 2026-03-02  \n**Status**: Accepted  \n**Deciders**: CEO, CTO  \n\n## Context\nInvoica must support Base, Polygon, and Solana by March 28.\nStripe x402 only supports Base (EVM). Solana support = competitive moat.\n\n## Decision\n[Document the settlement-router pattern, why EVM vs Solana abstraction was separated, why raw JSON-RPC was chosen over viem/solana-web3.js]\n\n## Chain Config\n[Document the CHAINS registry, the 3 chains, their USDC addresses]\n\n## Settlement Detection\n### EVM (Base + Polygon)\n[Document eth_getLogs approach]\n### Solana\n[Document getSignaturesForAddress approach, memo program for invoice matching]\n\n## Consequences\n- Adding a new chain = add entry to chain-registry.ts + implement detector\n- Solana requires different address format (base58 vs 0x hex)\n- Invoice table needs `chain` column (see migration CHAIN-006)\n\n## Alternatives Considered\n- viem library: rejected (adds 200KB dependency, raw RPC is sufficient)\n- @solana/web3.js: rejected (ESM-only, causes ts-node issues; raw RPC works)\n- The Graph indexer: future consideration for high-volume settlement detection\n```\n\nMax 150 lines. Write it as a real ADR a developer would find useful.",
+      "deliverables": [
+        "docs/adr/ADR-003-multi-chain-settlement.md"
+      ]
     },
     {
-      "id": "FE-130",
-      "agent": "frontend",
-      "type": "feature",
-      "priority": "high",
-      "status": "done",
-      "context": "Create a custom React hook for debounced values at frontend/hooks/use-debounce.ts. This hook delays updating a value until the user stops typing. Import { useState, useEffect } from 'react'. Export: (1) function useDebounce<T>(value: T, delayMs: number = 300): T — uses useState to store debouncedValue initialized to value, uses useEffect that sets a timer with setTimeout(delayMs) to update debouncedValue to value, returns cleanup function that calls clearTimeout. Returns debouncedValue. The effect dependencies are [value, delayMs]. That is the entire hook. No other functions or exports.",
-      "deliverables": {
-        "code": [
-          "frontend/hooks/use-debounce.ts"
-        ],
-        "tests": []
-      },
-      "description": "Create useDebounce<T> React hook for input debouncing at frontend/hooks/use-debounce.ts. ~15 lines.",
-      "constraints": "NEW file only. Import only from 'react'. Export exactly 1 function. No 'use client' directive needed. Keep under 20 lines.",
-      "output": {
-        "files": [
-          "frontend/hooks/use-debounce.ts"
-        ],
-        "commit": "",
-        "model": "MiniMax-M2.5",
-        "review": {
-          "verdict": "APPROVED",
-          "score": 95,
-          "summary": "Dual-approved: Claude (95/100) + Codex (95/100)",
-          "issues": [
-            {
-              "severity": "low",
-              "file": "frontend/hooks/use-debounce.ts",
-              "description": "Missing JSDoc documentation for the public API function"
-            }
-          ],
-          "strengths": [
-            "Exact implementation as specified - no overengineering or extra features",
-            "Proper TypeScript generic typing with <T>",
-            "Correct React hooks usage with proper cleanup",
-            "Follows the exact function signature and behavior requirements",
-            "Clean, readable code with appropriate variable naming",
-            "Proper useEffect dependencies array [value, delayMs]",
-            "No unnecessary abstractions or additional exports",
-            "File structure matches the requested path exactly",
-            "Implements generic typing correctly (useDebounce<T>)",
-            "Default delayMs parameter provided",
-            "Effect dependencies include both value and delayMs",
-            "Proper cleanup function to clear the timeout",
-            "No extraneous code beyond the spec"
-          ]
-        }
-      }
-    },
-    {
-      "id": "FE-131",
-      "agent": "frontend",
-      "type": "feature",
-      "priority": "high",
-      "status": "done",
-      "context": "Create a custom React hook for local storage persistence at frontend/hooks/use-local-storage.ts. This hook syncs state with localStorage. Import { useState, useEffect } from 'react'. Export: (1) function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T | ((prev: T) => T)) => void] — useState initializer function: try to get item from localStorage with key, JSON.parse it, return parsed value or initialValue on error. The setter function: if value is a function, call it with current state, then localStorage.setItem(key, JSON.stringify(newValue)) and update state. useEffect with [key, storedValue] deps that calls localStorage.setItem(key, JSON.stringify(storedValue)). Return [storedValue, setValue] tuple.",
-      "deliverables": {
-        "code": [
-          "frontend/hooks/use-local-storage.ts"
-        ],
-        "tests": []
-      },
-      "description": "Create useLocalStorage<T> React hook for persistent state at frontend/hooks/use-local-storage.ts. ~25 lines.",
-      "constraints": "NEW file only. Import only from 'react'. Export exactly 1 function. No 'use client' directive needed. Keep under 30 lines.",
-      "output": {
-        "files": [
-          "frontend/hooks/use-local-storage.ts"
-        ],
-        "commit": "",
-        "model": "MiniMax-M2.5",
-        "review": {
-          "verdict": "APPROVED",
-          "score": 85,
-          "summary": "CEO resolved conflict (Claude approved, Codex rejected): **APPROVE — The code fully meets the task specification and is production-ready.**\n\nCodex's concerns are valid engineering practices but not blockers:\n1. **Missing tests**: While tests are good practice, the task spec didn't require them. This is a simple, well-typed utility hook.\n2. **Silent error ",
-          "issues": [
-            {
-              "severity": "high",
-              "file": "frontend/hooks/use-local-storage.ts",
-              "description": "Missing Jest unit tests for this hook. All new frontend utilities require at least basic coverage to validate behavior."
-            },
-            {
-              "severity": "medium",
-              "file": "frontend/hooks/use-local-storage.ts",
-              "description": "Errors in both the initializer and setter are silently caught and ignored. Consider logging or surfacing the error for easier debugging."
-            }
-          ],
-          "strengths": [
-            "Correctly implements the exact function signature specified in the task",
-            "Proper TypeScript generics usage with no 'any' types",
-            "Handles localStorage errors gracefully with try-catch blocks",
-            "useState initializer function correctly tries localStorage.getItem and falls back to initialValue",
-            "setValue function properly handles both direct values and updater functions",
-            "useEffect correctly syncs state changes to localStorage with proper dependencies",
-            "Clean, readable code structure that follows React hooks patterns",
-            "No code fences or invalid syntax present",
-            "Implements all required functionality without overengineering"
-          ]
-        }
-      }
-    },
-    {
-      "id": "FE-132",
-      "agent": "frontend",
-      "type": "feature",
+      "id": "CHAIN-009",
+      "agent": "backend-core",
+      "type": "test",
       "priority": "medium",
-      "status": "done",
-      "context": "Create a tooltip component at frontend/components/ui/tooltip.tsx. Add 'use client' at the top. Import React, { useState } from 'react'. Export interface TooltipProps { children: React.ReactNode; content: string; position?: 'top' | 'bottom' | 'left' | 'right'; }. Export function Tooltip({ children, content, position = 'top' }: TooltipProps). Use useState<boolean>(false) for isVisible. Outer span: relative inline-flex. Has onMouseEnter setting isVisible=true, onMouseLeave setting isVisible=false. Inner children rendered directly. Conditionally render tooltip div when isVisible. Position classes: top = 'bottom-full left-1/2 -translate-x-1/2 mb-2', bottom = 'top-full left-1/2 -translate-x-1/2 mt-2', left = 'right-full top-1/2 -translate-y-1/2 mr-2', right = 'left-full top-1/2 -translate-y-1/2 ml-2'. Tooltip div classes: absolute z-50 px-2 py-1 text-xs font-medium text-white bg-slate-900 rounded whitespace-nowrap. Use a positionClasses Record mapping.",
-      "deliverables": {
-        "code": [
-          "frontend/components/ui/tooltip.tsx"
-        ],
-        "tests": []
-      },
-      "description": "Create reusable Tooltip component with position variants at frontend/components/ui/tooltip.tsx. ~30 lines.",
-      "constraints": "NEW file only. 'use client' directive. Tailwind CSS only. Export interface and component. Keep under 35 lines.",
-      "output": {
-        "files": [
-          "frontend/components/ui/tooltip.tsx"
-        ],
-        "commit": "",
-        "model": "MiniMax-M2.5",
-        "review": {
-          "verdict": "APPROVED",
-          "score": 93,
-          "summary": "Dual-approved: Claude (95/100) + Codex (90/100)",
-          "issues": [
-            {
-              "severity": "low",
-              "file": "frontend/components/ui/tooltip.tsx",
-              "description": "Missing JSDoc documentation for the public API components"
-            }
-          ],
-          "strengths": [
-            "Exact adherence to task specification - all requirements implemented correctly",
-            "Proper TypeScript strict typing with no 'any' types",
-            "Clean React functional component with proper hooks usage",
-            "Correct 'use client' directive for Next.js 14",
-            "Well-structured position mapping using Record type",
-            "Proper conditional rendering and event handling",
-            "Consistent naming conventions and code style",
-            "Efficient implementation without unnecessary complexity",
-            "Follows the task specification precisely",
-            "Includes 'use client' directive",
-            "Strongly typed with no `any` usage",
-            "Clean, concise, and readable implementation"
-          ]
-        }
-      }
-    },
-    {
-      "id": "FE-133",
-      "agent": "frontend",
-      "type": "feature",
-      "priority": "medium",
-      "status": "done",
-      "context": "Create a search input component at frontend/components/ui/search-input.tsx. Add 'use client' at the top. Import React from 'react'. Export interface SearchInputProps { value: string; onChange: (value: string) => void; placeholder?: string; className?: string; }. Export function SearchInput({ value, onChange, placeholder = 'Search...', className = '' }: SearchInputProps). Render a div with relative class. Inside, render an SVG search icon (magnifying glass) positioned absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4. The SVG uses: viewBox='0 0 20 20', fill='currentColor', single path d='M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z'. Render an input with: type='text', value, onChange={(e) => onChange(e.target.value)}, placeholder, className='w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent ' + className.",
-      "deliverables": {
-        "code": [
-          "frontend/components/ui/search-input.tsx"
-        ],
-        "tests": []
-      },
-      "description": "Create SearchInput component with icon at frontend/components/ui/search-input.tsx. ~25 lines.",
-      "constraints": "NEW file only. 'use client' directive. Tailwind CSS only. Export interface and component. Keep under 30 lines.",
-      "output": {
-        "files": [
-          "frontend/components/ui/search-input.tsx"
-        ],
-        "commit": "",
-        "model": "MiniMax-M2.5",
-        "review": {
-          "verdict": "APPROVED",
-          "score": 93,
-          "summary": "Dual-approved: Claude (95/100) + Codex (90/100)",
-          "issues": [
-            {
-              "severity": "low",
-              "file": "frontend/components/ui/search-input.tsx",
-              "description": "Added fillRule and clipRule attributes to SVG path that weren't in the spec, though they're harmless and potentially beneficial for rendering"
-            }
-          ],
-          "strengths": [
-            "Exact adherence to task specification requirements",
-            "Proper 'use client' directive for Next.js client component",
-            "Clean TypeScript interface with correct prop types",
-            "Proper default parameter values as specified",
-            "Correct SVG implementation with exact viewBox and path data",
-            "Proper Tailwind CSS classes applied as specified",
-            "Clean, readable code structure",
-            "No unnecessary abstractions or extra files",
-            "Proper React event handling pattern",
-            "No hardcoded values or security issues",
-            "Adheres exactly to the task specification.",
-            "Includes 'use client' directive for Next.js 14.",
-            "TypeScript interface is well-defined with appropriate defaults.",
-            "SVG icon is properly positioned and uses currentColor for theming.",
-            "Input uses correct Tailwind classes and composes additional `className` prop."
-          ]
-        }
-      }
+      "status": "pending",
+      "dependencies": ["CHAIN-001", "CHAIN-002", "CHAIN-003", "CHAIN-004", "CHAIN-005"],
+      "description": "Unit tests for chain registry and settlement router",
+      "context": "Create backend/src/services/settlement/__tests__/chain-registry.test.ts and settlement-router.test.ts.\n\nTest 1: chain-registry.test.ts\n```typescript\n// Tests for backend/src/lib/chain-registry.ts\ndescribe('chain-registry', () => {\n  it('returns config for base', () => {\n    const chain = getChain('base');\n    expect(chain.chainId).toBe(8453);\n    expect(chain.type).toBe('evm');\n    expect(chain.usdcAddress).toBe('0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913');\n  });\n  it('returns config for polygon', () => {\n    const chain = getChain('polygon');\n    expect(chain.chainId).toBe(137);\n    expect(chain.type).toBe('evm');\n  });\n  it('returns config for solana', () => {\n    const chain = getChain('solana');\n    expect(chain.type).toBe('solana');\n    expect(chain.usdcAddress).toBe('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');\n  });\n  it('throws for unknown chain', () => {\n    expect(() => getChain('arbitrum')).toThrow('Unsupported chain: arbitrum');\n  });\n  it('correctly identifies EVM chains', () => {\n    expect(isEvmChain('base')).toBe(true);\n    expect(isEvmChain('polygon')).toBe(true);\n    expect(isEvmChain('solana')).toBe(false);\n  });\n  it('correctly identifies Solana chains', () => {\n    expect(isSolanaChain('solana')).toBe(true);\n    expect(isSolanaChain('base')).toBe(false);\n  });\n});\n```\n\nTest 2: settlement-router.test.ts — mock the EVM and Solana detectors, verify routing:\n- `checkSettlement('base', addr)` calls EvmSettlementDetector\n- `checkSettlement('polygon', addr)` calls EvmSettlementDetector with Polygon config\n- `checkSettlement('solana', addr)` calls SolanaSettlementDetector\n- `checkSettlement('arbitrum', addr)` throws 'Unsupported chain'\n\nUse jest mocks. Max 100 lines total across both files.",
+      "deliverables": [
+        "backend/src/services/settlement/__tests__/chain-registry.test.ts",
+        "backend/src/services/settlement/__tests__/settlement-router.test.ts"
+      ]
     }
   ]
 }

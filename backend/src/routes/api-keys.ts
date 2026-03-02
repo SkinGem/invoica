@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { ApiKeyRotationService, ApiKey, RotateKeyResponse, ApiKeyRotationError } from '../services/api-key-rotation';
+import { createApiKey, createApiKeySchema } from '../services/api-keys';
 
 const router = Router();
 
@@ -14,14 +15,12 @@ const userIdSchema = z.string().uuid({ message: 'Invalid user ID format' });
 const keyIdSchema = z.string().uuid({ message: 'Invalid key ID format' });
 
 /**
- * Middleware to extract and validate userId from request
- * In production, this would come from authentication middleware
+ * Middleware to extract and validate userId from request headers.
+ * Required for list/rotate/revoke endpoints that scope to a user.
  */
 const extractUserId = (req: Request, res: Response, next: NextFunction): void => {
-  // In production, this would be extracted from JWT token or session
-  // For now, we expect it in headers
   const userId = req.headers['x-user-id'] as string;
-  
+
   if (!userId) {
     res.status(401).json({
       error: 'Unauthorized',
@@ -30,7 +29,6 @@ const extractUserId = (req: Request, res: Response, next: NextFunction): void =>
     return;
   }
 
-  // Validate UUID format
   const validation = userIdSchema.safeParse(userId);
   if (!validation.success) {
     res.status(400).json({
@@ -46,19 +44,58 @@ const extractUserId = (req: Request, res: Response, next: NextFunction): void =>
 };
 
 /**
- * GET /v1/api-keys
- * List all API keys for the authenticated user
- * Returns sanitized keys (prefix + last 4 chars only, never raw key)
+ * POST /v1/api-keys
+ * Create a new API key.
+ * customerEmail is optional — defaults to ${customerId}@agents.invoica.ai.
  */
-router.get('/', extractUserId, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/v1/api-keys', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await createApiKey(req.body);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        id: result.id,
+        customerId: result.customerId,
+        customerEmail: result.customerEmail,
+        name: result.name,
+        tier: result.tier,
+        plan: result.plan,
+        permissions: result.permissions,
+        keyPrefix: result.keyPrefix,
+        key: result.key,       // One-time display of the raw key
+        isActive: result.isActive,
+        expiresAt: result.expiresAt,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+      },
+    });
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      res.status(400).json({
+        success: false,
+        error: {
+          message: 'Validation failed',
+          code: 'VALIDATION_ERROR',
+          details: err.errors,
+        },
+      });
+      return;
+    }
+    next(err);
+  }
+});
+
+/**
+ * GET /v1/api-keys
+ * List all API keys for the authenticated user.
+ * Returns sanitized keys (prefix + metadata only, never raw key).
+ */
+router.get('/v1/api-keys', extractUserId, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as Request & { userId: string }).userId;
-
     const keys: ApiKey[] = await apiKeyService.listKeys(userId);
-
-    res.status(200).json({
-      keys,
-    });
+    res.status(200).json({ keys });
   } catch (error) {
     next(error);
   }
@@ -66,15 +103,14 @@ router.get('/', extractUserId, async (req: Request, res: Response, next: NextFun
 
 /**
  * POST /v1/api-keys/:id/rotate
- * Rotate an existing API key
- * Generates a new key, sets old key expiry to 24 hours from now
+ * Rotate an existing API key.
+ * Generates a new key, sets old key expiry to 24 hours from now.
  */
-router.post('/:id/rotate', extractUserId, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/v1/api-keys/:id/rotate', extractUserId, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as Request & { userId: string }).userId;
     const keyId = req.params.id;
 
-    // Validate key ID format
     const keyIdValidation = keyIdSchema.safeParse(keyId);
     if (!keyIdValidation.success) {
       res.status(400).json({
@@ -86,7 +122,6 @@ router.post('/:id/rotate', extractUserId, async (req: Request, res: Response, ne
     }
 
     const result: RotateKeyResponse = await apiKeyService.rotateKey(keyId, userId);
-
     res.status(200).json({
       apiKey: result.newKey,
       keyId: result.newKeyId,
@@ -99,15 +134,13 @@ router.post('/:id/rotate', extractUserId, async (req: Request, res: Response, ne
 
 /**
  * DELETE /v1/api-keys/:id
- * Revoke an API key immediately
- * Sets is_active = false
+ * Revoke an API key immediately (sets is_active = false).
  */
-router.delete('/:id', extractUserId, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/v1/api-keys/:id', extractUserId, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as Request & { userId: string }).userId;
     const keyId = req.params.id;
 
-    // Validate key ID format
     const keyIdValidation = keyIdSchema.safeParse(keyId);
     if (!keyIdValidation.success) {
       res.status(400).json({
@@ -119,7 +152,6 @@ router.delete('/:id', extractUserId, async (req: Request, res: Response, next: N
     }
 
     await apiKeyService.revokeKey(keyId, userId);
-
     res.status(204).send();
   } catch (error) {
     next(error);
@@ -133,15 +165,14 @@ router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('API Keys Route Error:', err);
 
   if (err instanceof ApiKeyRotationError) {
-    const statusCode = err.statusCode || 500;
+    const statusCode = (err as any).statusCode || 500;
     res.status(statusCode).json({
-      error: err.code,
+      error: (err as any).code,
       message: err.message,
     });
     return;
   }
 
-  // Handle Zod validation errors
   if (err instanceof z.ZodError) {
     res.status(400).json({
       error: 'VALIDATION_ERROR',
@@ -151,7 +182,6 @@ router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     return;
   }
 
-  // Generic server error
   res.status(500).json({
     error: 'INTERNAL_SERVER_ERROR',
     message: 'An unexpected error occurred',

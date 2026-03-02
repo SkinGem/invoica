@@ -2,32 +2,50 @@
 
 All notable changes to Invoica are documented here.
 
-## [1.7.0] — 2026-03-02
+## [1.5.0] — 2026-03-02
 
-- Added multichain x402 expansion framework — standing sprint priority for cross-chain payment support
-- Implemented full backend authentication layer (AUTH-003) and SDK enhancements (SDK-200, SDK-060a-e, SDK-061, SDK-062)
-- Released chain integration APIs (CHAIN-001, CHAIN-002) for decentralized invoice settlement
-- Enhanced core backend with BE-110 improvements for production stability and performance
-- Fixed critical bot issues: duplicate post prevention, wallet alert spam reduction, and misleading PM2 status reports
-- Strengthened agent autonomy: self-healing cron every 5 min, stale port cleanup, and static asset deployment fixes
+- Added x402 agent wallet spending — agents can now autonomously spend USDC on LLM calls with X402_SELLER_WALLET configuration
+- Implemented multichain x402 expansion with standing sprint priority for broader payment network support
+- Released SDK-060 through SDK-062 enhancements for improved TypeScript SDK compatibility and type safety
+- Added AUTH-002 and AUTH-003 authentication improvements for enhanced security
+- Deployed PAY-001, PAY-002, PAY-003 payment processing features for invoice settlements
+- Fixed critical backend startup issue with missing invoiceEvents and Supabase stubs
 
-## [1.6.0] — 2026-02-28
+## [1.6.0] — 2026-03-01
 
-- Launched Mission Control integration for unified agent operations visibility with PM2 process management
-- Implemented live docs auto-generation system for real-time documentation updates
-- Added memory-agent — institutional black box memory system for autonomous agent decision context
-- Enabled autonomous post-sprint pipeline: test→CTO review→Vercel deploy with sprint-runner PM2 cron
-- Introduced CMO weekly content plan generator (Sunday 06:00 UTC) with CEO approval gate and CTO review
-- Fixed infrastructure stability: isolated CEO bot to standalone PM2 process, prevented 4800+ unnecessary backend restarts
+- Launched autonomous agent framework with Mission Control integration for real-time ops visibility and CEO review gates
+- Implemented memory-agent black box system for institutional knowledge retention across autonomous operations
+- Added live docs auto-generation system to keep API documentation in sync with codebase changes
+- Enabled event-driven CEO review + sprint trigger mechanism for autonomous decision-making with human oversight
+- Deployed multi-agent autonomous pipeline: post-sprint test→CTO review→Vercel deploy cycle
+- Activated git-autodeploy server self-deployment from GitHub (5-minute polling cycle)
 
-## [1.5.0] — 2026-02-27
+## [1.7.0] — 2026-02-28
 
-- Activated agent wallet spending with X402 protocol — set X402_SELLER_WALLET env var to enable USDC payments for LLM calls
-- Integrated MiniMax-M2.5 model across backend core with improved fallback handling
-- Added CEO bot execution tools: run_shell, write_file, create_github_issue, and multi-wallet balance checking
-- Implemented Telegram bot integration with /report, /pm2, /health, and /sprint commands for real-time system monitoring
-- Fixed recurring CEO bot issues: multi-RPC balance fallback, alert deduplication, and Telegram silence resolution
-- Added autonomous x-admin agent for X posting with content calendar and CEO/CTO review gates
+- Released CEO bot with real execution tools: /sprint command, /pull updates, git operations, and GitHub issue creation
+- Implemented Telegram bot suite with /report, /pm2, /health, /sprint commands for team coordination and system monitoring
+- Added x-admin autonomous X posting agent with CEO + CTO review gates and content calendar management
+- Deployed heartbeat watchdog system with 6-hour Telegram summaries and PM2 dead-man switch health checks
+- Enhanced ceoBot with multi-RPC USDC balance checking and wallet alert deduplication to prevent spam
+- Fixed backend critical crash loop by adding lib/prisma.ts and backend-wrapper.sh PM2 entry point
+
+## [1.8.0] — 2026-02-27
+
+- Launched Invoica Ledger page for company-scoped transaction tracking with email verification
+- Added CTO email support monitoring script (cto-email-support) for support@invoica.ai IMAP/SMTP integration
+- Deployed real API keys page with TypeScript SDK build and proper authentication flows
+- Fixed mixed content issues via Next.js rewrites and web3 no-email beta bypass for improved accessibility
+- Implemented full CRUD webhooks management dashboard — add, delete, and toggle webhook endpoints
+- Added Telegram deep link support detection for mobile (tg://) and desktop (web.telegram.org) environments
+
+## [1.9.0] — 2026-02-26
+
+- Launched beta mode infrastructure with BetaBanner replacing pricing CTAs across homepage and dashboard
+- Deployed Telegram support card integration with live support button on dashboard help section
+- Added comprehensive TypeScript strict mode fixes across middleware, routes, and SDK modules for production stability
+- Implemented Conway governance layer v2.0 with mandatory CEO deployment rules and sprint launch protocols via GitHub milestones
+- Enhanced CTO daily scan and cto-email-support PM2 jobs with full email support monitoring capabilities
+- Fixed Supabase, Redis, viem, and Prisma type compatibility issues across inference and middleware layers
 
 ## [1.4.0] — 2026-02-20
 

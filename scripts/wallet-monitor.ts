@@ -11,7 +11,7 @@ import { getAgentWallets, updateBalance, createTopupRequest } from './wallet-ser
 const TELEGRAM_BOT_TOKEN = process.env.CEO_TELEGRAM_BOT_TOKEN!;
 const OWNER_CHAT_ID      = process.env.OWNER_TELEGRAM_CHAT_ID || process.env.CEO_TELEGRAM_CHAT_ID;
 const USDC_ABI_BALANCE   = '0x70a08231'; // balanceOf(address) selector
-const BASE_RPC           = 'https://mainnet.base.org';
+const BASE_RPC           = 'https://base.gateway.tenderly.co';
 const USDC_ADDRESS       = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 
 async function getUsdcBalance(address: string): Promise<number> {

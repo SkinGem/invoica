@@ -26,16 +26,20 @@ Call AI model (MiniMax or Claude) via x402 USDC payment
 
 ## Api keys
 
-### `GET /`
-GET /
+### `POST /v1/api-keys`
+Create a new API key
 **Auth:** None
 
-### `POST /:id/rotate`
-POST /:id/rotate
+### `GET /v1/api-keys`
+List all API keys for the authenticated user
 **Auth:** None
 
-### `DELETE /:id`
-DELETE /:id
+### `POST /v1/api-keys/:id/rotate`
+Rotate (regenerate) an API key
+**Auth:** None
+
+### `DELETE /v1/api-keys/:id`
+DELETE /v1/api-keys/:id
 **Auth:** None
 
 ## Health

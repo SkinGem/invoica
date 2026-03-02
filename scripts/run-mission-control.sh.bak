@@ -38,16 +38,6 @@ cd "$MC_DIR"
 
 # Use standalone server.js if available (output: standalone build)
 # Falls back to pnpm start for non-standalone builds
-# Ensure standalone static files are in place (required for Next.js standalone mode)
-if [ -f ".next/standalone/server.js" ]; then
-  if [ ! -d ".next/standalone/.next/static" ]; then
-    echo "[MissionControl] Copying static files into standalone..."; cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
-  fi
-  if [ ! -d ".next/standalone/public" ] && [ -d "public" ]; then
-    cp -r public .next/standalone/public 2>/dev/null || true
-  fi
-fi
-
 if [ -f ".next/standalone/server.js" ]; then
   exec node .next/standalone/server.js
 elif command -v pnpm &>/dev/null; then

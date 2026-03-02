@@ -308,7 +308,7 @@ async function telegramSend(method: string, params: object): Promise<any> {
 // ─── Tool Execution ───────────────────────────────────────────────────────────
 
 // Multiple RPC endpoints — queried in parallel, highest non-zero result wins
-const BASE_RPC_HOSTS = ['mainnet.base.org', 'base.llamarpc.com'];
+const BASE_RPC_HOSTS = ['base.gateway.tenderly.co', 'gateway.tenderly.co/public/base'];
 
 function rpcBalanceOf(hostname: string, address: string): Promise<number> {
   const padded = '0'.repeat(24) + address.toLowerCase().slice(2);
@@ -837,18 +837,25 @@ async function callClaudeWithTools(userId: number, userMessage: string, onToolCa
       const toolUseBlocks = content.filter((b: ContentBlock) => b.type === 'tool_use');
       const toolResults: ContentBlock[] = [];
 
-      for (const toolBlock of toolUseBlocks) {
-        const toolName = toolBlock.name!;
-        const toolInput = toolBlock.input as Record<string, unknown>;
-        console.log(`[CeoBot] Tool call: ${toolName}`, toolInput);
-        if (onToolCall) onToolCall(toolName);
+      try {
+        for (const toolBlock of toolUseBlocks) {
+          const toolName = toolBlock.name!;
+          const toolInput = toolBlock.input as Record<string, unknown>;
+          console.log(`[CeoBot] Tool call: ${toolName}`, toolInput);
+          if (onToolCall) onToolCall(toolName);
 
-        const result = await executeTool(toolName, toolInput, history.slice(-8));
-        toolResults.push({
-          type: 'tool_result',
-          tool_use_id: toolBlock.id,
-          content: result,
-        });
+          const result = await executeTool(toolName, toolInput, history.slice(-8));
+          toolResults.push({
+            type: 'tool_result',
+            tool_use_id: toolBlock.id,
+            content: result,
+          });
+        }
+      } catch (toolErr: any) {
+        // Tool execution failed — pop the orphaned assistant tool_use from history
+        history.pop();
+        console.error('[CeoBot] Tool execution error:', toolErr.message);
+        return `❌ Tool error: ${toolErr.message}`;
       }
 
       // Add tool results to history and continue loop
