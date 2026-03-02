@@ -313,6 +313,22 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
+      // Mission Control — self-hosted AI agent ops dashboard (builderz-labs/mission-control)
+      // Next.js + SQLite. No external deps. Runs permanently on port 3010.
+      // Access: ssh -L 3010:localhost:3010 invoica@<server> then open http://localhost:3010
+      // Setup (first time only): bash scripts/setup-mission-control.sh
+      name: "mission-control",
+      script: "./scripts/run-mission-control.sh",
+      interpreter: "bash",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "512M",
+      error_file: "/home/invoica/apps/Invoica/logs/mission-control-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/mission-control-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
       // Docs Generator — runs daily at 04:00 UTC
       // Scans git log + backend routes → writes changelog.json + api-reference.json
       // → rewrites frontend pages → git push → Vercel auto-redeploys live docs

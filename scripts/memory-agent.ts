@@ -25,6 +25,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync, spawnSync } from 'child_process';
 import 'dotenv/config';
+import { createMCClient } from './mc-client';
 
 // ── Config ─────────────────────────────────────────────────────────────────
 
@@ -46,6 +47,12 @@ const VERCEL_PROJECT = 'prj_AFOWCmQoEJzrsxOVyPOoFXE81nXR';
 const NOW     = new Date();
 const TODAY   = NOW.toISOString().slice(0, 10);           // YYYY-MM-DD
 const HOUR    = NOW.toISOString().slice(0, 13) + ':00Z';  // YYYY-MM-DDTHH:00Z
+
+// ── Mission Control token tracking ─────────────────────────────────────────
+// Accumulates across all callClaude() calls, reported to MC at end of run
+
+let _mcInputTokens  = 0;
+let _mcOutputTokens = 0;
 
 // ── Ensure output dirs exist ───────────────────────────────────────────────
 
@@ -108,6 +115,9 @@ async function callClaude(systemPrompt: string, userPrompt: string): Promise<str
       'anthropic-version': '2023-06-01',
     }, body);
     const parsed = JSON.parse(raw);
+    // Accumulate token usage for Mission Control cost tracking
+    _mcInputTokens  += parsed?.usage?.input_tokens  || 0;
+    _mcOutputTokens += parsed?.usage?.output_tokens || 0;
     return parsed?.content?.[0]?.text || '[Empty response]';
   } catch (e: any) {
     return `[LLM error: ${e.message}]`;
@@ -431,6 +441,11 @@ async function main(): Promise<void> {
   log(`Memory dir: ${MEMORY_DIR}`);
   log(`Repo mirror: ${REPO_MEM}`);
 
+  // ── Register with Mission Control ────────────────────────────────────────
+  const mc = createMCClient('memory-agent', 'observer');
+  await mc.connect();
+  try {
+
   // ── 1. Collect all data ─────────────────────────────────────────────────
   log('Collecting data...');
 
@@ -529,6 +544,14 @@ Format: dense markdown bullet points. No fluff. Max 300 words.`,
   log(`  daily-log-${TODAY}.md`);
   if (isNewDay) log(`  daily-continuity.md (refreshed)`);
   if (ltmStale)  log(`  long-term-memory.md (updated)`);
+
+  } finally {
+    // Report accumulated token usage + disconnect from Mission Control
+    if (_mcInputTokens > 0) {
+      await mc.reportTokens('claude-haiku-4-5', _mcInputTokens, _mcOutputTokens, 'memory_run');
+    }
+    await mc.disconnect();
+  }
 }
 
 main().catch((err: unknown) => {

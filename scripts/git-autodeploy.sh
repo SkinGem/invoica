@@ -82,6 +82,13 @@ if echo "$CHANGED" | grep -q "^scripts/heartbeat-daemon\.ts$"; then
   echo "[$TIMESTAMP] [AutoDeploy] heartbeat-daemon.ts changed — will apply on next hourly cron"
 fi
 
+# Mission Control startup wrapper (long-running — restart on script change)
+if echo "$CHANGED" | grep -qE "^scripts/run-mission-control\.sh$"; then
+  echo "[$TIMESTAMP] [AutoDeploy] run-mission-control.sh changed → restarting mission-control"
+  pm2 restart mission-control --update-env || true
+  echo "[$TIMESTAMP] [AutoDeploy] mission-control restarted"
+fi
+
 # ecosystem.config.js: reload PM2 so new/removed processes take effect
 if echo "$CHANGED" | grep -q "^ecosystem\.config\.js$"; then
   echo "[$TIMESTAMP] [AutoDeploy] ecosystem.config.js changed → reloading PM2"
