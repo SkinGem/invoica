@@ -160,7 +160,7 @@
       "agent": "backend-core",
       "type": "feature",
       "priority": "medium",
-      "status": "in_progress",
+      "status": "done",
       "dependencies": [
         "CHAIN-001",
         "CHAIN-005"
@@ -169,14 +169,21 @@
       "context": "Create docs/adr/ADR-003-multi-chain-settlement.md — Architecture Decision Record documenting the multi-chain settlement design.\n\nThis captures the key decisions made in Sprint 10 so future agents have context.\n\nStructure:\n```markdown\n# ADR-003: Multi-Chain Settlement Architecture\n\n**Date**: 2026-03-02  \n**Status**: Accepted  \n**Deciders**: CEO, CTO  \n\n## Context\nInvoica must support Base, Polygon, and Solana by March 28.\nStripe x402 only supports Base (EVM). Solana support = competitive moat.\n\n## Decision\n[Document the settlement-router pattern, why EVM vs Solana abstraction was separated, why raw JSON-RPC was chosen over viem/solana-web3.js]\n\n## Chain Config\n[Document the CHAINS registry, the 3 chains, their USDC addresses]\n\n## Settlement Detection\n### EVM (Base + Polygon)\n[Document eth_getLogs approach]\n### Solana\n[Document getSignaturesForAddress approach, memo program for invoice matching]\n\n## Consequences\n- Adding a new chain = add entry to chain-registry.ts + implement detector\n- Solana requires different address format (base58 vs 0x hex)\n- Invoice table needs `chain` column (see migration CHAIN-006)\n\n## Alternatives Considered\n- viem library: rejected (adds 200KB dependency, raw RPC is sufficient)\n- @solana/web3.js: rejected (ESM-only, causes ts-node issues; raw RPC works)\n- The Graph indexer: future consideration for high-volume settlement detection\n```\n\nMax 150 lines. Write it as a real ADR a developer would find useful.",
       "deliverables": [
         "docs/adr/ADR-003-multi-chain-settlement.md"
-      ]
+      ],
+      "output": {
+        "files": [
+          "filepath: docs/adr/ADR-003-multi-chain-settlement.md"
+        ],
+        "commit": "b777cd3",
+        "model": "MiniMax-M2.5"
+      }
     },
     {
       "id": "CHAIN-009",
       "agent": "backend-core",
       "type": "test",
       "priority": "medium",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         "CHAIN-001",
         "CHAIN-002",
