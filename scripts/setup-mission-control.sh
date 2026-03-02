@@ -122,6 +122,15 @@ echo "[MC] Building Next.js app (this takes ~1-2 minutes)..."
 pnpm build
 echo "[MC] Build complete"
 
+# ── 8b. Copy static assets into standalone dir (required for standalone builds) ─
+# Next.js standalone server.js does NOT serve /_next/static or /public by itself
+if [ -d ".next/standalone" ]; then
+  echo "[MC] Copying static assets to standalone dir..."
+  cp -r .next/static .next/standalone/.next/static
+  cp -r public      .next/standalone/public 2>/dev/null || true
+  echo "[MC] Static assets copied"
+fi
+
 # ── 9. Add MC credentials to Invoica .env so agents can auto-connect ─────────
 if [ -f "$INVOICA_DIR/.env" ]; then
   # Remove any existing MC lines to avoid duplicates
