@@ -68,9 +68,24 @@ if echo "$CHANGED" | grep -q "^ecosystem\.config\.js$"; then
     pm2 delete telegram-bot || true
     echo "[$TIMESTAMP] [AutoDeploy] Deleted retired telegram-bot process"
   fi
-  # Reload ecosystem with updated env vars (starts new processes, updates existing)
-  env $(grep -v '^#' .env | grep -v '^$' | xargs) pm2 reload ecosystem.config.js --update-env
+  # Load .env into a temp file PM2 can consume safely (avoids xargs quoting issues)
+  set -a; source .env; set +a
+  # Start any NEW processes defined in ecosystem that aren't running yet (e.g. ceo-ai-bot)
+  pm2 start ecosystem.config.js --update-env
+  # Reload (graceful restart) all existing processes with updated env
+  pm2 reload ecosystem.config.js --update-env
+  # Persist process list so it survives server reboots
+  pm2 save
   echo "[$TIMESTAMP] [AutoDeploy] PM2 ecosystem reloaded"
+fi
+
+# ── 5. Self-heal: ensure ceo-ai-bot is running (guard against failed pm2 reload) ─
+if ! pm2 list | grep -q "ceo-ai-bot"; then
+  echo "[$TIMESTAMP] [AutoDeploy] ceo-ai-bot not in PM2 list — starting it now"
+  set -a; source .env; set +a
+  pm2 start ecosystem.config.js --only ceo-ai-bot --update-env
+  pm2 save
+  echo "[$TIMESTAMP] [AutoDeploy] ceo-ai-bot started"
 fi
 
 echo "[$TIMESTAMP] [AutoDeploy] ✅ Done — deployed $REMOTE"
