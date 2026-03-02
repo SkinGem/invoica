@@ -3,36 +3,36 @@
     "version": "1.7.0",
     "date": "2026-03-02",
     "changes": [
-      "Mission Control integration for agent ops visibility — agent process monitoring and health dashboards",
-      "Live docs auto-generation system — dynamic documentation generation from system state",
-      "Memory-agent black box institutional memory system — persistent context across agent operations",
-      "Self-healing CEO bot with 5-minute reconciliation cycles — prevents deployment loops and corrects stale state",
-      "Git-autodeploy server self-refresh every 5 minutes from GitHub with crash-loop prevention (port isolation, asset copying)",
-      "Agent autonomy framework — PM2 process isolation, Telegram dead-man's switch alerts, TypeScript gate enforcement on all deployments"
+      "Added multichain x402 expansion framework — standing sprint priority for cross-chain payment support",
+      "Implemented full backend authentication layer (AUTH-003) and SDK enhancements (SDK-200, SDK-060a-e, SDK-061, SDK-062)",
+      "Released chain integration APIs (CHAIN-001, CHAIN-002) for decentralized invoice settlement",
+      "Enhanced core backend with BE-110 improvements for production stability and performance",
+      "Fixed critical bot issues: duplicate post prevention, wallet alert spam reduction, and misleading PM2 status reports",
+      "Strengthened agent autonomy: self-healing cron every 5 min, stale port cleanup, and static asset deployment fixes"
     ]
   },
   {
     "version": "1.6.0",
     "date": "2026-02-28",
     "changes": [
-      "Autonomous post-sprint pipeline — test → CTO review → Vercel deploy triggered automatically after sprints",
-      "x-admin autonomous X posting agent with CEO + CTO review gates before content publication",
-      "Sprint-runner PM2 service — closes execution loop between CEO strategy and live sprints",
-      "CMO weekly content plan generator with Sunday 06:00 UTC cron and CEO approval workflow",
-      "Ledger page in dashboard for company-scoped settlement tracking",
-      "CTO email support monitoring — IMAP/SMTP listener on support@invoica.ai with MiniMax agent responses"
+      "Launched Mission Control integration for unified agent operations visibility with PM2 process management",
+      "Implemented live docs auto-generation system for real-time documentation updates",
+      "Added memory-agent — institutional black box memory system for autonomous agent decision context",
+      "Enabled autonomous post-sprint pipeline: test→CTO review→Vercel deploy with sprint-runner PM2 cron",
+      "Introduced CMO weekly content plan generator (Sunday 06:00 UTC) with CEO approval gate and CTO review",
+      "Fixed infrastructure stability: isolated CEO bot to standalone PM2 process, prevented 4800+ unnecessary backend restarts"
     ]
   },
   {
     "version": "1.5.0",
     "date": "2026-02-27",
     "changes": [
-      "x402 agent wallet spending — agents now spend USDC directly on LLM inference calls with configurable X402_SELLER_WALLET",
-      "CEO bot execution tools — /run_shell, /write_file, /create_github_issue for autonomous sprint management",
-      "Live system context injection into CEO bot — eliminated hallucinations by pre-loading real PM2 state, wallet balances, and health metrics",
-      "Real API keys page with TypeScript SDK build support",
-      "Web3 no-email bypass and mixed content fixes via Next.js rewrites",
-      "Telegram CEO assistant bot with /report, /pm2, /health, /sprint commands for ops visibility"
+      "Activated agent wallet spending with X402 protocol — set X402_SELLER_WALLET env var to enable USDC payments for LLM calls",
+      "Integrated MiniMax-M2.5 model across backend core with improved fallback handling",
+      "Added CEO bot execution tools: run_shell, write_file, create_github_issue, and multi-wallet balance checking",
+      "Implemented Telegram bot integration with /report, /pm2, /health, and /sprint commands for real-time system monitoring",
+      "Fixed recurring CEO bot issues: multi-RPC balance fallback, alert deduplication, and Telegram silence resolution",
+      "Added autonomous x-admin agent for X posting with content calendar and CEO/CTO review gates"
     ]
   },
   {

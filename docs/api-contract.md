@@ -26,40 +26,22 @@ Call AI model (MiniMax or Claude) via x402 USDC payment
 
 ## Api keys
 
-### `POST /v1/api-keys`
-Create a new API key
+### `GET /`
+GET /
 **Auth:** None
 
-### `GET /v1/api-keys`
-List all API keys for the authenticated user
+### `POST /:id/rotate`
+POST /:id/rotate
 **Auth:** None
 
-### `POST /v1/api-keys/:id/revoke`
-Revoke an API key
-**Auth:** None
-
-### `POST /v1/api-keys/:id/rotate`
-Rotate (regenerate) an API key
+### `DELETE /:id`
+DELETE /:id
 **Auth:** None
 
 ## Health
 
 ### `GET /v1/health`
 Health check — returns API status and uptime
-**Auth:** None
-
-## Invoices
-
-### `POST /v1/invoices`
-Create a new invoice
-**Auth:** None
-
-### `GET /v1/invoices/number/:number`
-Get invoice by invoice number
-**Auth:** None
-
-### `GET /v1/invoices/:id`
-Get invoice by UUID
 **Auth:** None
 
 ## Ledger

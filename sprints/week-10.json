@@ -17,7 +17,7 @@
       ]
     },
     "acceptance_criteria": "POST /v1/tax/calculate with buyerCountry=GB, transactionType=B2C, amount=100 returns taxRate=0.20, taxAmount=20",
-    "status": "pending"
+    "status": "in_progress"
   },
   {
     "id": "BUG-009",
@@ -59,7 +59,7 @@
       "files": [],
       "commit": "manual-fix",
       "model": "human+claude",
-      "note": "TypeScript compile error fixed \u2014 run-cto-email-support.ts seen:false fixed, rate-limit.ts brace fixed"
+      "note": "TypeScript compile error fixed — run-cto-email-support.ts seen:false fixed, rate-limit.ts brace fixed"
     }
   },
   {
@@ -82,7 +82,7 @@
       "files": [],
       "commit": "manual-fix",
       "model": "human+claude",
-      "note": "cto-email-support fixed manually \u2014 EACCES resolved, running every 5min"
+      "note": "cto-email-support fixed manually — EACCES resolved, running every 5min"
     }
   },
   {
@@ -91,7 +91,7 @@
     "type": "feature",
     "priority": "critical",
     "dependencies": [],
-    "context": "Create settlement report generator at backend/services/settlement-service.ts. This service generates daily/weekly settlement reports for merchant payouts. Export: (1) interface Settlement { merchant_id: string; period_start: string; period_end: string; total_invoices: number; total_amount: number; currency: string; usdc_amount: number; status: 'pending' | 'processing' | 'completed' | 'failed'; }. (2) async function generateSettlementReport(merchantId: string, startDate: Date, endDate: Date): Promise<Settlement> \u2014 queries invoices table for paid invoices in date range, aggregates totals, converts to USDC using exchange rate, returns Settlement object. (3) async function getSettlementHistory(merchantId: string, limit: number): Promise<Settlement[]> \u2014 fetches recent settlements from settlements table. Use Supabase client from backend/lib/supabase.ts. Keep it under 80 lines.",
+    "context": "Create settlement report generator at backend/services/settlement-service.ts. This service generates daily/weekly settlement reports for merchant payouts. Export: (1) interface Settlement { merchant_id: string; period_start: string; period_end: string; total_invoices: number; total_amount: number; currency: string; usdc_amount: number; status: 'pending' | 'processing' | 'completed' | 'failed'; }. (2) async function generateSettlementReport(merchantId: string, startDate: Date, endDate: Date): Promise<Settlement> — queries invoices table for paid invoices in date range, aggregates totals, converts to USDC using exchange rate, returns Settlement object. (3) async function getSettlementHistory(merchantId: string, limit: number): Promise<Settlement[]> — fetches recent settlements from settlements table. Use Supabase client from backend/lib/supabase.ts. Keep it under 80 lines.",
     "deliverables": {
       "code": [
         "backend/services/settlement-service.ts"
@@ -110,7 +110,7 @@
     "dependencies": [
       "PAY-001"
     ],
-    "context": "Create USDC payment executor at backend/services/payment-executor.ts. This service executes USDC transfers from merchant wallets to Invoica treasury. Export: (1) interface PaymentExecution { settlement_id: string; from_address: string; to_address: string; amount: string; tx_hash?: string; status: 'pending' | 'submitted' | 'confirmed' | 'failed'; error?: string; }. (2) async function executePayment(settlementId: string, fromAddress: string, amount: string): Promise<PaymentExecution> \u2014 validates settlement exists, creates payment record in payments table with status='pending', returns PaymentExecution. DO NOT implement actual blockchain transfer yet (that's PAY-003). (3) async function getPaymentStatus(settlementId: string): Promise<PaymentExecution | null> \u2014 fetches payment record from payments table. Use Supabase client. Keep it under 60 lines.",
+    "context": "Create USDC payment executor at backend/services/payment-executor.ts. This service executes USDC transfers from merchant wallets to Invoica treasury. Export: (1) interface PaymentExecution { settlement_id: string; from_address: string; to_address: string; amount: string; tx_hash?: string; status: 'pending' | 'submitted' | 'confirmed' | 'failed'; error?: string; }. (2) async function executePayment(settlementId: string, fromAddress: string, amount: string): Promise<PaymentExecution> — validates settlement exists, creates payment record in payments table with status='pending', returns PaymentExecution. DO NOT implement actual blockchain transfer yet (that's PAY-003). (3) async function getPaymentStatus(settlementId: string): Promise<PaymentExecution | null> — fetches payment record from payments table. Use Supabase client. Keep it under 60 lines.",
     "deliverables": {
       "code": [
         "backend/services/payment-executor.ts"
@@ -129,7 +129,7 @@
     "dependencies": [
       "PAY-002"
     ],
-    "context": "Add blockchain transfer to payment executor at backend/services/payment-executor.ts. Add new function: async function submitPaymentToChain(paymentId: string): Promise<{ tx_hash: string }> \u2014 fetches payment record, uses ethers.js to submit USDC transfer on Base, updates payment record with tx_hash and status='submitted', returns tx_hash. Import { ethers } from 'ethers'. Use RPC_URL from env. USDC contract on Base: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913. Treasury address: 0x9E0e342e4E2Df813B27F078AD0119eD6c289643f (CEO wallet). DO NOT modify existing functions from PAY-002. Keep addition under 40 lines.",
+    "context": "Add blockchain transfer to payment executor at backend/services/payment-executor.ts. Add new function: async function submitPaymentToChain(paymentId: string): Promise<{ tx_hash: string }> — fetches payment record, uses ethers.js to submit USDC transfer on Base, updates payment record with tx_hash and status='submitted', returns tx_hash. Import { ethers } from 'ethers'. Use RPC_URL from env. USDC contract on Base: 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913. Treasury address: 0x9E0e342e4E2Df813B27F078AD0119eD6c289643f (CEO wallet). DO NOT modify existing functions from PAY-002. Keep addition under 40 lines.",
     "deliverables": {
       "code": [
         "backend/services/payment-executor.ts"
@@ -146,7 +146,7 @@
     "type": "feature",
     "priority": "high",
     "dependencies": [],
-    "context": "Create rate limiter middleware at backend/middleware/rate-limiter.ts. This prevents API abuse. Export: (1) interface RateLimitConfig { windowMs: number; maxRequests: number; keyPrefix: string; }. (2) function createRateLimiter(config: RateLimitConfig): express.RequestHandler \u2014 returns Express middleware that tracks requests per API key using in-memory Map, returns 429 if limit exceeded. Use API key from req.headers.authorization. Store counts as { [key: string]: { count: number; resetAt: number } }. Reset window when resetAt < Date.now(). DO NOT use external rate-limit libraries. Keep it under 50 lines.",
+    "context": "Create rate limiter middleware at backend/middleware/rate-limiter.ts. This prevents API abuse. Export: (1) interface RateLimitConfig { windowMs: number; maxRequests: number; keyPrefix: string; }. (2) function createRateLimiter(config: RateLimitConfig): express.RequestHandler — returns Express middleware that tracks requests per API key using in-memory Map, returns 429 if limit exceeded. Use API key from req.headers.authorization. Store counts as { [key: string]: { count: number; resetAt: number } }. Reset window when resetAt < Date.now(). DO NOT use external rate-limit libraries. Keep it under 50 lines.",
     "deliverables": {
       "code": [
         "backend/middleware/rate-limiter.ts"
@@ -160,7 +160,7 @@
       "files": [],
       "commit": "manual-fix",
       "model": "human+claude",
-      "note": "rate-limit.ts exists and is functional \u2014 syntax bug fixed, middleware operational"
+      "note": "rate-limit.ts exists and is functional — syntax bug fixed, middleware operational"
     }
   },
   {
@@ -169,7 +169,7 @@
     "type": "feature",
     "priority": "high",
     "dependencies": [],
-    "context": "Create API key rotation service at backend/services/api-key-service.ts. Export: (1) interface ApiKey { id: string; user_id: string; key_hash: string; name: string; created_at: string; expires_at?: string; last_used_at?: string; revoked: boolean; }. (2) async function generateApiKey(userId: string, name: string, expiresInDays?: number): Promise<{ key: string; api_key_record: ApiKey }> \u2014 generates random 32-char key with prefix 'inv_', hashes it using crypto.createHash('sha256'), stores hash in api_keys table, returns plaintext key (only time it's visible) and record. (3) async function validateApiKey(key: string): Promise<ApiKey | null> \u2014 hashes key, looks up in api_keys table, checks not revoked and not expired, updates last_used_at, returns record or null. (4) async function revokeApiKey(keyId: string): Promise<void> \u2014 sets revoked=true. Use Supabase client. Keep it under 80 lines.",
+    "context": "Create API key rotation service at backend/services/api-key-service.ts. Export: (1) interface ApiKey { id: string; user_id: string; key_hash: string; name: string; created_at: string; expires_at?: string; last_used_at?: string; revoked: boolean; }. (2) async function generateApiKey(userId: string, name: string, expiresInDays?: number): Promise<{ key: string; api_key_record: ApiKey }> — generates random 32-char key with prefix 'inv_', hashes it using crypto.createHash('sha256'), stores hash in api_keys table, returns plaintext key (only time it's visible) and record. (3) async function validateApiKey(key: string): Promise<ApiKey | null> — hashes key, looks up in api_keys table, checks not revoked and not expired, updates last_used_at, returns record or null. (4) async function revokeApiKey(keyId: string): Promise<void> — sets revoked=true. Use Supabase client. Keep it under 80 lines.",
     "deliverables": {
       "code": [
         "backend/services/api-key-service.ts"

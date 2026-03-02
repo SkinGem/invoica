@@ -18,18 +18,9 @@
     ]
   },
   {
-    "method": "POST",
-    "path": "/v1/api-keys",
-    "description": "Create a new API key",
-    "auth": "None",
-    "tags": [
-      "api keys"
-    ]
-  },
-  {
     "method": "GET",
-    "path": "/v1/api-keys",
-    "description": "List all API keys for the authenticated user",
+    "path": "/",
+    "description": "GET /",
     "auth": "None",
     "tags": [
       "api keys"
@@ -37,17 +28,17 @@
   },
   {
     "method": "POST",
-    "path": "/v1/api-keys/:id/revoke",
-    "description": "Revoke an API key",
+    "path": "/:id/rotate",
+    "description": "POST /:id/rotate",
     "auth": "None",
     "tags": [
       "api keys"
     ]
   },
   {
-    "method": "POST",
-    "path": "/v1/api-keys/:id/rotate",
-    "description": "Rotate (regenerate) an API key",
+    "method": "DELETE",
+    "path": "/:id",
+    "description": "DELETE /:id",
     "auth": "None",
     "tags": [
       "api keys"
@@ -60,33 +51,6 @@
     "auth": "None",
     "tags": [
       "health"
-    ]
-  },
-  {
-    "method": "POST",
-    "path": "/v1/invoices",
-    "description": "Create a new invoice",
-    "auth": "None",
-    "tags": [
-      "invoices"
-    ]
-  },
-  {
-    "method": "GET",
-    "path": "/v1/invoices/number/:number",
-    "description": "Get invoice by invoice number",
-    "auth": "None",
-    "tags": [
-      "invoices"
-    ]
-  },
-  {
-    "method": "GET",
-    "path": "/v1/invoices/:id",
-    "description": "Get invoice by UUID",
-    "auth": "None",
-    "tags": [
-      "invoices"
     ]
   },
   {

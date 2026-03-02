@@ -1,12 +1,12 @@
 {
-  "last_heartbeat": "2026-03-02T11:00:06.869Z",
+  "last_heartbeat": "2026-03-02T12:00:09.177Z",
   "status": "critical",
   "phase": "beta_month_1",
-  "uptime_seconds": 3,
+  "uptime_seconds": 5,
   "checks": {
     "api_status": "operational",
     "database_status": "operational",
-    "edge_function_status": "operational",
+    "edge_function_status": "down",
     "dashboard_status": "operational",
     "website_status": "operational"
   },
@@ -21,17 +21,17 @@
         "name": "mission-control",
         "status": "online",
         "restarts": 2,
-        "uptimeMs": 2835195,
+        "uptimeMs": 6437521,
         "pid": 953195,
-        "memory": 119574528,
+        "memory": 121954304,
         "cpu": 0.2
       },
       {
         "name": "backend",
         "status": "online",
-        "restarts": 184,
-        "uptimeMs": 18570,
-        "pid": 989725,
+        "restarts": 491,
+        "uptimeMs": 11985,
+        "pid": 1020599,
         "memory": 3932160,
         "cpu": 0
       },
@@ -39,7 +39,7 @@
         "name": "openclaw-gateway",
         "status": "online",
         "restarts": 58,
-        "uptimeMs": 2063542,
+        "uptimeMs": 5665868,
         "pid": 964055,
         "memory": 57065472,
         "cpu": 0
@@ -66,19 +66,19 @@
         "name": "heartbeat",
         "status": "online",
         "restarts": 0,
-        "uptimeMs": 6842,
-        "pid": 989765,
-        "memory": 139169792,
-        "cpu": 7.7
+        "uptimeMs": 9168,
+        "pid": 1020621,
+        "memory": 137338880,
+        "cpu": 3.9
       },
       {
         "name": "x-admin-post",
-        "status": "online",
+        "status": "stopped",
         "restarts": 0,
-        "uptimeMs": 6841,
-        "pid": 989767,
-        "memory": 124608512,
-        "cpu": 5.8
+        "uptimeMs": null,
+        "pid": 0,
+        "memory": 0,
+        "cpu": 0
       },
       {
         "name": "cmo-daily-watch",
@@ -118,12 +118,12 @@
       },
       {
         "name": "ceo-review",
-        "status": "stopped",
+        "status": "online",
         "restarts": 0,
-        "uptimeMs": null,
-        "pid": 0,
-        "memory": 0,
-        "cpu": 0
+        "uptimeMs": 9169,
+        "pid": 1020620,
+        "memory": 117460992,
+        "cpu": 1.6
       },
       {
         "name": "cfo-weekly",
@@ -137,10 +137,10 @@
       {
         "name": "ceo-ai-bot",
         "status": "online",
-        "restarts": 1,
-        "uptimeMs": 127741,
-        "pid": 989186,
-        "memory": 131543040,
+        "restarts": 2,
+        "uptimeMs": 3015141,
+        "pid": 993323,
+        "memory": 146980864,
         "cpu": 0
       },
       {
@@ -165,19 +165,19 @@
         "name": "sprint-runner",
         "status": "online",
         "restarts": 0,
-        "uptimeMs": 6841,
-        "pid": 989779,
-        "memory": 114774016,
-        "cpu": 2.6
+        "uptimeMs": 9166,
+        "pid": 1020643,
+        "memory": 115392512,
+        "cpu": 0.8
       },
       {
         "name": "memory-agent",
         "status": "online",
         "restarts": 0,
-        "uptimeMs": 6836,
-        "pid": 989816,
-        "memory": 127578112,
-        "cpu": 9.3
+        "uptimeMs": 9166,
+        "pid": 1020623,
+        "memory": 129236992,
+        "cpu": 5.2
       },
       {
         "name": "docs-generator",

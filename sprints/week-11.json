@@ -98,6 +98,14 @@
       ]
     },
     "acceptance_criteria": "ApiKeyRotationService class exported with rotateKey, revokeKey, listKeys methods. Route file exports router with 3 endpoints.",
-    "status": "in_progress"
+    "status": "done",
+    "output": {
+      "files": [
+        "backend/src/services/api-key-rotation.ts",
+        "backend/src/routes/api-keys.ts"
+      ],
+      "commit": "eba87fc",
+      "model": "MiniMax-M2.5"
+    }
   }
 ]
