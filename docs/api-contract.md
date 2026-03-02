@@ -1,28 +1,109 @@
-# API Contract
+# Invoica API Contract
 
-## Invoice API
+*Auto-generated 2026-03-02 from backend/src/routes/*
 
-### POST /api/invoices
-Create a new invoice.
+## Base URL
+```
+https://invoica.wp1.host/v1
+```
 
-Request: { amount, currency, buyer: { companyName, address, vat, email }, seller: { name, address, vat, wallet } }
-Response: { id, invoiceNumber, status, total }
+## Authentication
 
-### GET /api/invoices/:id
-Get invoice by ID.
+| Method | Header | Required for |
+|--------|--------|-------------|
+| API Key | `X-API-Key: your-key` | Ledger endpoints |
+| x402 Payment | `X-Payment: base64(EIP-3009 proof)` | AI inference |
 
-### GET /api/invoices
-List invoices with filters: status, startDate, endDate, agentId
+## Ai inference
 
-## Tax API
+### `GET /v1/ai/inference`
+Get x402 payment requirements for AI inference
+**Auth:** None
 
-### POST /api/tax/calculate
-Calculate tax for a transaction.
+### `POST /v1/ai/inference`
+Call AI model (MiniMax or Claude) via x402 USDC payment
+**Auth:** x402 Payment (X-Payment header, USDC on Base)
 
-## Budget API
+## Api keys
 
-### POST /api/budget/check
-Check if agent can spend amount.
+### `POST /v1/api-keys`
+Create a new API key
+**Auth:** None
 
-### GET /api/budget/:agentId
-Get agent budget status.
+### `GET /v1/api-keys`
+List all API keys for the authenticated user
+**Auth:** None
+
+### `POST /v1/api-keys/:id/revoke`
+Revoke an API key
+**Auth:** None
+
+### `POST /v1/api-keys/:id/rotate`
+Rotate (regenerate) an API key
+**Auth:** None
+
+## Health
+
+### `GET /v1/health`
+Health check — returns API status and uptime
+**Auth:** None
+
+## Invoices
+
+### `POST /v1/invoices`
+Create a new invoice
+**Auth:** None
+
+### `GET /v1/invoices/number/:number`
+Get invoice by invoice number
+**Auth:** None
+
+### `GET /v1/invoices/:id`
+Get invoice by UUID
+**Auth:** None
+
+## Ledger
+
+### `POST /v1/ledger/send-verification`
+Send email verification for ledger access
+**Auth:** None
+
+### `POST /v1/ledger/confirm-verification`
+Confirm email verification code
+**Auth:** None
+
+### `GET /v1/ledger`
+Get ledger transactions (requires API key)
+**Auth:** API Key (X-API-Key header)
+
+### `GET /v1/ledger/summary`
+Get ledger summary statistics (requires API key)
+**Auth:** API Key (X-API-Key header)
+
+### `GET /v1/ledger/export.csv`
+Export ledger as CSV (requires API key)
+**Auth:** API Key (X-API-Key header)
+
+## Settlements
+
+### `GET /v1/settlements/:id`
+Get settlement details by ID
+**Auth:** None
+
+### `GET /v1/settlements`
+List all settlements (paid/completed invoices)
+**Auth:** None
+
+## Webhooks
+
+### `POST /v1/webhooks`
+Register a new webhook endpoint
+**Auth:** None
+
+### `GET /v1/webhooks`
+List all registered webhooks
+**Auth:** None
+
+### `DELETE /v1/webhooks/:id`
+Delete a webhook
+**Auth:** None

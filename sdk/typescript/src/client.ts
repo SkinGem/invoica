@@ -1,99 +1,133 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import {
-  Invoice,
-  InvoiceCreateInput,
-  Settlement,
-  SettlementListResponse,
-  InvoiceListResponse,
-  ApiKey,
-  ApiKeyCreateResponse,
-  WebhookRegistrationConfig,
-  WebhookRegistration,
-  WebhookListResponse,
-} from './types';
+import { ApiKey, CreateApiKeyParams, ApiKeyListResponse, Invoice, CreateInvoiceParams, Settlement, InvoiceListParams, InvoiceListResponse, SettlementListParams, SettlementListResponse } from './types';
+
+interface RequestOptions {
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  path: string;
+  body?: Record<string, unknown>;
+  params?: Record<string, string | number | boolean>;
+}
 
 export class InvoicaClient {
-  private readonly client: AxiosInstance;
+  private readonly baseUrl: string;
+  private readonly apiKey: string;
 
-  constructor(private readonly config: { baseUrl: string; apiKey: string }) {
-    this.client = axios.create({
-      baseURL: config.baseUrl,
-      headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
-        'Content-Type': 'application/json',
-      },
+  constructor(baseUrl: string, apiKey: string) {
+    this.baseUrl = baseUrl;
+    this.apiKey = apiKey;
+  }
+
+  /**
+   * Make an authenticated request to the API
+   */
+  private async request<T>(options: RequestOptions): Promise<T> {
+    const url = new URL(`${this.baseUrl}${options.path}`);
+    
+    if (options.params) {
+      Object.entries(options.params).forEach(([key, value]) => {
+        url.searchParams.append(key, String(value));
+      });
+    }
+
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${this.apiKey}`,
+      'Content-Type': 'application/json',
+    };
+
+    const response = await fetch(url.toString(), {
+      method: options.method,
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Request failed' }));
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Get a single invoice by ID
+   */
+  async getInvoice(id: string): Promise<Invoice> {
+    return this.request<Invoice>({
+      method: 'GET',
+      path: `/invoices/${id}`,
     });
   }
 
-  private async request<T>(method: string, url: string, data?: unknown): Promise<T> {
-    const config: AxiosRequestConfig = {
-      method,
-      url,
-      ...(data && { data }),
-    };
-
-    try {
-      const response = await this.client.request<T>(config);
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        const message = error.response?.data?.message || error.message;
-        throw new Error(`Invoica API Error: ${message}`);
-      }
-      throw error;
-    }
+  /**
+   * Create a new invoice
+   */
+  async createInvoice(params: CreateInvoiceParams): Promise<Invoice> {
+    return this.request<Invoice>({
+      method: 'POST',
+      path: '/invoices',
+      body: params,
+    });
   }
 
-  async getInvoice(id: string): Promise<Invoice> {
-    return this.request<Invoice>('GET', `/invoices/${id}`);
-  }
-
-  async createInvoice(input: InvoiceCreateInput): Promise<Invoice> {
-    return this.request<Invoice>('POST', '/invoices', input);
-  }
-
+  /**
+   * Get a single settlement by ID
+   */
   async getSettlement(id: string): Promise<Settlement> {
-    return this.request<Settlement>('GET', `/settlements/${id}`);
+    return this.request<Settlement>({
+      method: 'GET',
+      path: `/settlements/${id}`,
+    });
   }
 
-  async listSettlements(params?: { limit?: number; offset?: number }): Promise<SettlementListResponse> {
-    const query = new URLSearchParams();
-    if (params?.limit) query.append('limit', String(params.limit));
-    if (params?.offset) query.append('offset', String(params.offset));
-    const queryString = query.toString();
-    return this.request<SettlementListResponse>('GET', `/settlements${queryString ? `?${queryString}` : ''}`);
+  /**
+   * List settlements with optional filters
+   */
+  async listSettlements(params?: SettlementListParams): Promise<SettlementListResponse> {
+    return this.request<SettlementListResponse>({
+      method: 'GET',
+      path: '/settlements',
+      params: params as Record<string, string | number | boolean>,
+    });
   }
 
-  async listInvoices(params?: { limit?: number; offset?: number; status?: string }): Promise<InvoiceListResponse> {
-    const query = new URLSearchParams();
-    if (params?.limit) query.append('limit', String(params.limit));
-    if (params?.offset) query.append('offset', String(params.offset));
-    if (params?.status) query.append('status', params.status);
-    const queryString = query.toString();
-    return this.request<InvoiceListResponse>('GET', `/invoices${queryString ? `?${queryString}` : ''}`);
+  /**
+   * List invoices with optional filters
+   */
+  async listInvoices(params?: InvoiceListParams): Promise<InvoiceListResponse> {
+    return this.request<InvoiceListResponse>({
+      method: 'GET',
+      path: '/invoices',
+      params: params as Record<string, string | number | boolean>,
+    });
   }
 
-  async createApiKey(name: string): Promise<ApiKeyCreateResponse> {
-    return this.request<ApiKeyCreateResponse>('POST', '/api-keys', { name });
+  /**
+   * Create a new API key
+   */
+  async createApiKey(params: CreateApiKeyParams): Promise<ApiKey> {
+    return this.request<ApiKey>({
+      method: 'POST',
+      path: '/api-keys',
+      body: params,
+    });
   }
 
+  /**
+   * Revoke an API key by ID
+   */
   async revokeApiKey(id: string): Promise<void> {
-    return this.request<void>('DELETE', `/api-keys/${id}`);
+    return this.request<void>({
+      method: 'DELETE',
+      path: `/api-keys/${id}`,
+    });
   }
 
-  async listApiKeys(): Promise<ApiKey[]> {
-    return this.request<ApiKey[]>('GET', '/api-keys');
-  }
-
-  async registerWebhook(config: WebhookRegistrationConfig): Promise<WebhookRegistration> {
-    return this.request<WebhookRegistration>('POST', '/webhooks', config);
-  }
-
-  async listWebhooks(): Promise<WebhookListResponse> {
-    return this.request<WebhookListResponse>('GET', '/webhooks');
-  }
-
-  async deleteWebhook(id: string): Promise<void> {
-    return this.request<void>('DELETE', `/webhooks/${id}`);
+  /**
+   * List all API keys
+   */
+  async listApiKeys(): Promise<ApiKeyListResponse> {
+    return this.request<ApiKeyListResponse>({
+      method: 'GET',
+      path: '/api-keys',
+    });
   }
 }

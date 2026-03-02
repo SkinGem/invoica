@@ -1,0 +1,61 @@
+# Changelog
+
+All notable changes to Invoica are documented here.
+
+## [1.7.0] — 2026-03-02
+
+- Mission Control integration for agent ops visibility — agent process monitoring and health dashboards
+- Live docs auto-generation system — dynamic documentation generation from system state
+- Memory-agent black box institutional memory system — persistent context across agent operations
+- Self-healing CEO bot with 5-minute reconciliation cycles — prevents deployment loops and corrects stale state
+- Git-autodeploy server self-refresh every 5 minutes from GitHub with crash-loop prevention (port isolation, asset copying)
+- Agent autonomy framework — PM2 process isolation, Telegram dead-man's switch alerts, TypeScript gate enforcement on all deployments
+
+## [1.6.0] — 2026-02-28
+
+- Autonomous post-sprint pipeline — test → CTO review → Vercel deploy triggered automatically after sprints
+- x-admin autonomous X posting agent with CEO + CTO review gates before content publication
+- Sprint-runner PM2 service — closes execution loop between CEO strategy and live sprints
+- CMO weekly content plan generator with Sunday 06:00 UTC cron and CEO approval workflow
+- Ledger page in dashboard for company-scoped settlement tracking
+- CTO email support monitoring — IMAP/SMTP listener on support@invoica.ai with MiniMax agent responses
+
+## [1.5.0] — 2026-02-27
+
+- x402 agent wallet spending — agents now spend USDC directly on LLM inference calls with configurable X402_SELLER_WALLET
+- CEO bot execution tools — /run_shell, /write_file, /create_github_issue for autonomous sprint management
+- Live system context injection into CEO bot — eliminated hallucinations by pre-loading real PM2 state, wallet balances, and health metrics
+- Real API keys page with TypeScript SDK build support
+- Web3 no-email bypass and mixed content fixes via Next.js rewrites
+- Telegram CEO assistant bot with /report, /pm2, /health, /sprint commands for ops visibility
+
+## [1.4.0] — 2026-02-20
+
+- New Web3 Growth plan at $24/mo with 5,000 invoices and 25,000 API calls
+- Web3 projects see tailored pricing during onboarding
+- Registered companies see Free + Pro ($49) + Enterprise tiers
+- Added Plans & Pricing documentation page
+
+## [1.3.0] — 2026-02-16
+
+- Added backend API routes for invoices, API keys, webhooks, and settlements
+- Added Express app entry point with middleware stack
+- Completed SDK test coverage for retry, debug, and client-config modules
+
+## [1.2.0] — 2026-02-15
+
+- Fixed SDK import chain — all modules now use v2 transport and error handling
+- Added SDK tests for pagination, events, and timeout modules
+- New documentation pages: error handling, environments, quickstart
+
+## [1.1.0] — 2026-02-14
+
+- SDK consolidation — barrel exports, interceptors, environment detection
+- New tests for rate-limit, error-compat, and request-builder
+- Added webhook events and quickstart documentation
+
+## [1.0.0] — 2026-02-13
+
+- Initial release of Invoica TypeScript SDK
+- Core client with invoice, settlement, and API key management
+- Webhook signature verification and rate limiting
