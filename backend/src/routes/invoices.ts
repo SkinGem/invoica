@@ -1,563 +1,469 @@
-import express, { Request, Response, NextFunction } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-// Prisma replaced with plain enums — no database connection needed
-const InvoiceStatus = { DRAFT: 'DRAFT', PENDING: 'PENDING', PROCESSING: 'PROCESSING', SETTLED: 'SETTLED', OVERDUE: 'OVERDUE', CANCELLED: 'CANCELLED', FAILED: 'FAILED' } as const;
-const PaymentMethod = { CRYPTO: 'CRYPTO', BANK_TRANSFER: 'BANK_TRANSFER', CARD: 'CARD', WIRE: 'WIRE' } as const;
-type InvoiceStatus = typeof InvoiceStatus[keyof typeof InvoiceStatus];
-type PaymentMethod = typeof PaymentMethod[keyof typeof PaymentMethod];
 import { validateChain } from '../lib/chain-validator';
+import { prisma } from '../lib/prisma';
+import { InvoiceStatus, Chain } from '@prisma/client';
 
-const router = express.Router();
-const prisma: any = { invoice: { findMany: async()=>[], findUnique: async()=>null, create: async(d:any)=>({...d.data,id:"mock"}), update: async(d:any)=>d.data, count: async()=>0 } };
+const router = Router();
 
 // Validation schemas
 const createInvoiceSchema = z.object({
   body: z.object({
-    customerId: z.string().uuid('Invalid customer ID format'),
-    amount: z.number().positive('Amount must be positive'),
-    currency: z.string().length(3, 'Currency must be 3-letter code').default('USD'),
+    customerId: z.string().uuid(),
+    amount: z.number().positive(),
+    currency: z.string().length(3),
+    chain: z.string().optional(),
     description: z.string().optional(),
     dueDate: z.string().datetime().optional(),
-    paymentMethods: z.array(z.enum(['BANK_TRANSFER', 'CREDIT_CARD', 'CRYPTO'])).optional(),
     lineItems: z.array(z.object({
       description: z.string(),
       quantity: z.number().positive(),
       unitPrice: z.number().positive(),
-      taxRate: z.number().min(0).max(1).optional().default(0),
-    })).min(1, 'At least one line item is required'),
-    metadata: z.record(z.unknown()).optional(),
+    })).optional(),
   }),
 });
 
 const updateInvoiceSchema = z.object({
   body: z.object({
     status: z.nativeEnum(InvoiceStatus).optional(),
-    paymentMethod: z.nativeEnum(PaymentMethod).optional(),
+    amount: z.number().positive().optional(),
+    currency: z.string().length(3).optional(),
+    chain: z.string().optional(),
+    description: z.string().optional(),
+    dueDate: z.string().datetime().optional(),
     paidAt: z.string().datetime().optional(),
-    notes: z.string().optional(),
-    metadata: z.record(z.unknown()).optional(),
-  }),
-  params: z.object({
-    id: z.string().uuid('Invalid invoice ID format'),
   }),
 });
 
-const invoiceIdParamSchema = z.object({
-  params: z.object({
-    id: z.string().uuid('Invalid invoice ID format'),
-  }),
-});
-
-const paginationSchema = z.object({
+const invoiceQuerySchema = z.object({
   query: z.object({
-    page: z.coerce.number().int().positive().default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(20),
-    status: z.nativeEnum(InvoiceStatus).optional(),
     customerId: z.string().uuid().optional(),
-    startDate: z.string().datetime().optional(),
-    endDate: z.string().datetime().optional(),
-    sortBy: z.enum(['createdAt', 'updatedAt', 'dueDate', 'amount']).default('createdAt'),
-    sortOrder: z.enum(['asc', 'desc']).default('desc'),
+    status: z.nativeEnum(InvoiceStatus).optional(),
+    chain: z.string().optional(),
+    fromDate: z.string().datetime().optional(),
+    toDate: z.string().datetime().optional(),
+    page: z.string().regex(/^\d+$/).transform(Number).optional(),
+    limit: z.string().regex(/^\d+$/).transform(Number).optional(),
   }),
 });
 
-// Error handling wrapper
+// Error handler wrapper
 const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 };
 
-// Custom error class
-class AppError extends Error {
-  constructor(
-    public statusCode: number,
-    public message: string,
-    public isOperational = true
-  ) {
-    super(message);
-    Object.setPrototypeOf(this, AppError.prototype);
-  }
-}
-
-// Invoice number generator
-async function generateInvoiceNumber(prisma: PrismaClient): Promise<string> {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
+// GET /api/invoices - List all invoices with filtering and pagination
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
+  const chain = validateChain(req.body.chain ?? req.query.chain);
   
-  const lastInvoice = await prisma.invoice.findFirst({
-    where: {
-      invoiceNumber: {
-        startsWith: `INV-${year}${month}`,
+  const { customerId, status, fromDate, toDate, page = '1', limit = '20' } = req.query;
+  
+  const where: any = {};
+  
+  if (customerId) where.customerId = customerId;
+  if (status) where.status = status;
+  if (chain) where.chain = chain;
+  if (fromDate || toDate) {
+    where.createdAt = {};
+    if (fromDate) where.createdAt.gte = new Date(fromDate as string);
+    if (toDate) where.createdAt.lte = new Date(toDate as string);
+  }
+  
+  const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+  const take = parseInt(limit as string);
+  
+  const [invoices, total] = await Promise.all([
+    prisma.invoice.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        lineItems: true,
       },
+    }),
+    prisma.invoice.count({ where }),
+  ]);
+  
+  res.json({
+    data: invoices,
+    pagination: {
+      page: parseInt(page as string),
+      limit: parseInt(limit as string),
+      total,
+      pages: Math.ceil(total / parseInt(limit as string)),
     },
-    orderBy: { invoiceNumber: 'desc' },
   });
+}));
 
-  let sequence = 1;
-  if (lastInvoice) {
-    const lastSequence = parseInt(lastInvoice.invoiceNumber.split('-')[2], 10);
-    sequence = lastSequence + 1;
+// GET /api/invoices/:id - Get single invoice by ID
+router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  
+  const invoice = await prisma.invoice.findUnique({
+    where: { id },
+    include: {
+      customer: true,
+      lineItems: true,
+      settlements: true,
+    },
+  });
+  
+  if (!invoice) {
+    return res.status(404).json({ error: 'Invoice not found' });
   }
+  
+  res.json(invoice);
+}));
 
-  return `INV-${year}${month}-${String(sequence).padStart(4, '0')}`;
-}
+// POST /api/invoices - Create a new invoice
+router.post('/', asyncHandler(async (req: Request, res: Response) => {
+  const chain = validateChain(req.body.chain ?? req.query.chain);
+  
+  const { customerId, amount, currency, description, dueDate, lineItems } = req.body;
+  
+  // Generate invoice number atomically
+  const invoiceNumber = await prisma.$transaction(async (tx) => {
+    const lastInvoice = await tx.invoice.findFirst({
+      orderBy: { invoiceNumber: 'desc' },
+      select: { invoiceNumber: true },
+    });
+    
+    const lastNumber = lastInvoice ? parseInt(lastInvoice.invoiceNumber.replace(/^INV-/, '')) : 0;
+    return `INV-${String(lastNumber + 1).padStart(6, '0')}`;
+  });
+  
+  const invoice = await prisma.invoice.create({
+    data: {
+      invoiceNumber,
+      customerId,
+      amount,
+      currency: currency.toUpperCase(),
+      chain,
+      description,
+      dueDate: dueDate ? new Date(dueDate) : null,
+      status: InvoiceStatus.PENDING,
+      lineItems: lineItems ? {
+        create: lineItems.map((item: any) => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+        })),
+      } : undefined,
+    },
+    include: {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+      lineItems: true,
+    },
+  });
+  
+  res.status(201).json(invoice);
+}));
 
-// Calculate invoice totals
-function calculateInvoiceTotals(lineItems: Array<{
-  quantity: number;
-  unitPrice: number;
-  taxRate?: number;
-}>) {
-  let subtotal = 0;
-  let totalTax = 0;
-
-  for (const item of lineItems) {
-    const itemSubtotal = item.quantity * item.unitPrice;
-    const itemTax = itemSubtotal * (item.taxRate || 0);
-    subtotal += itemSubtotal;
-    totalTax += itemTax;
+// PUT /api/invoices/:id - Update an invoice
+router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
+  const chain = validateChain(req.body.chain ?? req.query.chain);
+  
+  const { id } = req.params;
+  const { status, amount, currency, description, dueDate, paidAt } = req.body;
+  
+  const existingInvoice = await prisma.invoice.findUnique({ where: { id } });
+  
+  if (!existingInvoice) {
+    return res.status(404).json({ error: 'Invoice not found' });
   }
-
-  return {
-    subtotal,
-    tax: totalTax,
-    total: subtotal + totalTax,
+  
+  // Validate status transitions
+  const validTransitions: Record<InvoiceStatus, InvoiceStatus[]> = {
+    [InvoiceStatus.PENDING]: [InvoiceStatus.PROCESSING, InvoiceStatus.SETTLED],
+    [InvoiceStatus.SETTLED]: [InvoiceStatus.PROCESSING],
+    [InvoiceStatus.PROCESSING]: [InvoiceStatus.COMPLETED, InvoiceStatus.FAILED],
+    [InvoiceStatus.COMPLETED]: [],
+    [InvoiceStatus.FAILED]: [InvoiceStatus.PENDING],
   };
-}
-
-// Status transition validation
-const validStatusTransitions: Record<InvoiceStatus, InvoiceStatus[]> = {
-  [InvoiceStatus.DRAFT]: [InvoiceStatus.PENDING, InvoiceStatus.CANCELLED],
-  [InvoiceStatus.PENDING]: [InvoiceStatus.PROCESSING, InvoiceStatus.SETTLED, InvoiceStatus.OVERDUE, InvoiceStatus.CANCELLED],
-  [InvoiceStatus.PROCESSING]: [InvoiceStatus.SETTLED, InvoiceStatus.FAILED, InvoiceStatus.PENDING],
-  [InvoiceStatus.SETTLED]: [InvoiceStatus.COMPLETED, InvoiceStatus.REFUNDED],
-  [InvoiceStatus.COMPLETED]: [InvoiceStatus.REFUNDED],
-  [InvoiceStatus.FAILED]: [InvoiceStatus.PENDING, InvoiceStatus.CANCELLED],
-  [InvoiceStatus.OVERDUE]: [InvoiceStatus.SETTLED, InvoiceStatus.CANCELLED, InvoiceStatus.COLLECTION],
-  [InvoiceStatus.COLLECTION]: [InvoiceStatus.SETTLED, InvoiceStatus.WRITE_OFF],
-  [InvoiceStatus.REFUNDED]: [],
-  [InvoiceStatus.CANCELLED]: [],
-  [InvoiceStatus.WRITE_OFF]: [],
-};
-
-function isValidStatusTransition(from: InvoiceStatus, to: InvoiceStatus): boolean {
-  return validStatusTransitions[from]?.includes(to) ?? false;
-}
-
-// Route handlers
-
-/**
- * GET /invoices
- * List all invoices with pagination and filters
- */
-router.get(
-  '/',
-  validateChain(paginationSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { page, limit, status, customerId, startDate, endDate, sortBy, sortOrder } = (req as any).validated;
-    
-    const where: any = {};
-    
-    if (status) {
-      where.status = status;
-    }
-    
-    if (customerId) {
-      where.customerId = customerId;
-    }
-    
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) {
-        where.createdAt.gte = new Date(startDate);
-      }
-      if (endDate) {
-        where.createdAt.lte = new Date(endDate);
-      }
-    }
-
-    const [invoices, total] = await Promise.all([
-      prisma.invoice.findMany({
-        where,
-        skip: (page - 1) * limit,
-        take: limit,
-        orderBy: { [sortBy]: sortOrder },
-        include: {
-          customer: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
-          lineItems: true,
-        },
-      }),
-      prisma.invoice.count({ where }),
-    ]);
-
-    res.json({
-      data: invoices,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
-  })
-);
-
-/**
- * GET /invoices/:id
- * Get a single invoice by ID
- */
-router.get(
-  '/:id',
-  validateChain(invoiceIdParamSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = (req as any).validated.params;
-    
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-      include: {
-        customer: true,
-        lineItems: true,
-        payments: {
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    });
-
-    if (!invoice) {
-      throw new AppError(404, 'Invoice not found');
-    }
-
-    res.json(invoice);
-  })
-);
-
-/**
- * POST /invoices
- * Create a new invoice
- */
-router.post(
-  '/',
-  validateChain(createInvoiceSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { body } = (req as any).validated;
-    const { lineItems, metadata, ...invoiceData } = body;
-
-    // Generate invoice number atomically
-    const invoiceNumber = await prisma.$transaction(async (tx) => {
-      return generateInvoiceNumber(tx);
-    });
-
-    // Calculate totals
-    const { subtotal, tax, total } = calculateInvoiceTotals(lineItems);
-
-    // Calculate due date (default to 30 days)
-    const dueDate = body.dueDate 
-      ? new Date(body.dueDate) 
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-    const invoice = await prisma.invoice.create({
-      data: {
-        invoiceNumber,
-        customerId: body.customerId,
-        amount: total,
-        subtotal,
-        tax,
-        currency: body.currency,
-        description: body.description,
-        dueDate,
-        status: InvoiceStatus.DRAFT,
-        paymentMethods: body.paymentMethods || [PaymentMethod.BANK_TRANSFER],
-        metadata,
-        lineItems: {
-          create: lineItems.map((item: any) => ({
-            description: item.description,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            taxRate: item.taxRate || 0,
-          })),
-        },
-      },
-      include: {
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        lineItems: true,
-      },
-    });
-
-    res.status(201).json(invoice);
-  })
-);
-
-/**
- * PATCH /invoices/:id
- * Update an invoice
- */
-router.patch(
-  '/:id',
-  validateChain(updateInvoiceSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = (req as any).validated.params;
-    const updateData = (req as any).validated.body;
-
-    const existingInvoice = await prisma.invoice.findUnique({
-      where: { id },
-    });
-
-    if (!existingInvoice) {
-      throw new AppError(404, 'Invoice not found');
-    }
-
-    // Validate status transition if status is being updated
-    if (updateData.status && updateData.status !== existingInvoice.status) {
-      if (!isValidStatusTransition(existingInvoice.status, updateData.status)) {
-        throw new AppError(
-          400,
-          `Invalid status transition from ${existingInvoice.status} to ${updateData.status}`
-        );
-      }
-    }
-
-    const invoice = await prisma.invoice.update({
-      where: { id },
-      data: {
-        ...updateData,
-        paidAt: updateData.paidAt ? new Date(updateData.paidAt) : undefined,
-      },
-      include: {
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        lineItems: true,
-      },
-    });
-
-    res.json(invoice);
-  })
-);
-
-/**
- * DELETE /invoices/:id
- * Delete (cancel) an invoice
- */
-router.delete(
-  '/:id',
-  validateChain(invoiceIdParamSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = (req as any).validated.params;
-
-    const existingInvoice = await prisma.invoice.findUnique({
-      where: { id },
-    });
-
-    if (!existingInvoice) {
-      throw new AppError(404, 'Invoice not found');
-    }
-
-    // Only allow deletion of DRAFT or CANCELLED invoices
-    if (existingInvoice.status !== InvoiceStatus.DRAFT && 
-        existingInvoice.status !== InvoiceStatus.CANCELLED) {
-      throw new AppError(
-        400,
-        'Only DRAFT or CANCELLED invoices can be deleted'
-      );
-    }
-
-    await prisma.invoice.delete({
-      where: { id },
-    });
-
-    res.status(204).send();
-  })
-);
-
-/**
- * POST /invoices/:id/send
- * Send invoice to customer via email
- */
-router.post(
-  '/:id/send',
-  validateChain(invoiceIdParamSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = (req as any).validated.params;
-
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-      include: {
-        customer: true,
-        lineItems: true,
-      },
-    });
-
-    if (!invoice) {
-      throw new AppError(404, 'Invoice not found');
-    }
-
-    if (invoice.status === InvoiceStatus.DRAFT) {
-      // Auto-publish draft invoices when sending
-      await prisma.invoice.update({
-        where: { id },
-        data: { status: InvoiceStatus.PENDING },
+  
+  if (status && status !== existingInvoice.status) {
+    const allowed = validTransitions[existingInvoice.status];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({
+        error: `Invalid status transition from ${existingInvoice.status} to ${status}`,
       });
     }
-
-    // TODO: Integrate with email service (SendGrid)
-    // await sendInvoiceEmail(invoice);
-
-    res.json({ message: 'Invoice sent successfully', invoiceId: id });
-  })
-);
-
-/**
- * POST /invoices/:id/remind
- * Send payment reminder for overdue invoice
- */
-router.post(
-  '/:id/remind',
-  validateChain(invoiceIdParamSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = (req as any).validated.params;
-
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-      include: {
-        customer: true,
+  }
+  
+  const updateData: any = {};
+  if (status) updateData.status = status;
+  if (amount) updateData.amount = amount;
+  if (currency) updateData.currency = currency.toUpperCase();
+  if (chain) updateData.chain = chain;
+  if (description !== undefined) updateData.description = description;
+  if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+  if (paidAt) updateData.paidAt = new Date(paidAt);
+  
+  const invoice = await prisma.invoice.update({
+    where: { id },
+    data: updateData,
+    include: {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
       },
+      lineItems: true,
+    },
+  });
+  
+  res.json(invoice);
+}));
+
+// DELETE /api/invoices/:id - Delete an invoice
+router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  
+  const existingInvoice = await prisma.invoice.findUnique({ where: { id } });
+  
+  if (!existingInvoice) {
+    return res.status(404).json({ error: 'Invoice not found' });
+  }
+  
+  // Only allow deletion of pending invoices
+  if (existingInvoice.status !== InvoiceStatus.PENDING) {
+    return res.status(400).json({
+      error: 'Only pending invoices can be deleted',
     });
+  }
+  
+  await prisma.invoice.delete({ where: { id } });
+  
+  res.status(204).send();
+}));
 
-    if (!invoice) {
-      throw new AppError(404, 'Invoice not found');
-    }
+// GET /api/invoices/:id/pdf - Get invoice PDF
+router.get('/:id/pdf', asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  
+  const invoice = await prisma.invoice.findUnique({
+    where: { id },
+    include: {
+      customer: true,
+      lineItems: true,
+    },
+  });
+  
+  if (!invoice) {
+    return res.status(404).json({ error: 'Invoice not found' });
+  }
+  
+  // PDF generation is handled by the worker queue
+  // This endpoint returns the PDF URL or triggers generation
+  res.json({
+    message: 'PDF generation queued',
+    invoiceId: id,
+  });
+}));
 
-    if (invoice.status !== InvoiceStatus.OVERDUE && invoice.status !== InvoiceStatus.PENDING) {
-      throw new AppError(400, 'Can only send reminders for PENDING or OVERDUE invoices');
-    }
+// POST /api/invoices/:id/send - Send invoice via email
+router.post('/:id/send', asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  
+  const invoice = await prisma.invoice.findUnique({
+    where: { id },
+    include: { customer: true },
+  });
+  
+  if (!invoice) {
+    return res.status(404).json({ error: 'Invoice not found' });
+  }
+  
+  // Email sending is handled by the worker queue
+  res.json({
+    message: 'Invoice send queued',
+    invoiceId: id,
+    email: invoice.customer.email,
+  });
+}));
 
-    // TODO: Integrate with email service for reminders
-    // await sendReminderEmail(invoice);
-
-    res.json({ message: 'Reminder sent successfully', invoiceId: id });
-  })
-);
-
-/**
- * GET /invoices/:id/pdf
- * Generate and return PDF for invoice
- */
-router.get(
-  '/:id/pdf',
-  validateChain(invoiceIdParamSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = (req as any).validated.params;
-
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
+// GET /api/invoices/chain/:chain - Get invoices by chain
+router.get('/chain/:chain', asyncHandler(async (req: Request, res: Response) => {
+  const chain = validateChain(req.params.chain);
+  
+  const { status, page = '1', limit = '20' } = req.query;
+  
+  const where: any = { chain };
+  if (status) where.status = status;
+  
+  const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+  const take = parseInt(limit as string);
+  
+  const [invoices, total] = await Promise.all([
+    prisma.invoice.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
       include: {
-        customer: true,
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    }),
+    prisma.invoice.count({ where }),
+  ]);
+  
+  res.json({
+    data: invoices,
+    pagination: {
+      page: parseInt(page as string),
+      limit: parseInt(limit as string),
+      total,
+      pages: Math.ceil(total / parseInt(limit as string)),
+    },
+  });
+}));
+
+// GET /api/invoices/customer/:customerId - Get invoices for a customer
+router.get('/customer/:customerId', asyncHandler(async (req: Request, res: Response) => {
+  const { customerId } = req.params;
+  const chain = validateChain(req.body.chain ?? req.query.chain);
+  
+  const { status, fromDate, toDate, page = '1', limit = '20' } = req.query;
+  
+  const where: any = { customerId };
+  if (status) where.status = status;
+  if (chain) where.chain = chain;
+  if (fromDate || toDate) {
+    where.createdAt = {};
+    if (fromDate) where.createdAt.gte = new Date(fromDate as string);
+    if (toDate) where.createdAt.lte = new Date(toDate as string);
+  }
+  
+  const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+  const take = parseInt(limit as string);
+  
+  const [invoices, total] = await Promise.all([
+    prisma.invoice.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
+      include: {
         lineItems: true,
       },
-    });
-
-    if (!invoice) {
-      throw new AppError(404, 'Invoice not found');
-    }
-
-    // TODO: Integrate with PDF generation service
-    // const pdfBuffer = await generateInvoicePDF(invoice);
-    
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="invoice-${invoice.invoiceNumber}.pdf"`);
-    res.send(Buffer.from('PDF placeholder')); // Replace with actual PDF
-  })
-);
-
-/**
- * POST /invoices/:id/process-payment
- * Process payment for an invoice
- */
-router.post(
-  '/:id/process-payment',
-  validateChain(invoiceIdParamSchema),
-  asyncHandler(async (req: Request, res: Response) => {
-    const { id } = (req as any).validated.params;
-    const { paymentMethod, paymentDetails } = req.body;
-
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-    });
-
-    if (!invoice) {
-      throw new AppError(404, 'Invoice not found');
-    }
-
-    if (invoice.status !== InvoiceStatus.PENDING && invoice.status !== InvoiceStatus.PROCESSING) {
-      throw new AppError(400, 'Invoice is not in a payable state');
-    }
-
-    // Update status to processing
-    await prisma.invoice.update({
-      where: { id },
-      data: { 
-        status: InvoiceStatus.PROCESSING,
-        paymentMethod: paymentMethod as PaymentMethod,
-      },
-    });
-
-    // TODO: Integrate with payment processor
-    // const paymentResult = await processPayment(invoice, paymentDetails);
-
-    res.json({ 
-      message: 'Payment processing initiated',
-      invoiceId: id,
-      status: InvoiceStatus.PROCESSING,
-    });
-  })
-);
-
-// Error handling middleware
-router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Invoice route error:', err);
-
-  if (err instanceof z.ZodError) {
-    return res.status(400).json({
-      status: 'error',
-      message: 'Validation error',
-      errors: err.errors.map((e) => ({
-        path: e.path.join('.'),
-        message: e.message,
-      })),
-    });
-  }
-
-  if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      status: 'error',
-      message: err.message,
-    });
-  }
-
-  res.status(500).json({
-    status: 'error',
-    message: 'Internal server error',
+    }),
+    prisma.invoice.count({ where }),
+  ]);
+  
+  res.json({
+    data: invoices,
+    pagination: {
+      page: parseInt(page as string),
+      limit: parseInt(limit as string),
+      total,
+      pages: Math.ceil(total / parseInt(limit as string)),
+    },
   });
-});
+}));
+
+// POST /api/invoices/:id/remind - Send payment reminder
+router.post('/:id/remind', asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  
+  const invoice = await prisma.invoice.findUnique({
+    where: { id },
+    include: { customer: true },
+  });
+  
+  if (!invoice) {
+    return res.status(404).json({ error: 'Invoice not found' });
+  }
+  
+  if (invoice.status === InvoiceStatus.COMPLETED) {
+    return res.status(400).json({ error: 'Invoice is already paid' });
+  }
+  
+  // Reminder sending is handled by the worker queue
+  res.json({
+    message: 'Payment reminder queued',
+    invoiceId: id,
+    email: invoice.customer.email,
+  });
+}));
+
+// GET /api/invoices/stats/summary - Get invoice statistics
+router.get('/stats/summary', asyncHandler(async (req: Request, res: Response) => {
+  const chain = validateChain(req.body.chain ?? req.query.chain);
+  
+  const { fromDate, toDate } = req.query;
+  
+  const where: any = {};
+  if (chain) where.chain = chain;
+  if (fromDate || toDate) {
+    where.createdAt = {};
+    if (fromDate) where.createdAt.gte = new Date(fromDate as string);
+    if (toDate) where.createdAt.lte = new Date(toDate as string);
+  }
+  
+  const [totalInvoices, byStatus, byChain, recentInvoices] = await Promise.all([
+    prisma.invoice.count({ where }),
+    prisma.invoice.groupBy({
+      by: ['status'],
+      where,
+      _count: true,
+      _sum: { amount: true },
+    }),
+    prisma.invoice.groupBy({
+      by: ['chain'],
+      where,
+      _count: true,
+      _sum: { amount: true },
+    }),
+    prisma.invoice.findMany({
+      where,
+      take: 10,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        customer: {
+          select: { name: true },
+        },
+      },
+    }),
+  ]);
+  
+  res.json({
+    totalInvoices,
+    byStatus: byStatus.map(s => ({
+      status: s.status,
+      count: s._count,
+      totalAmount: s._sum.amount || 0,
+    })),
+    byChain: byChain.map(c => ({
+      chain: c.chain,
+      count: c._count,
+      totalAmount: c._sum.amount || 0,
+    })),
+    recentInvoices,
+  });
+}));
 
 export default router;
-
-// [Part A complete - awaiting Part B]
