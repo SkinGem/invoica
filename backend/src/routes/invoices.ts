@@ -152,26 +152,25 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 });
 
 // GET /invoices/number/:number - Get invoice by invoice number
-router.get('/number/:number', asyncHandler(async (req: Request, res: Response) => {
-  const invoiceNumber = parseInt(req.params.number, 10);
-  if (isNaN(invoiceNumber) || invoiceNumber < 1) {
-    res.status(400).json({ success: false, error: { message: 'Invalid invoice number', code: 'VALIDATION_ERROR' } });
-    return;
+router.get('/number/:number', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const invoiceNumber = parseInt(req.params.number, 10);
+    if (isNaN(invoiceNumber) || invoiceNumber < 1) {
+      res.status(400).json({ success: false, error: { message: 'Invalid invoice number', code: 'VALIDATION_ERROR' } });
+      return;
+    }
+    const { createClient } = require('@supabase/supabase-js');
+    const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const { data: invoice, error } = await sb.from('invoices').select('*').eq('invoiceNumber', invoiceNumber).single();
+    if (error || !invoice) {
+      res.status(404).json({ success: false, error: { message: 'Invoice not found', code: 'NOT_FOUND' } });
+      return;
+    }
+    res.json({ success: true, data: invoice });
+  } catch (err) {
+    next(err);
   }
-  const invoice = await prisma.invoice.findFirst({
-    where: { invoiceNumber },
-    include: {
-      customer: true,
-      items: true,
-      payments: { orderBy: { createdAt: 'desc' } },
-    },
-  });
-  if (!invoice) {
-    res.status(404).json({ success: false, error: { message: 'Invoice not found', code: 'NOT_FOUND' } });
-    return;
-  }
-  res.json({ success: true, data: invoice });
-}));
+});
 
 // GET /invoices/:id - Get invoice by ID
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
