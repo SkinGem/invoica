@@ -416,7 +416,7 @@ Sprint progress update:\n- Done: ${done}/${total}\n- Pending: ${pending.map(t =>
     rejecter: string,
   ): Promise<string> {
     log(c.magenta, `\n[ceo] Resolving supervisor conflict on ${task.id}...`);
-    const userPrompt = `Two code review supervisors disagree on task ${task.id}.
+    const userPrompt = `IMPORTANT: Respond with ONLY APPROVE or REJECT and a brief reason. No tools, no XML, no file reading.\n\nTwo code review supervisors disagree on task ${task.id}.
 
 ## Task Spec
 ${task.context?.substring(0, 800) || 'No context'}
@@ -523,7 +523,7 @@ Wrap all decisions in a JSON array. Be concise.`;
     const pending = tasks.filter(t => t.status === 'pending').length;
     const today = new Date().toISOString().split('T')[0];
 
-    const userPrompt = `Generate a daily report for the owner of Countable. Today is ${today}.
+    const userPrompt = `IMPORTANT: Output ONLY the markdown report. No tools, no XML, no file reading. All data is in this message.\n\nGenerate a daily report for the owner of Countable. Today is ${today}.
 
 ## Sprint Data
 - Tasks executed: ${stats.tasksExecuted}
