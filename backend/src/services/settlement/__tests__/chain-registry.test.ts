@@ -1,3 +1,4 @@
+// backend/src/services/settlement/__tests__/chain-registry.test.ts
 import { getChain, isEvmChain, isSolanaChain } from '../../../lib/chain-registry';
 
 describe('chain-registry', () => {

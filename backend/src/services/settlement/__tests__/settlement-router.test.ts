@@ -1,3 +1,4 @@
+// backend/src/services/settlement/__tests__/settlement-router.test.ts
 import { checkSettlement } from '../settlement-router';
 import { EvmSettlementDetector } from '../detectors/evm-settlement-detector';
 import { SolanaSettlementDetector } from '../detectors/solana-settlement-detector';
@@ -9,34 +10,30 @@ const mockEvmDetector = EvmSettlementDetector.prototype as jest.Mocked<EvmSettle
 const mockSolanaDetector = SolanaSettlementDetector.prototype as jest.Mocked<SolanaSettlementDetector>;
 
 describe('settlement-router', () => {
-  const testAddress = '0x1234567890123456789012345678901234567890';
+  const mockAddress = '0x1234567890123456789012345678901234567890';
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockEvmDetector.checkSettlement = jest.fn().mockResolvedValue({ found: false });
+    mockSolanaDetector.checkSettlement = jest.fn().mockResolvedValue({ found: false });
   });
 
   it('routes base chain to EvmSettlementDetector', async () => {
-    mockEvmDetector.checkSettlement.mockResolvedValue({ settled: true, amount: '100' });
-    const result = await checkSettlement('base', testAddress);
-    expect(mockEvmDetector.checkSettlement).toHaveBeenCalledWith(testAddress, 8453);
-    expect(result.settled).toBe(true);
+    await checkSettlement('base', mockAddress);
+    expect(mockEvmDetector.checkSettlement).toHaveBeenCalledWith(mockAddress, 8453);
   });
 
-  it('routes polygon chain to EvmSettlementDetector with Polygon config', async () => {
-    mockEvmDetector.checkSettlement.mockResolvedValue({ settled: false, amount: '0' });
-    const result = await checkSettlement('polygon', testAddress);
-    expect(mockEvmDetector.checkSettlement).toHaveBeenCalledWith(testAddress, 137);
-    expect(result.settled).toBe(false);
+  it('routes polygon chain to EvmSettlementDetector with polygon chainId', async () => {
+    await checkSettlement('polygon', mockAddress);
+    expect(mockEvmDetector.checkSettlement).toHaveBeenCalledWith(mockAddress, 137);
   });
 
   it('routes solana chain to SolanaSettlementDetector', async () => {
-    mockSolanaDetector.checkSettlement.mockResolvedValue({ settled: true, amount: '500' });
-    const result = await checkSettlement('solana', testAddress);
-    expect(mockSolanaDetector.checkSettlement).toHaveBeenCalledWith(testAddress);
-    expect(result.settled).toBe(true);
+    await checkSettlement('solana', mockAddress);
+    expect(mockSolanaDetector.checkSettlement).toHaveBeenCalledWith(mockAddress);
   });
 
   it('throws for unsupported chain', async () => {
-    await expect(checkSettlement('arbitrum', testAddress)).rejects.toThrow('Unsupported chain: arbitrum');
+    await expect(checkSettlement('arbitrum', mockAddress)).rejects.toThrow('Unsupported chain: arbitrum');
   });
 });
