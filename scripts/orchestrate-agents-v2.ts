@@ -968,18 +968,11 @@ function loadOwnerDirectives(): string {
       .reverse(); // newest first
     for (const f of files.slice(0, 5)) {
       const content = readFileSync(dir + "/" + f, "utf-8");
-      sections.push("### Owner Directive: " + f + "
-" + content.substring(0, 3000));
+      sections.push("### Owner Directive: " + f + "\n" + content.substring(0, 3000));
     }
   } catch { /* graceful degradation */ }
   return sections.length > 0
-    ? "## Owner Directives (MANDATORY — highest priority)
-
-" + sections.join("
-
----
-
-")
+    ? "## Owner Directives (MANDATORY \u2014 highest priority)\n\n" + sections.join("\n\n---\n\n")
     : "";
 }
 
@@ -1779,9 +1772,7 @@ ONLY output the JSON array. No markdown, no explanation.`;
       const ownerDirectives = loadOwnerDirectives();
       if (ownerDirectives) {
         log(c.magenta, "  Owner directives found — will include in CEO review (highest priority)");
-        cmoReports = ownerDirectives + (cmoReports ? "
-
-" + cmoReports : "");
+        cmoReports = ownerDirectives + (cmoReports ? "\n\n" + cmoReports : "");
       }
 
       // 5. CEO reviews CTO proposals + CMO reports
