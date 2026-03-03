@@ -1,6 +1,6 @@
 # Invoica API Contract
 
-*Auto-generated 2026-03-02 from backend/src/routes/*
+*Auto-generated 2026-03-03 from backend/src/routes/*
 
 ## Base URL
 ```

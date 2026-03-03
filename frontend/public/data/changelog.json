@@ -3,36 +3,36 @@
     "version": "1.7.0",
     "date": "2026-03-02",
     "changes": [
-      "Expanded x402 to multi-chain architecture — Base, Polygon, and Solana support with unified payment routing",
-      "Added Mission Control integration for real-time agent operations visibility and health monitoring",
-      "Implemented memory-agent — institutional black-box memory system for CEO context persistence",
-      "Deployed live docs auto-generation system — changelog and API reference now auto-update from git history",
-      "Added multi-agent autonomous sprint execution (CHAIN-001 through CHAIN-009) with MiniMax M2.5 model optimization",
-      "Fixed orchestrator deliverables schema and strengthened CEO review logic to eliminate hallucinations on system state"
+      "Deployed multi-chain x402 architecture supporting Base, Polygon, and Solana with 9 new chain integration tasks (CHAIN-001 through CHAIN-009)",
+      "Released 8 backend SDK enhancements including authentication, payment, and database improvements (AUTH-002, AUTH-003, PAY-001, PAY-002, PAY-003, DB-001)",
+      "Added frontend dashboard enhancements for invoice management and company-scoped ledger views (FE-020, FE-021)",
+      "Implemented autonomous CI/CD with git autodeploy (5-min polling), PM2 process watchdog, and Telegram alerts for infrastructure health",
+      "Fixed orchestrator deliverables schema mismatch and added CEO owner directives pipeline for strategic execution",
+      "Completed sprint 10 delivery: multi-chain infrastructure, autonomous post-sprint testing, and CMO content planning automation"
     ]
   },
   {
     "version": "1.6.0",
-    "date": "2026-02-28",
+    "date": "2026-03-01",
     "changes": [
-      "Launched autonomous X posting agent (@invoica_ai) with CEO + CTO review gates on all content",
-      "Implemented git-autodeploy — server self-deploys from GitHub every 5 minutes with TypeScript validation",
-      "Added sprint-runner PM2 cron — closes CEO↔execution loop with autonomous post-sprint test→deploy pipeline",
-      "Deployed CMO weekly content plan generator (Sunday 06:00 UTC) with CEO approval workflow",
-      "Added PM2 service watchdog with Telegram alerts and pre-deploy TypeScript/ecosystem checks",
-      "Implemented Dashboard ledger page with company-scoped x402 settlement tracking and email verification"
+      "Enabled autonomous post-sprint pipeline: test → CTO review → Vercel deploy without manual intervention",
+      "Launched CMO weekly content plan generator with CEO approval gate and Sunday automation (06:00 UTC)",
+      "Implemented live docs auto-generation system: changelog and API reference auto-update on every deploy",
+      "Added institutional memory agent (memory-agent) — black box system for persistent knowledge retention",
+      "Integrated Mission Control ops visibility platform for real-time agent monitoring and performance tracking",
+      "Secured agent wallets: migrated hardcoded addresses to environment variables with X402_SELLER_WALLET support"
     ]
   },
   {
     "version": "1.5.0",
     "date": "2026-02-27",
     "changes": [
-      "Added Telegram bot integration with CEO assistant and real execution tools (/sprint, /pull, /update commands)",
-      "Implemented x402 agent wallet spending — agents now spend USDC on LLM calls with proper wallet management",
-      "Added email support monitoring (support@invoica.ai) with CTO agent IMAP/SMTP integration",
-      "Fixed critical backend crash loop — added missing lib/prisma.ts and improved PM2 process management",
-      "Implemented CEO bot tool execution layer (run_shell, write_file, create_github_issue) with multi-RPC balance checks",
-      "Added real-time wallet monitoring with live on-chain balance checks and low-balance Telegram alerts"
+      "Activated agent wallet spending with X402 payments — agents can now spend USDC on LLM calls via seller wallet configuration",
+      "Added executive dashboard for CEO agent with real system context injection to eliminate hallucinations",
+      "Implemented real execution tools for CEO bot: shell commands, file writes, GitHub issue creation, and live balance checks",
+      "Launched Telegram support bot with MiniMax integration and live agent status monitoring",
+      "Fixed TypeScript compilation pipeline with ecosystem GitHub Actions CI gate to prevent broken deployments",
+      "Added legal pages (Terms of Service, Privacy Policy, Acceptable Use) and beta-mode UI across dashboard"
     ]
   },
   {
