@@ -1,4 +1,4 @@
-import { getSupportedChains, ChainConfig, getChain } from './chain-registry';
+import { getSupportedChains, getChain } from './chain-registry';
 
 /**
  * Validates that a chain ID is supported. Throws 400 if not.
