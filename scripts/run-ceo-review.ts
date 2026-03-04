@@ -215,8 +215,65 @@ function collectReports(state: ReviewState): ReportSet {
 
 // ─── Sprint trigger ──────────────────────────────────────────────────────────
 
-function triggerSprint(goal: string, scope: string[], rationale: string, state: ReviewState) {
-  // Write sprint brief so orchestrator CEO can read it as additional context
+// ─── Sprint file generation ─────────────────────────────────────────────────
+
+async function generateSprintFile(goal: string, scope: string[], rationale: string, sprintNum: number): Promise<string> {
+  const sprintDir = path.join(ROOT, 'sprints');
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const sprintId = `auto-${timestamp}`;
+  const sprintPath = path.join(sprintDir, `${sprintId}.json`);
+
+  const system = `You are the CEO of Invoica planning a focused engineering sprint.
+Generate a sprint with 4-7 specific tasks to achieve the stated goal.
+
+CRITICAL RULES (MiniMax AI will execute these — it truncates large files):
+- Each task targets EXACTLY ONE file. No multi-file tasks.
+- Keep context under 600 chars per task — be concise and specific.
+- agent must be: backend-core | frontend | agents | infra
+- type: feature | bugfix | test | docs
+- priority: critical | high | medium | low
+- status: always "pending"
+- dependencies: array of task IDs from THIS sprint that must complete first (empty if none)
+- Do NOT assign ADR/documentation-only tasks to MiniMax — those fail. Use docs type sparingly.
+- Prefer small, focused changes over large rewrites.
+
+Return ONLY valid JSON (no markdown fences):
+{"tasks":[{"id":"PREFIX-001","agent":"backend-core","type":"bugfix","priority":"critical","dependencies":[],"description":"Short title","context":"Specific instructions. One file only. What to change and why.","deliverables":{"code":["relative/path/to/file.ts"],"tests":[],"docs":[]},"status":"pending"}]}`;
+
+  const user = `Sprint Goal: ${goal}\nScope: ${scope.join(', ')}\nRationale: ${rationale}\n\nGenerate the task list now. Return JSON only.`;
+
+  console.log('[ceo-review] Generating sprint tasks with Claude...');
+  const raw = await callLLM(system, user, 3000);
+
+  let tasks: any[];
+  try {
+    const fenceMatch = raw.match(/\`\`\`(?:json)?\n?([\s\S]*?)\`\`\`/);
+    const jsonStr = fenceMatch ? fenceMatch[1] : raw;
+    const start = jsonStr.indexOf('{');
+    const end = jsonStr.lastIndexOf('}');
+    if (start === -1 || end === -1) throw new Error('No JSON found');
+    const parsed = JSON.parse(jsonStr.slice(start, end + 1));
+    tasks = parsed.tasks;
+    if (!Array.isArray(tasks) || tasks.length === 0) throw new Error('Empty task list');
+  } catch (e: any) {
+    throw new Error(`Sprint task generation failed: ${e.message} | raw: ${raw.slice(0, 300)}`);
+  }
+
+  fs.mkdirSync(sprintDir, { recursive: true });
+  fs.writeFileSync(sprintPath, JSON.stringify({ tasks }, null, 2));
+
+  // Update current.json symlink to point to new sprint
+  const currentLink = path.join(sprintDir, 'current.json');
+  try { fs.unlinkSync(currentLink); } catch { /* ignore if not exists */ }
+  fs.symlinkSync(`${sprintId}.json`, currentLink);
+
+  console.log(`[ceo-review] ✅ Sprint file: ${sprintPath} (${tasks.length} tasks)`);
+  console.log(`[ceo-review]    current.json → ${sprintId}.json`);
+  return sprintPath;
+}
+
+async function triggerSprint(goal: string, scope: string[], rationale: string, state: ReviewState): Promise<void> {
+  // Write sprint brief
   const brief = [
     `# CEO Sprint Brief — ${new Date().toISOString()}`,
     '',
@@ -235,12 +292,23 @@ function triggerSprint(goal: string, scope: string[], rationale: string, state: 
 
   fs.writeFileSync(SPRINT_BRIEF, brief);
 
+  // Generate sprint file with tasks — THIS was the missing step
+  let sprintFile: string;
+  try {
+    sprintFile = await generateSprintFile(goal, scope, rationale, state.sprintCount + 1);
+  } catch (e: any) {
+    console.log(`[ceo-review] ❌ Sprint file generation failed: ${e.message}`);
+    console.log('[ceo-review]    Sprint NOT triggered — fix the generation error first');
+    return;
+  }
+
   const logFile = path.join(LOGS_DIR, `sprint-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.log`);
   const logStream = fs.createWriteStream(logFile, { flags: 'a' });
 
+  // Pass generated sprint file as argv[2] so orchestrator uses it instead of current.json
   const child = spawn(
     'node',
-    ['-r', 'ts-node/register', path.join(ROOT, 'scripts', 'orchestrate-agents-v2.ts')],
+    ['-r', 'ts-node/register', path.join(ROOT, 'scripts', 'orchestrate-agents-v2.ts'), sprintFile],
     {
       detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -261,6 +329,7 @@ function triggerSprint(goal: string, scope: string[], rationale: string, state: 
 
   console.log(`[ceo-review] 🚀 Sprint #${state.sprintCount + 1} triggered — PID ${child.pid}`);
   console.log(`[ceo-review]    Goal: ${goal}`);
+  console.log(`[ceo-review]    File: ${sprintFile}`);
   console.log(`[ceo-review]    Log:  ${logFile}`);
 }
 
@@ -482,7 +551,7 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
     if (decision.sprint_decision.trigger && !recentSprint) {
       state.sprintCount++;
       state.lastSprintAt = Date.now();
-      triggerSprint(
+      await triggerSprint(
         decision.sprint_decision.goal,
         decision.sprint_decision.scope ?? [],
         decision.sprint_decision.rationale,
