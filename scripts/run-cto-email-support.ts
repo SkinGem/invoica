@@ -128,6 +128,14 @@ async function main() {
         if (processedIds.has(uidStr)) continue;
         const from = msg.envelope?.from?.[0]?.address || 'unknown';
         if (from.includes('invoica.ai')) { processedIds.add(uidStr); continue; }
+        // Spam domain blocklist — skip without calling AI to avoid timeout loops
+        const SPAM_DOMAINS = ['out.ndlz.net', 'ndlz.net', 'mailchimp-outreach', 'gdprconfirm.com'];
+        const fromDomain = from.split('@')[1] || '';
+        if (SPAM_DOMAINS.some(d => fromDomain.endsWith(d))) {
+          log(`  Spam blocked: ${from} — marking as seen`);
+          processedIds.add(uidStr);
+          continue;
+        }
         const subject = msg.envelope?.subject || '(no subject)';
         const body = msg.bodyParts?.get('TEXT')?.toString() || '';
         toProcess.push({ uid: msg.uid, uidStr, from, subject, body, msgId: msg.envelope?.messageId });
