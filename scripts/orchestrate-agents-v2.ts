@@ -1101,6 +1101,17 @@ class CodingAgent {
     log(c.gray, `  -> Using MiniMax-M2.5 (one-file-per-call mode)`);
     const deliverables = [...(task.deliverables.code || []), ...(task.deliverables.tests || []), ...(task.deliverables.docs || [])];
 
+    // Pre-flight: validate all deliverable files exist for non-feature tasks
+    // If a file doesn't exist and we're asked to modify it, skip rather than hallucinate
+    if (task.type !== 'feature' && task.type !== 'docs') {
+      const missing = deliverables.filter(f => !existsSync(f));
+      if (missing.length > 0) {
+        log(c.red, `  ✗ Pre-flight FAILED: File(s) not found: ${missing.join(', ')}`);
+        log(c.red, `  ✗ Skipping task ${task.id} — deliverable files do not exist in repo`);
+        throw new Error(`PREFLIGHT_FAILED: Files not found: ${missing.join(', ')}`);
+      }
+    }
+
     let rejectionContext = '';
     if (previousReview && previousReview.verdict !== 'APPROVED') {
       const issueList = (previousReview.issues || []).map(i => `- [${i.severity}] ${i.file}: ${i.description}`).join('\n');
@@ -1117,6 +1128,9 @@ class CodingAgent {
       const fileList = deliverables.map((f, idx) => `${idx + 1}. ${f}${f === filepath ? ' ← THIS ONE' : ''}`).join('\n');
 
       const isTestFile = filepath.includes('test') || filepath.includes('spec');
+      const existingContent = existsSync(filepath)
+        ? `\n\n## Current File Content (EDIT this — do not rewrite from scratch)\n\`\`\`typescript\n${readFileSync(filepath, 'utf-8').substring(0, 3000)}\n\`\`\`\n`
+        : `\n\n## Note: This is a NEW file — create it from scratch.\n`;
       const testConstraint = isTestFile
         ? `\n\n## CRITICAL: TEST FILE SIZE LIMIT
 This is a test file. You MUST keep it SHORT to avoid truncation:
@@ -1137,7 +1151,7 @@ ${task.context}
 ${fileList}
 
 ## Generate ONLY: ${filepath}
-${priorCtx}${testConstraint}
+${existingContent}${priorCtx}${testConstraint}
 Write ONLY the content for "${filepath}". Rules:
 - Output a single fenced code block with the COMPLETE file content
 - Production quality, no TODOs or placeholders

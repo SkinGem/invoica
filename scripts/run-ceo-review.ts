@@ -217,14 +217,36 @@ function collectReports(state: ReviewState): ReportSet {
 
 // ─── Sprint file generation ─────────────────────────────────────────────────
 
+function buildFileTree(): string {
+  try {
+    const { execSync } = require('child_process');
+    const raw = execSync(
+      'find . -type f \\( -name "*.ts" -o -name "*.tsx" -o -name "*.css" -o -name "*.scss" \\)' +
+      ' -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*"' +
+      ' -not -path "*/__tests__/*" -not -path "*/sprints/*"' +
+      ' | sort | head -120',
+      { cwd: '/home/invoica/apps/Invoica', encoding: 'utf-8', timeout: 5000 }
+    ) as string;
+    const lines = raw.trim().split('\n').map(f => f.replace('./', ''));
+    return lines.join('\n');
+  } catch {
+    return '(file tree unavailable)';
+  }
+}
+
 async function generateSprintFile(goal: string, scope: string[], rationale: string, sprintNum: number): Promise<string> {
   const sprintDir = path.join(ROOT, 'sprints');
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
   const sprintId = `auto-${timestamp}`;
   const sprintPath = path.join(sprintDir, `${sprintId}.json`);
 
+  const fileTree = buildFileTree();
   const system = `You are the CEO of Invoica planning a focused engineering sprint.
 Generate a sprint with 4-7 specific tasks to achieve the stated goal.
+
+## Real Project File Tree
+IMPORTANT: You MUST only reference files that exist below. Do NOT invent file paths.
+${fileTree}
 
 CRITICAL RULES (MiniMax AI will execute these — it truncates large files):
 - Each task targets EXACTLY ONE file. No multi-file tasks.
