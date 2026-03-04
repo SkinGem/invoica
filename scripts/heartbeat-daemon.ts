@@ -259,9 +259,12 @@ function determineHealthStatus(
     return 'degraded';
   }
 
-  // Majority of PM2 processes stopped/errored → at least degraded
-  const notOnline = pm2.total > 0 ? pm2.total - pm2.online : 0;
-  if (pm2.total > 0 && notOnline > pm2.total / 2) return 'critical';
+  // Only count persistent (always-on) processes — cron jobs stop between runs by design.
+  const PERSISTENT_PROCESSES = ['backend', 'openclaw-gateway', 'ceo-ai-bot', 'mission-control'];
+  const persistentDown = pm2.processes.filter(
+    (p: any) => PERSISTENT_PROCESSES.includes(p.name) && p.status !== 'online'
+  ).length;
+  if (persistentDown >= PERSISTENT_PROCESSES.length / 2) return 'critical';
 
   if (failedCount === 0) return 'healthy';
   if (failedCount <= 2) return 'degraded';
