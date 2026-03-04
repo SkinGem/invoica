@@ -4,30 +4,29 @@ All notable changes to Invoica are documented here.
 
 ## [1.7.0] — 2026-03-03
 
-- Expand multi-chain architecture — Base, Polygon, and Solana support (CHAIN-001 through CHAIN-009)
-- Add 22 new SDK features (SDK-060a through SDK-062) for enhanced developer tooling
-- Implement event-driven CEO review and sprint trigger pipeline
-- Add settlement router quote validation and multi-RPC settlement handling
-- Deploy post-sprint autonomous test→CTO review→Vercel deploy pipeline
-- Add CMO weekly content plan generator with CTO→CEO approval gate (Sundays 06:00 UTC)
+- Enhanced x402 agent wallet spending — agents now spend USDC on LLM calls with MiniMax model optimization
+- Completed multi-chain settlement architecture with real quote handling and batching optimization
+- Added autonomous post-sprint test→CTO review→Vercel deploy pipeline with git-autodeploy every 5 min
+- Implemented CMO weekly content plan generator with CEO approval gate and Sunday 06:00 UTC scheduling
+- Fixed frontend redirect from /api-keys to /dashboard/api-keys with sidebar navigation updates
+- Added live docs auto-generation system with data-driven changelog and API reference pages
 
-## [1.6.0] — 2026-03-01
+## [1.6.0] — 2026-02-28
 
-- Enable agent wallet spending on x402 — agents now spend USDC directly via wallet transactions
-- Add Telegram bot support with /report, /pm2, /health, /sprint commands for ops visibility
-- Implement autonomous x402 settlement router with multi-RPC balance checking
-- Add real execution tools to CEO agent — run_shell, write_file, create_github_issue
-- Deploy live docs auto-generation system for API reference and changelog
-- Add institutional memory system (memory-agent) for autonomous knowledge retention
+- Implemented x402 payment system with 0.003 USDC pricing and batched settlement queue (flush every 50 calls or 5 min)
+- Added EIP-3009 signer script for x402 demo — sign-payment.js for transaction signing
+- Deployed multi-chain architecture support (Base, Polygon, Solana) with CHAIN-001 through CHAIN-009 implementations
+- Added CEO bot with real execution tools — run_shell, write_file, create_github_issue via REST API
+- Implemented live USDC balance checks across multiple RPC nodes with deduplication for wallet alerts
+- Added Telegram bot integration with /report, /pm2, /health, /sprint commands for ops visibility
 
 ## [1.5.0] — 2026-02-27
 
-- Add GET /invoices/number/:number endpoint for invoice lookup by number
-- Fix Prisma enum crashes — replace with plain const objects for stability
-- Add EIP-3009 signer script for x402 payment demo
-- Reduce x402 USDC pricing to 0.003 per call with batched settlement queue (flush every 50 calls or 5 min)
-- Fix API keys endpoints — GET list and revoke now working for dashboard
-- Redirect legacy /api-keys route to /dashboard/api-keys
+- Fixed invoice retrieval by number endpoint — proper async Supabase query with route ordering fix
+- Replaced Prisma enums with plain const objects to resolve invoice schema crash loop
+- Fixed API keys GET list and revoke endpoints for dashboard compatibility
+- Corrected settlement router quote handling and added ADR-003 decision record
+- Added GET /invoices/number/:number route to retrieve invoices by reference number
 
 ## [1.4.0] — 2026-02-20
 
