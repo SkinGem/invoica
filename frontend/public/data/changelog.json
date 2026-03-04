@@ -1,38 +1,38 @@
 [
   {
     "version": "1.7.0",
-    "date": "2026-03-02",
+    "date": "2026-03-03",
     "changes": [
-      "Launched multi-chain x402 expansion: standing sprint priority for Base, Polygon, and Solana payment settlement",
-      "Implemented memory-agent — institutional black box memory system for autonomous agent knowledge persistence",
-      "Added live docs auto-generation system with data-driven changelog and API reference pages",
-      "Enhanced SDK with 8 new auth and payment endpoints (AUTH-002, AUTH-003, PAY-001, PAY-002, PAY-003)",
-      "Implemented git-autodeploy — server self-deploys from GitHub every 5 minutes with Vercel integration",
-      "Added database schema migration suite (DB-001) and 10+ backend core features for payment and chain infrastructure"
+      "Expand multi-chain architecture — Base, Polygon, and Solana support (CHAIN-001 through CHAIN-009)",
+      "Add 22 new SDK features (SDK-060a through SDK-062) for enhanced developer tooling",
+      "Implement event-driven CEO review and sprint trigger pipeline",
+      "Add settlement router quote validation and multi-RPC settlement handling",
+      "Deploy post-sprint autonomous test→CTO review→Vercel deploy pipeline",
+      "Add CMO weekly content plan generator with CTO→CEO approval gate (Sundays 06:00 UTC)"
     ]
   },
   {
     "version": "1.6.0",
-    "date": "2026-02-28",
+    "date": "2026-03-01",
     "changes": [
-      "Added real execution tools to CEO bot: run_shell, write_file, create_github_issue via REST API",
-      "Implemented live on-chain USDC balance monitoring for agent wallets with multi-RPC fallback and deduplication",
-      "Added CTO email support monitoring (support@invoica.ai) with IMAP/SMTP integration and MiniMax-M2.5 agent responses",
-      "Enhanced sprint automation: autonomous post-sprint test→CTO review→Vercel deploy pipeline with sprint-runner PM2 cron",
-      "Implemented CMO weekly content plan generator with Sunday 06:00 UTC scheduling and CEO approval gates",
-      "Added Mission Control integration for real-time agent ops visibility and health monitoring"
+      "Enable agent wallet spending on x402 — agents now spend USDC directly via wallet transactions",
+      "Add Telegram bot support with /report, /pm2, /health, /sprint commands for ops visibility",
+      "Implement autonomous x402 settlement router with multi-RPC balance checking",
+      "Add real execution tools to CEO agent — run_shell, write_file, create_github_issue",
+      "Deploy live docs auto-generation system for API reference and changelog",
+      "Add institutional memory system (memory-agent) for autonomous knowledge retention"
     ]
   },
   {
     "version": "1.5.0",
     "date": "2026-02-27",
     "changes": [
-      "Added x402 agent wallet spending — agents can now spend USDC on LLM calls with X402_SELLER_WALLET configuration",
-      "Implemented multi-chain architecture support for Base, Polygon, and Solana with CHAIN-001 through CHAIN-009 endpoints",
-      "Added CEO bot Telegram integration with /report, /pm2, /health, and /sprint command tools",
-      "Enhanced x-admin autonomous posting agent with CEO + CTO review gates before publishing",
-      "Fixed backend stability issues — added missing lib/prisma.ts and backend-wrapper.sh to eliminate crash loops",
-      "Implemented autonomy system: PM2 service watchdog, heartbeat monitoring, and pre-deploy TypeScript checks"
+      "Add GET /invoices/number/:number endpoint for invoice lookup by number",
+      "Fix Prisma enum crashes — replace with plain const objects for stability",
+      "Add EIP-3009 signer script for x402 payment demo",
+      "Reduce x402 USDC pricing to 0.003 per call with batched settlement queue (flush every 50 calls or 5 min)",
+      "Fix API keys endpoints — GET list and revoke now working for dashboard",
+      "Redirect legacy /api-keys route to /dashboard/api-keys"
     ]
   },
   {

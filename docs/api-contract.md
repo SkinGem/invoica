@@ -1,6 +1,6 @@
 # Invoica API Contract
 
-*Auto-generated 2026-03-03 from backend/src/routes/*
+*Auto-generated 2026-03-04 from backend/src/routes/*
 
 ## Base URL
 ```
@@ -38,6 +38,10 @@ List all API keys for the authenticated user
 Rotate (regenerate) an API key
 **Auth:** None
 
+### `POST /v1/api-keys/:id/revoke`
+Revoke an API key
+**Auth:** None
+
 ### `DELETE /v1/api-keys/:id`
 DELETE /v1/api-keys/:id
 **Auth:** None
@@ -50,10 +54,6 @@ Health check — returns API status and uptime
 
 ## Invoices
 
-### `POST /`
-POST /
-**Auth:** None
-
 ### `GET /`
 GET /
 **Auth:** None
@@ -62,12 +62,36 @@ GET /
 GET /:id
 **Auth:** None
 
+### `POST /`
+POST /
+**Auth:** None
+
 ### `PATCH /:id`
 PATCH /:id
 **Auth:** None
 
 ### `DELETE /:id`
 DELETE /:id
+**Auth:** None
+
+### `POST /:id/resend`
+POST /:id/resend
+**Auth:** None
+
+### `GET /merchant/:merchantId`
+GET /merchant/:merchantId
+**Auth:** None
+
+### `GET /customer/:customerId`
+GET /customer/:customerId
+**Auth:** None
+
+### `POST /:id/mark-paid`
+POST /:id/mark-paid
+**Auth:** None
+
+### `GET /stats/summary`
+GET /stats/summary
 **Auth:** None
 
 ## Ledger
