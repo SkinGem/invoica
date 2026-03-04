@@ -66,7 +66,7 @@ echo "[$TIMESTAMP] [AutoDeploy] Pull complete"
 # Backend: any change under backend/
 if echo "$CHANGED" | grep -q "^backend/"; then
   echo "[$TIMESTAMP] [AutoDeploy] backend/ changed → restarting backend"
-  pm2 restart backend
+  pm2 reload backend --update-env
   echo "[$TIMESTAMP] [AutoDeploy] backend restarted"
 fi
 
