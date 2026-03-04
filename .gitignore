@@ -38,3 +38,7 @@ reports/cfo/*-202*.md
 reports/daily/202*.md
 reports/invoica-x-admin/logs/202*.md
 reports/invoica-x-admin/drafts/
+
+# Runtime state files — written by heartbeat-daemon, overwritten by git-pull if tracked
+health.json
+tier.json
