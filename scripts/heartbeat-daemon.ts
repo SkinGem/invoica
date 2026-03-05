@@ -299,7 +299,7 @@ async function runHealthChecks(): Promise<HealthState['checks']> {
   const [apiOk, dbOk, edgeFnOk, dashboardOk, websiteOk] = await Promise.all([
     checkEndpoint(`${SUPABASE_URL}/rest/v1/`),
     checkEndpoint(`${SUPABASE_URL}/rest/v1/`), // DB accessible through REST API
-    checkEndpoint(`${SUPABASE_URL}/functions/v1/api/v1/health`),
+    checkEndpoint(`${SUPABASE_URL}/functions/v1/api/v1/health`, 15000), // cold starts can take up to ~5s
     checkEndpoint(DASHBOARD_URL),
     checkEndpoint(WEBSITE_URL),
   ]);
