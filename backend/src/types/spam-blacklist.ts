@@ -1,23 +1,30 @@
 /**
- * Spam Blacklist Utilities
- * Simple domain validation against hardcoded blacklist
+ * Spam Blacklist Types
+ * Type definitions for the spam blacklist feature
  */
-
-const SPAM_BLACKLIST = [
-  'temp-mail.org',
-  'guerrillamail.com',
-  '10minutemail.com',
-] as const;
 
 /**
- * Validates if the given email domain is in the spam blacklist.
- * @param email - The email address to validate
- * @returns true if domain is blacklisted, false otherwise
+ * Redis key configuration for spam blacklist
  */
-export function validateEmailDomain(email: string): boolean {
-  const domain = email.split('@')[1]?.toLowerCase();
-  if (!domain) {
-    return false;
-  }
-  return SPAM_BLACKLIST.includes(domain as typeof SPAM_BLACKLIST[number]);
+export interface SpamBlacklistConfig {
+  redisKey: string;
 }
+
+/**
+ * Result of domain validation
+ */
+export interface DomainValidationResult {
+  isSpam: boolean;
+}
+
+/**
+ * Result of adding a domain to the blacklist
+ * Returns void on success, or an error object on failure
+ */
+export type AddDomainResult = void | { error: Error };
+
+/**
+ * Result of removing a domain from the blacklist
+ * Returns void on success, or an error object on failure
+ */
+export type RemoveDomainResult = void | { error: Error };
