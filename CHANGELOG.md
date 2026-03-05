@@ -4,29 +4,30 @@ All notable changes to Invoica are documented here.
 
 ## [1.7.0] — 2026-03-05
 
-- Expanded agent autonomy with AUTONOMY-001, AUTONOMY-004-A capability enhancements
-- Added task decomposition system (DECOMP-001-006) for complex sprint management
-- Implemented agent-driven feature restoration (RESTORE-003) with automatic recovery
-- Enhanced frontend with QFIX-007-A and SPRINT-002 improvements for user experience
-- Added AGENTS-003-A and BACK-001-002 architectural improvements for backend stability
-- Improved sprint execution with real file tree injection and stuck task detection mechanisms
+- Agent autonomy framework — AUTONOMY-001, AUTONOMY-004 task decomposition
+- Enhanced invoice router with v1 API routes and proper route ordering
+- Sprint file tree injection with pre-flight file validation
+- Orchestrator integration for multi-agent sprint execution
+- Heartbeat health monitoring with critical status calculation
+- Email support system with IMAP/SMTP monitoring for support@invoica.ai
 
 ## [1.6.0] — 2026-03-01
 
-- Launched x402 payment infrastructure with 0.003 USDC pricing and batched settlement queue
-- Enabled agent wallet spending on LLM calls with autonomous USDC settlement
-- Integrated Mission Control orchestrator visibility dashboard for agent operations
-- Added multi-chain architecture support (Base, Polygon, Solana) with CHAIN-001-009 features
-- Implemented autonomous post-sprint pipeline: test → CTO review → Vercel deploy
-- Added CMO weekly content plan generator with CEO approval gate and Sunday automation
+- Mission Control agent operations visibility platform
+- Autonomous post-sprint pipeline — test→CTO review→Vercel deploy
+- CMO weekly content plan generator with CEO approval gate
+- Live docs auto-generation system for API reference and changelog
+- Memory agent — institutional memory system for context preservation
+- Sprint runner automation with GitHub milestone integration
 
 ## [1.5.0] — 2026-02-27
 
-- Added GET /invoices/number/:number endpoint for invoice lookup by invoice number
-- Fixed invoices router with corrected v1 API routes and proper route ordering
-- Replaced Prisma enums with plain const objects to resolve invoice module crashes
-- Added real file tree injection into sprint generation with pre-flight validation
-- Implemented graceful port conflict handling in backend startup wrapper
+- X402 payment settlement system with batched queue (0.003 USDC per API call)
+- Multi-chain architecture foundation for Base, Polygon, and Solana support
+- Agent wallet spending integration — autonomous LLM cost settlement via USDC
+- Invoice routing API with GET /invoices/number/:number endpoint
+- API keys management dashboard with revoke functionality
+- Telegram CEO bot with real execution tools (shell, file write, GitHub issues)
 
 ## [1.4.0] — 2026-02-20
 
