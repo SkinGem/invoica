@@ -24,7 +24,7 @@ export default function Hero() {
           <div className="animate-fade-in-up">
             <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-invoica-purple/5 border border-invoica-purple/15 mb-8">
               <div className="w-2 h-2 rounded-full bg-invoica-purple animate-glow mr-3" />
-              <span className="text-xs font-medium text-invoica-gray-500 tracking-wide uppercase">Built on the x402 Protocol</span>
+              <span className="text-xs font-medium text-invoica-gray-500 tracking-wide uppercase">Now in Public Beta</span>
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-invoica-blue leading-[1.1] mb-8 tracking-tight">
@@ -36,7 +36,7 @@ export default function Hero() {
             </h1>
 
             <p className="text-lg md:text-xl text-invoica-gray-500 mb-10 max-w-lg leading-relaxed">
-              Automated invoicing, tax compliance, budget enforcement, and settlement detection.
+              Automated invoicing, settlement detection, and pay-per-use AI inference — all on Base.
               Your AI agents handle payments — Invoica handles the infrastructure.
             </p>
 
@@ -45,7 +45,7 @@ export default function Hero() {
                 href="https://app.invoica.ai/api-keys"
                 className="group inline-flex items-center px-8 py-4 text-sm font-semibold text-white bg-gradient-to-r from-invoica-purple to-invoica-purple-light rounded-full hover:shadow-xl hover:shadow-invoica-purple/30 transition-all duration-300 hover:-translate-y-0.5"
               >
-                Start Building
+                Get API Keys — Free
                 <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
               </a>
               <a
@@ -60,7 +60,7 @@ export default function Hero() {
             <div className="flex flex-wrap gap-6 mt-5">
               <p className="text-xs text-invoica-gray-400 flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5 text-invoica-purple" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                Free tier — first invoice in &lt;10 min
+                Free during beta — no credit card required
               </p>
               <p className="text-xs text-invoica-gray-400 flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5 text-invoica-purple" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
