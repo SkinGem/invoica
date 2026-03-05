@@ -2156,11 +2156,19 @@ async function postSprintSmokeTest(): Promise<void> {
     log(c.yellow, `  ⚠️  PM2 reload failed (may not be running in PM2): ${e.message}`);
   }
 
-  // 9b. Wait for backend to come up
-  await new Promise(r => setTimeout(r, 5000));
+  // 9b. Poll health endpoint until backend is ready (up to 30s)
+  const backendBase = process.env.BACKEND_URL || 'http://localhost:3001';
+  const healthUrl = `${backendBase}/v1/health`;
+  let ready = false;
+  for (let attempt = 1; attempt <= 15; attempt++) {
+    await new Promise(r => setTimeout(r, 2000));
+    const probe = await httpGet(healthUrl);
+    if (probe.ok) { log(c.green, `  ✅ Backend ready after ${attempt * 2}s`); ready = true; break; }
+    log(c.gray, `  ⏳ Waiting for backend... (${attempt * 2}s, HTTP ${probe.status || 'timeout'})`);
+  }
+  if (!ready) { log(c.yellow, '  ⚠️  Backend did not come up in 30s — smoke tests may fail'); }
 
   // 9c. Smoke test key endpoints
-  const backendBase = process.env.BACKEND_URL || 'http://localhost:3001';
   const endpoints = [
     { name: 'health',      url: `${backendBase}/v1/health` },
     { name: 'invoices',    url: `${backendBase}/v1/invoices?limit=1` },
