@@ -1503,7 +1503,9 @@ Continue from where it left off and output ONLY the remaining code (no duplicate
         committedRaw.split('\n').map((f: string) => f.trim()).filter(Boolean),
       );
 
-      const missing = files.filter(f => !committedFiles.has(f));
+      const missing = files
+        .map(f => f.replace(/^\.\//, ''))   // normalize ./foo -> foo (git show omits ./)
+        .filter(f => !committedFiles.has(f));
       if (missing.length > 0) {
         throw new Error(
           `GIT_VERIFICATION_FAILED: ${missing.length} file(s) not found in commit: ${missing.join(', ')}. ` +
@@ -1826,6 +1828,10 @@ ONLY output the JSON array. No markdown, no explanation.`;
       this.stats.tasksExecuted++;
 
       // Execute with rejection feedback if retrying
+      const headBefore = (() => {
+        try { return execSync('git rev-parse HEAD', { encoding: 'utf-8', timeout: 5000 }).trim(); }
+        catch { return ''; }
+      })();
       let result: { files: string[]; model: string };
       try {
         result = await agent.execute(task, lastReview);
@@ -1840,7 +1846,17 @@ ONLY output the JSON array. No markdown, no explanation.`;
           issues: [{ severity: 'critical', file: 'unknown', description: execErr.message }],
           strengths: [],
         };
-        try { execSync('git reset --hard HEAD~1', { timeout: 10000 }); } catch {}
+        try {
+          const headAfter = execSync('git rev-parse HEAD', { encoding: 'utf-8', timeout: 5000 }).trim();
+          if (headAfter !== headBefore) {
+            execSync('git reset --hard HEAD~1', { timeout: 10000 });
+            log(c.gray, '  Reset to previous commit (dropped failed task commit)');
+          } else {
+            log(c.gray, '  No commit was made — skipping reset');
+          }
+        } catch {
+          log(c.gray, '  Reset skipped');
+        }
         continue;
       }
 
