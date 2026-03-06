@@ -403,6 +403,89 @@ interface TwitterUserV2 {
   public_metrics?: { followers_count: number };
 }
 
+interface CmoAccountTarget {
+  handle: string;
+  topic: string;
+  engagement_angle: string;
+}
+
+// ---------------------------------------------------------------------------
+// CMO Weekly Plan Targets
+// Reads the current week's approved CMO plan and resolves accounts_to_watch
+// into Candidates via the Twitter /2/users/by batch lookup endpoint.
+// ---------------------------------------------------------------------------
+function getMondayOfWeek(): string {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0=Sun, 1=Mon … 6=Sat
+  const diff = day === 0 ? -6 : 1 - day;
+  const monday = new Date(now);
+  monday.setUTCDate(now.getUTCDate() + diff);
+  return monday.toISOString().slice(0, 10);
+}
+
+async function loadCmoPlanTargets(bearerToken: string): Promise<Candidate[]> {
+  const monday   = getMondayOfWeek();
+  const planPath = path.join(ROOT, 'reports', 'cmo', `weekly-content-plan-${monday}.json`);
+
+  if (!fs.existsSync(planPath)) {
+    console.log(`  [cmo-plan] No plan for week of ${monday} — no CMO targets`);
+    return [];
+  }
+
+  let plan: any;
+  try {
+    plan = JSON.parse(fs.readFileSync(planPath, 'utf-8'));
+  } catch (e: any) {
+    console.log(`  [cmo-plan] Parse error: ${e.message}`);
+    return [];
+  }
+
+  if (plan?.status !== 'approved') {
+    console.log(`  [cmo-plan] Plan status="${plan?.status}" — skipping CMO targets`);
+    return [];
+  }
+
+  const accounts: CmoAccountTarget[] = plan?.accounts_to_watch ?? [];
+  if (accounts.length === 0) {
+    console.log(`  [cmo-plan] No accounts_to_watch in plan`);
+    return [];
+  }
+
+  // Batch resolve handles → user objects
+  const handles = accounts.map(a => a.handle.replace(/^@/, '')).join(',');
+  const lookupUrl = new URL('https://api.twitter.com/2/users/by');
+  lookupUrl.searchParams.set('usernames',   handles);
+  lookupUrl.searchParams.set('user.fields', 'id,username,name,description,public_metrics');
+
+  const res = await httpsGet(lookupUrl.toString(), bearerToken);
+  if (res.statusCode < 200 || res.statusCode >= 300) {
+    console.log(`  [cmo-plan] User lookup failed (HTTP ${res.statusCode})`);
+    return [];
+  }
+
+  const users: TwitterUserV2[] = res.body?.data ?? [];
+  console.log(`  [cmo-plan] ✅ Resolved ${users.length}/${accounts.length} CMO target accounts`);
+
+  return users
+    .map(user => {
+      const meta = accounts.find(
+        a => a.handle.replace(/^@/, '').toLowerCase() === user.username.toLowerCase(),
+      );
+      return {
+        userId:         user.id,
+        username:       user.username,
+        name:           user.name ?? '',
+        bio:            user.description ?? '',
+        followersCount: user.public_metrics?.followers_count ?? 0,
+        // matchingTweet carries CMO context used in DM personalisation
+        matchingTweet:  meta
+          ? `[CMO target — ${meta.topic}] ${meta.engagement_angle}`
+          : '[CMO weekly target]',
+      } as Candidate;
+    })
+    .filter(c => c.bio.length >= 10 && c.followersCount >= 50);
+}
+
 // ---------------------------------------------------------------------------
 // Search queries
 // ---------------------------------------------------------------------------
@@ -499,10 +582,24 @@ async function run(dryRun: boolean): Promise<void> {
   const state = loadState();
   const date = new Date().toISOString().slice(0, 10);
 
-  // Step 1: Discover candidates
-  console.log('\n→ Discovering target accounts...');
-  const allCandidates = await searchTargetAccounts(creds.bearerToken);
-  console.log(`  Found ${allCandidates.length} candidates from search`);
+  // Step 1a: Discover candidates via Twitter search
+  console.log('\n→ Discovering target accounts via Twitter search...');
+  const searchCandidates = await searchTargetAccounts(creds.bearerToken);
+  console.log(`  Found ${searchCandidates.length} candidates from search`);
+
+  // Step 1b: Load CMO weekly plan targets (accounts_to_watch)
+  console.log('\n→ Loading CMO weekly plan targets...');
+  const cmoTargets = await loadCmoPlanTargets(creds.bearerToken);
+  console.log(`  Found ${cmoTargets.length} CMO-curated targets`);
+
+  // Merge: CMO targets first (higher priority — hand-picked by CMO strategy),
+  // then deduplicated search results. Dedup by userId.
+  const seenIds = new Set<string>(cmoTargets.map(c => c.userId));
+  const allCandidates: Candidate[] = [
+    ...cmoTargets,
+    ...searchCandidates.filter(c => !seenIds.has(c.userId)),
+  ];
+  console.log(`  Total merged candidates: ${allCandidates.length} (${cmoTargets.length} CMO + ${searchCandidates.length} search)`);
 
   // Step 2: Filter already-contacted
   const newCandidates = filterNewCandidates(allCandidates, state);
@@ -521,7 +618,7 @@ async function run(dryRun: boolean): Promise<void> {
   const logEntries: string[] = [
     `## Run at ${new Date().toISOString()}`,
     `**Mode:** ${dryRun ? 'dry-run' : 'live'}`,
-    `**Candidates:** ${allCandidates.length} found, ${toContact.length} selected`,
+    `**Candidates:** ${allCandidates.length} total (${cmoTargets.length} CMO + ${searchCandidates.length} search), ${toContact.length} selected`,
     '',
   ];
 

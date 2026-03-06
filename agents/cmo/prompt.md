@@ -103,6 +103,7 @@ The plan contains **post-ready content** — not topics or ideas, but fully-writ
 - **No fabricated metrics**: every number must trace to a real git commit or report
 - **No ETAs or timelines**: never reveal what's being built or when
 - **Accounts to watch**: max 3-5 per week. Comments must be educational, never spammy
+- **DM targets**: Every entry in `accounts_to_watch` is also automatically queued for a personalised DM by the `x-dm-outreach` autonomous process (runs every Tuesday 10:00 UTC). Write `engagement_angle` as the strongest 1-sentence reason this specific builder should use Invoica — it will be the DM hook. Target builders actively discussing x402, autonomous agents, AI billing, Base/USDC, or agent-to-agent payments. Quality over quantity: 2-3 precisely chosen targets beat 5 generic ones.
 
 #### Images (branded Invoica visuals)
 For each post that deserves an image, produce a branded PNG saved to `reports/cmo/images/`:

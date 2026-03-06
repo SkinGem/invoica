@@ -20,6 +20,7 @@ context_files:
   - ../../reports/cmo/latest-strategy-report.md
 managed_agents:
   - x-admin
+  - x-dm-outreach
 constraints:
   - All brand decisions must align with company identity (NOT product-specific like Invoica)
   - Never publish or post content directly — propose to CEO for approval

@@ -103,6 +103,27 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
+      // Every Tuesday at 10:00 UTC — DM outreach to x402/Base/AI-agent builders
+      // Sources: Twitter search queries + CMO weekly plan accounts_to_watch
+      // Deduplicates against state file; sends max 5 DMs per run (30s apart)
+      name: "x-dm-outreach",
+      script: "./scripts/x-dm-outreach.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "0 10 * * 2",
+      args: "--run",
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json"
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/x-dm-outreach-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/x-dm-outreach-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
       name: "cmo-daily-watch",
       script: "./scripts/run-cmo-fixed.ts",
       interpreter: "node",
