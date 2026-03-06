@@ -308,6 +308,76 @@ Write the DM.`;
   return text.length > 280 ? text.slice(0, 277) + '...' : text;
 }
 
+
+// ---------------------------------------------------------------------------
+// DM Sending
+// ---------------------------------------------------------------------------
+interface SendDMResult {
+  success: boolean;
+  dmConversationId?: string;
+  error?: string;
+  permissionError?: boolean;
+}
+
+async function sendDM(userId: string, message: string, creds: XCredentials): Promise<SendDMResult> {
+  const url = 'https://api.twitter.com/2/dm_conversations';
+  const payload = {
+    participant_ids: [userId],
+    message: { text: message },
+  };
+  const body = JSON.stringify(payload);
+  const authHeader = buildOAuthHeader('POST', url, creds);
+
+  return new Promise((resolve, reject) => {
+    // Use parsedUrl for the URL object to avoid shadowing the response body variable
+    const parsedUrl = new URL(url);
+    const req = https.request({
+      hostname: parsedUrl.hostname,
+      port: 443,
+      path: parsedUrl.pathname,
+      method: 'POST',
+      headers: {
+        Authorization: authHeader,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body).toString(),
+        'User-Agent': 'x-dm-outreach/1.0',
+      },
+    }, res => {
+      const chunks: Buffer[] = [];
+      res.on('data', (c: Buffer) => chunks.push(c));
+      res.on('end', () => {
+        const rawBody = Buffer.concat(chunks).toString();
+        let parsed: any;
+        try { parsed = JSON.parse(rawBody); } catch { parsed = rawBody; }
+
+        if (res.statusCode === 201) {
+          resolve({
+            success: true,
+            dmConversationId: parsed?.data?.dm_conversation_id,
+          });
+        } else if (res.statusCode === 403) {
+          resolve({
+            success: false,
+            permissionError: true,
+            error: `403 Forbidden — your X app likely needs "Direct Messages" permission.\n` +
+              `Go to: https://developer.twitter.com/en/portal/projects-and-apps\n` +
+              `Enable: "Read and Write and Direct Messages"\n` +
+              `Then regenerate access tokens and update .env`,
+          });
+        } else {
+          resolve({
+            success: false,
+            error: `${res.statusCode}: ${JSON.stringify(parsed).slice(0, 200)}`,
+          });
+        }
+      });
+      res.on('error', reject);
+    });
+    req.on('error', reject);
+    req.write(body);
+    req.end();
+  });
+}
 // ---------------------------------------------------------------------------
 // Candidate interface
 // ---------------------------------------------------------------------------
