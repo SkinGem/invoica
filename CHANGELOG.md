@@ -4,30 +4,30 @@ All notable changes to Invoica are documented here.
 
 ## [1.7.0] — 2026-03-05
 
-- Agent autonomy framework — AUTONOMY-001, AUTONOMY-004 task decomposition
-- Enhanced invoice router with v1 API routes and proper route ordering
-- Sprint file tree injection with pre-flight file validation
-- Orchestrator integration for multi-agent sprint execution
-- Heartbeat health monitoring with critical status calculation
-- Email support system with IMAP/SMTP monitoring for support@invoica.ai
+- Shipped complexity-aware LLM routing with cost reduction optimization for agent inference
+- Fixed Prisma enum crash by replacing with plain const objects in invoices module
+- Implemented sustainable MiniMax pipeline with auto-skip cascades and truncation retry logic
+- Added orchestrator poll-based backend readiness checks with 15s timeout for health validation
+- Enhanced edge function health checks with increased 15s timeout for reliability
+- Published auto-generated changelog and API reference (28 endpoints) with data-driven frontend pages
 
 ## [1.6.0] — 2026-03-01
 
-- Mission Control agent operations visibility platform
-- Autonomous post-sprint pipeline — test→CTO review→Vercel deploy
-- CMO weekly content plan generator with CEO approval gate
-- Live docs auto-generation system for API reference and changelog
-- Memory agent — institutional memory system for context preservation
-- Sprint runner automation with GitHub milestone integration
+- Launched autonomous post-sprint pipeline with test→CTO review→Vercel deployment automation
+- Added CMO weekly content plan generator with CEO approval gating (Sunday 06:00 UTC cron)
+- Implemented x-admin autonomous X posting agent with content calendar and CEO+CTO review gates
+- Added PM2 service watchdog with Telegram alerts and pre-deploy TypeScript validation
+- Integrated Mission Control for agent operations visibility and orchestrator state tracking
+- Implemented git-autodeploy — server self-deploys from GitHub every 5 minutes
 
 ## [1.5.0] — 2026-02-27
 
-- X402 payment settlement system with batched queue (0.003 USDC per API call)
-- Multi-chain architecture foundation for Base, Polygon, and Solana support
-- Agent wallet spending integration — autonomous LLM cost settlement via USDC
-- Invoice routing API with GET /invoices/number/:number endpoint
-- API keys management dashboard with revoke functionality
-- Telegram CEO bot with real execution tools (shell, file write, GitHub issues)
+- Added Telegram bot integration with CEO assistant and customer support capabilities
+- Implemented x402 payment settlement with USDC batching (0.003 USDC pricing, flush every 50 calls or 5 min)
+- Added GET /invoices/number/:number endpoint for invoice lookup by number
+- Fixed invoices router with v1 routes and correct route ordering
+- Implemented multi-RPC balance checking for wallet monitoring across multiple blockchain nodes
+- Added real execution tools to CEO bot: run_shell, write_file, and create_github_issue
 
 ## [1.4.0] — 2026-02-20
 
