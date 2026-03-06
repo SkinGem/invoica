@@ -1,0 +1,341 @@
+/**
+ * x-dm-outreach.ts
+ *
+ * X/Twitter DM outreach script for Invoica.
+ * Searches for target accounts discussing x402, agent payments, and related topics,
+ * then sends personalised DMs to qualified candidates.
+ *
+ * Zero external dependencies — uses only Node.js built-in modules.
+ *
+ * CLI usage:
+ *   npx ts-node --transpile-only scripts/x-dm-outreach.ts --run
+ *   npx ts-node --transpile-only scripts/x-dm-outreach.ts --dry-run
+ *   npx ts-node --transpile-only scripts/x-dm-outreach.ts --status
+ */
+
+import * as https from 'https';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// ---------------------------------------------------------------------------
+// Load .env
+// ---------------------------------------------------------------------------
+try {
+  require('dotenv/config');
+} catch {
+  // dotenv not installed — rely on env vars being set externally
+}
+
+// ---------------------------------------------------------------------------
+// Credential remap: INVOICA_X_* → X_*
+// ---------------------------------------------------------------------------
+if (process.env.INVOICA_X_API_KEY)             process.env.X_API_KEY             = process.env.INVOICA_X_API_KEY;
+if (process.env.INVOICA_X_API_SECRET)          process.env.X_API_SECRET          = process.env.INVOICA_X_API_SECRET;
+if (process.env.INVOICA_X_ACCESS_TOKEN)        process.env.X_ACCESS_TOKEN        = process.env.INVOICA_X_ACCESS_TOKEN;
+if (process.env.INVOICA_X_ACCESS_TOKEN_SECRET) process.env.X_ACCESS_TOKEN_SECRET = process.env.INVOICA_X_ACCESS_TOKEN_SECRET;
+if (process.env.INVOICA_X_BEARER_TOKEN)        process.env.X_BEARER_TOKEN        = process.env.INVOICA_X_BEARER_TOKEN;
+
+// ---------------------------------------------------------------------------
+// Config constants
+// ---------------------------------------------------------------------------
+const MAX_CANDIDATES   = 20;
+const MAX_DMS_PER_RUN  = 5;
+const DM_DELAY_MS      = 30000;
+
+const ROOT        = path.resolve(__dirname, '..');
+const REPORTS_DIR = path.join(ROOT, 'reports', 'x-admin');
+const STATE_FILE  = path.join(REPORTS_DIR, 'state.json');
+
+// ---------------------------------------------------------------------------
+// XCredentials interface + loadCredentials()
+// ---------------------------------------------------------------------------
+interface XCredentials {
+  apiKey: string;
+  apiSecret: string;
+  accessToken: string;
+  accessTokenSecret: string;
+  bearerToken: string;
+}
+
+function loadCredentials(): XCredentials {
+  const apiKey            = process.env.X_API_KEY;
+  const apiSecret         = process.env.X_API_SECRET;
+  const accessToken       = process.env.X_ACCESS_TOKEN;
+  const accessTokenSecret = process.env.X_ACCESS_TOKEN_SECRET;
+  const bearerToken       = process.env.X_BEARER_TOKEN;
+
+  const missing: string[] = [];
+  if (!apiKey)            missing.push('X_API_KEY');
+  if (!apiSecret)         missing.push('X_API_SECRET');
+  if (!accessToken)       missing.push('X_ACCESS_TOKEN');
+  if (!accessTokenSecret) missing.push('X_ACCESS_TOKEN_SECRET');
+  if (!bearerToken)       missing.push('X_BEARER_TOKEN');
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}\n` +
+      'Set them in your .env file or export them before running this script.'
+    );
+  }
+
+  return {
+    apiKey: apiKey!,
+    apiSecret: apiSecret!,
+    accessToken: accessToken!,
+    accessTokenSecret: accessTokenSecret!,
+    bearerToken: bearerToken!,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// OAuth 1.0a helpers
+// ---------------------------------------------------------------------------
+
+/** Percent-encode a string per RFC 3986. */
+function pct(str: string): string {
+  return encodeURIComponent(str).replace(/[!'()*]/g, (c) => {
+    return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+  });
+}
+
+/** Build the full OAuth Authorization header value. */
+function buildOAuthHeader(
+  method: string,
+  url: string,
+  creds: XCredentials,
+  extraParams?: Record<string, string>
+): string {
+  const nonce     = crypto.randomBytes(16).toString('hex');
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+
+  const oauthParams: Record<string, string> = {
+    oauth_consumer_key:     creds.apiKey,
+    oauth_nonce:            nonce,
+    oauth_signature_method: 'HMAC-SHA1',
+    oauth_timestamp:        timestamp,
+    oauth_token:            creds.accessToken,
+    oauth_version:          '1.0',
+  };
+
+  const allParams: Record<string, string> = { ...oauthParams };
+  if (extraParams) {
+    Object.assign(allParams, extraParams);
+  }
+
+  // Build signature base string
+  const sortedKeys  = Object.keys(allParams).sort();
+  const paramString = sortedKeys.map((k) => `${pct(k)}=${pct(allParams[k])}`).join('&');
+  const baseString  = [method.toUpperCase(), pct(url), pct(paramString)].join('&');
+
+  // Sign with HMAC-SHA1
+  const signingKey = `${pct(creds.apiSecret)}&${pct(creds.accessTokenSecret)}`;
+  const signature  = crypto.createHmac('sha1', signingKey).update(baseString).digest('base64');
+
+  oauthParams['oauth_signature'] = signature;
+
+  const headerParts = Object.keys(oauthParams)
+    .sort()
+    .map((k) => `${pct(k)}="${pct(oauthParams[k])}"`)
+    .join(', ');
+
+  return `OAuth ${headerParts}`;
+}
+
+// ---------------------------------------------------------------------------
+// HTTP helpers
+// ---------------------------------------------------------------------------
+
+interface ApiResponse {
+  statusCode: number;
+  body: any;
+  rawBody: string;
+}
+
+/** Bearer-token GET request (for search API). */
+function httpsGet(url: string, bearerToken: string): Promise<ApiResponse> {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+
+    const options: https.RequestOptions = {
+      hostname: parsed.hostname,
+      port:     443,
+      path:     parsed.pathname + parsed.search,
+      method:   'GET',
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+        'User-Agent':  'x-dm-outreach/1.0',
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () => {
+        const rawBody = Buffer.concat(chunks).toString('utf-8');
+        let body: any;
+        try { body = JSON.parse(rawBody); } catch { body = rawBody; }
+        resolve({ statusCode: res.statusCode || 0, body, rawBody });
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.end();
+  });
+}
+
+/** Generic POST helper. Accepts body as a pre-serialised string. */
+function httpsPost(
+  url: string,
+  headers: Record<string, string>,
+  body: string
+): Promise<ApiResponse> {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+
+    const options: https.RequestOptions = {
+      hostname: parsed.hostname,
+      port:     443,
+      path:     parsed.pathname + parsed.search,
+      method:   'POST',
+      headers: {
+        ...headers,
+        'Content-Length': Buffer.byteLength(body).toString(),
+        'User-Agent':     'x-dm-outreach/1.0',
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () => {
+        const rawBody = Buffer.concat(chunks).toString('utf-8');
+        let parsedBody: any;
+        try { parsedBody = JSON.parse(rawBody); } catch { parsedBody = rawBody; }
+        resolve({ statusCode: res.statusCode || 0, body: parsedBody, rawBody });
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    req.write(body);
+    req.end();
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Error Handling
+// ---------------------------------------------------------------------------
+function assertOk(res: { status: number; body: any }, context: string): void {
+  if (res.status < 200 || res.status >= 300) {
+    const detail = typeof res.body === 'object'
+      ? (res.body?.detail || res.body?.title || JSON.stringify(res.body).slice(0, 200))
+      : String(res.body).slice(0, 200);
+    throw new Error(`${context} failed (${res.status}): ${detail}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Candidate interface
+// ---------------------------------------------------------------------------
+interface Candidate {
+  userId:        string;
+  username:      string;
+  name:          string;
+  bio:           string;
+  followersCount: number;
+  matchingTweet: string;
+}
+
+interface TwitterTweetV2 {
+  author_id: string;
+  text: string;
+}
+
+interface TwitterUserV2 {
+  id: string;
+  username: string;
+  name: string;
+  description?: string;
+  public_metrics?: { followers_count: number };
+}
+
+// ---------------------------------------------------------------------------
+// Search queries
+// ---------------------------------------------------------------------------
+const SEARCH_QUERIES: string[] = [
+  '(x402 OR "HTTP 402" OR "agent payments" OR "AI agent invoicing") lang:en -is:retweet',
+  '("Base network" OR "Base L2" OR "USDC" OR "autonomous agents") (billing OR payments OR invoicing) lang:en -is:retweet',
+];
+
+// ---------------------------------------------------------------------------
+// searchTargetAccounts()
+// ---------------------------------------------------------------------------
+async function searchTargetAccounts(bearerToken: string): Promise<Candidate[]> {
+  const seen      = new Set<string>();
+  const candidates: Candidate[] = [];
+
+  for (const query of SEARCH_QUERIES) {
+    if (candidates.length >= MAX_CANDIDATES) break;
+
+    const searchUrl = new URL('https://api.twitter.com/2/tweets/search/recent');
+    searchUrl.searchParams.set('query',        query);
+    searchUrl.searchParams.set('max_results',  '20');
+    searchUrl.searchParams.set('tweet.fields', 'author_id,text');
+    searchUrl.searchParams.set('expansions',   'author_id');
+    searchUrl.searchParams.set('user.fields',  'id,username,name,description,public_metrics');
+
+    const res = await httpsGet(searchUrl.toString(), bearerToken);
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      console.error(`[search] HTTP ${res.statusCode} for query: ${query.slice(0, 60)}...`);
+      console.error(`[search] Response: ${res.rawBody.slice(0, 200)}`);
+      continue;
+    }
+
+    const tweets: TwitterTweetV2[] = res.body?.data ?? [];
+    const users: TwitterUserV2[]   = res.body?.includes?.users ?? [];
+
+    // Build userId → user map
+    const userMap = new Map<string, TwitterUserV2>(users.map(u => [u.id, u]));
+
+    for (const tweet of tweets) {
+      if (candidates.length >= MAX_CANDIDATES) break;
+
+      const user = userMap.get(tweet.author_id);
+      if (!user) continue;
+
+      // Skip duplicates
+      if (seen.has(user.id)) continue;
+
+      // Skip @invoica_ai
+      if (user.username?.toLowerCase() === 'invoica_ai') continue;
+
+      // Filter: bio >= 10 chars
+      const bio: string = user.description ?? '';
+      if (bio.length < 10) continue;
+
+      // Filter: followers >= 50
+      const followersCount: number = user.public_metrics?.followers_count ?? 0;
+      if (followersCount < 50) continue;
+
+      seen.add(user.id);
+      candidates.push({
+        userId:        user.id,
+        username:      user.username,
+        name:          user.name ?? '',
+        bio,
+        followersCount,
+        matchingTweet: tweet.text,
+      });
+    }
+  }
+
+  return candidates;
+}
+
+// ---------------------------------------------------------------------------
+// CLI entry point (placeholder)
+// ---------------------------------------------------------------------------
+if (require.main === module) {
+  console.log('x-dm-outreach: use --run, --dry-run, or --status');
+}
