@@ -1,38 +1,38 @@
 [
   {
     "version": "1.7.0",
-    "date": "2026-03-05",
+    "date": "2026-03-06",
     "changes": [
-      "Shipped complexity-aware LLM routing with cost reduction optimization for agent inference",
-      "Fixed Prisma enum crash by replacing with plain const objects in invoices module",
-      "Implemented sustainable MiniMax pipeline with auto-skip cascades and truncation retry logic",
-      "Added orchestrator poll-based backend readiness checks with 15s timeout for health validation",
-      "Enhanced edge function health checks with increased 15s timeout for reliability",
-      "Published auto-generated changelog and API reference (28 endpoints) with data-driven frontend pages"
+      "Implemented complexity-aware LLM routing with CEO cost reduction and model selection optimization",
+      "Added sustainable MiniMax pipeline with auto-skip cascades and transitive dependency resolution",
+      "Fixed heartbeat edge function health checks with increased 15s timeout for reliability",
+      "Introduced orchestrator poll-based backend readiness detection after PM2 reload",
+      "Enhanced invoices router with Prisma enum replacement using plain const objects to prevent crashes",
+      "Added agent autonomy improvements including self-healing capabilities and post-sprint smoke testing"
     ]
   },
   {
     "version": "1.6.0",
     "date": "2026-03-01",
     "changes": [
-      "Launched autonomous post-sprint pipeline with test→CTO review→Vercel deployment automation",
-      "Added CMO weekly content plan generator with CEO approval gating (Sunday 06:00 UTC cron)",
-      "Implemented x-admin autonomous X posting agent with content calendar and CEO+CTO review gates",
-      "Added PM2 service watchdog with Telegram alerts and pre-deploy TypeScript validation",
-      "Integrated Mission Control for agent operations visibility and orchestrator state tracking",
-      "Implemented git-autodeploy — server self-deploys from GitHub every 5 minutes"
+      "Implemented autonomous post-sprint CI/CD pipeline with automated testing and Vercel deployment",
+      "Added CMO weekly content plan generator with CEO approval gate and Sunday scheduling",
+      "Introduced agent wallet spending for x402 USDC-based LLM inference cost management",
+      "Added Mission Control dashboard for real-time agent operations visibility and orchestration",
+      "Implemented live documentation auto-generation system with data-driven changelog and API reference",
+      "Added institutional memory system for autonomous agent knowledge persistence"
     ]
   },
   {
     "version": "1.5.0",
     "date": "2026-02-27",
     "changes": [
-      "Added Telegram bot integration with CEO assistant and customer support capabilities",
-      "Implemented x402 payment settlement with USDC batching (0.003 USDC pricing, flush every 50 calls or 5 min)",
-      "Added GET /invoices/number/:number endpoint for invoice lookup by number",
-      "Fixed invoices router with v1 routes and correct route ordering",
-      "Implemented multi-RPC balance checking for wallet monitoring across multiple blockchain nodes",
-      "Added real execution tools to CEO bot: run_shell, write_file, and create_github_issue"
+      "Added real API keys management page with full CRUD operations for dashboard",
+      "Implemented x402 payment integration with 0.003 USDC per-call pricing and batched settlement queue",
+      "Added multi-chain support for Base, Polygon, and Solana blockchain networks",
+      "Fixed invoice router with v1 routes and correct route ordering for reliable endpoint access",
+      "Launched Telegram support bot integration with CEO assistant and customer support channels",
+      "Added company profile with registry verification across 12 countries during onboarding"
     ]
   },
   {
