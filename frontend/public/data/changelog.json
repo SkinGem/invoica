@@ -3,36 +3,36 @@
     "version": "1.7.0",
     "date": "2026-03-06",
     "changes": [
-      "Implemented complexity-aware LLM routing with CEO cost reduction and model selection optimization",
-      "Added sustainable MiniMax pipeline with auto-skip cascades and transitive dependency resolution",
-      "Fixed heartbeat edge function health checks with increased 15s timeout for reliability",
-      "Introduced orchestrator poll-based backend readiness detection after PM2 reload",
-      "Enhanced invoices router with Prisma enum replacement using plain const objects to prevent crashes",
-      "Added agent autonomy improvements including self-healing capabilities and post-sprint smoke testing"
+      "Added X DM outreach capability to autonomous CMO agent with Claude personalization, candidate dedup, and state management",
+      "Implemented TypeScript syntax gate + deliverable verification in orchestrator before supervisor review",
+      "Added complexity-aware LLM routing with CEO cost reduction — new files route to Claude Sonnet, edits to MiniMax-M2.5",
+      "Fixed invoices router with v1 REST routes (GET /v1/invoices, POST /v1/invoices/pay, GET /v1/invoices/:id)",
+      "Hardened orchestrator reset logic with path normalization, no-commit guards, and tsc regex anchoring",
+      "Fixed email support loop with spam domain blocklist and restored CTO monitoring suite (daily scan, support tickets, tech watch)"
     ]
   },
   {
     "version": "1.6.0",
     "date": "2026-03-01",
     "changes": [
-      "Implemented autonomous post-sprint CI/CD pipeline with automated testing and Vercel deployment",
-      "Added CMO weekly content plan generator with CEO approval gate and Sunday scheduling",
-      "Introduced agent wallet spending for x402 USDC-based LLM inference cost management",
-      "Added Mission Control dashboard for real-time agent operations visibility and orchestration",
-      "Implemented live documentation auto-generation system with data-driven changelog and API reference",
-      "Added institutional memory system for autonomous agent knowledge persistence"
+      "Shipped Mission Control — real-time agent operations visibility with PM2 process monitoring and Telegram alerts",
+      "Integrated autonomous post-sprint pipeline: test → CTO review → Vercel deploy with self-healing watchdog",
+      "Added CMO weekly content plan generator (Sunday 06:00 UTC) with CEO approval gate and X posting integration",
+      "Implemented git auto-deploy — server self-deploys from GitHub every 5 minutes with safety gates and pre-deploy TS checks",
+      "Added agent wallet spending with x402 USDC pricing (0.003 USDC per call) and live balance monitoring via multi-RPC",
+      "Launched live docs auto-generation system with weekly changelog, API contract, and data-driven frontend pages"
     ]
   },
   {
     "version": "1.5.0",
     "date": "2026-02-27",
     "changes": [
-      "Added real API keys management page with full CRUD operations for dashboard",
-      "Implemented x402 payment integration with 0.003 USDC per-call pricing and batched settlement queue",
-      "Added multi-chain support for Base, Polygon, and Solana blockchain networks",
-      "Fixed invoice router with v1 routes and correct route ordering for reliable endpoint access",
-      "Launched Telegram support bot integration with CEO assistant and customer support channels",
-      "Added company profile with registry verification across 12 countries during onboarding"
+      "Added X/Twitter marketing automation agent (@invoica_ai) with autonomous posting and CEO review gates",
+      "Launched Telegram support integration with live support button and CEO bot assistant (/sprint, /pm2, /health commands)",
+      "Implemented x402 USDC payment settlement — agents autonomously spend tokens on LLM calls with batched queue",
+      "Added multi-chain architecture foundation (Base, Polygon, Solana) with EIP-3009 signer support",
+      "Launched beta onboarding flow with company profile verification (12 countries), API key generation, and Stripe billing",
+      "Added system status pages for infrastructure health monitoring across dashboard and public website"
     ]
   },
   {
