@@ -25,7 +25,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 
 import { execSync } from 'child_process';
 import * as https from 'https';
 import * as http from 'http';
-import 'dotenv/config';
+import * as dotenv from 'dotenv'; dotenv.config({ override: true });
 import { createMCClient } from './mc-client';
 
 // ===== Types =====

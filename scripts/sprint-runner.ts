@@ -23,7 +23,7 @@ import { existsSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from
 import { join } from 'path';
 import { spawnSync } from 'child_process';
 import * as https from 'https';
-import 'dotenv/config';
+import * as dotenv from 'dotenv'; dotenv.config({ override: true });
 
 // ── Config ─────────────────────────────────────────────────────────────────
 const ROOT       = process.cwd();

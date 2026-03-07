@@ -21,7 +21,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
 import { spawn } from 'child_process';
-import 'dotenv/config';
+import * as dotenv from 'dotenv'; dotenv.config({ override: true });
 
 // ─── Config ────────────────────────────────────────────────────────────────
 
