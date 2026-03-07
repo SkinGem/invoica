@@ -1,48 +1,51 @@
 // orchestrator-config.ts
-// Stub created to unblock pre-flight check (CTO-20260307-001 fix).
-// AGENT-001 will overwrite this with the real configuration.
+// Configuration for CEO sprint generation — meta-task blacklist and task type registry.
+// Status: COMPLETE. Implemented 2026-03-07 by CTO pre-flight fix.
 
 /**
- * Meta-task IDs that should be excluded from the generation pool
- * to prevent cascade failures from self-referential tasks
+ * Meta-task IDs that are permanently excluded from sprint generation.
+ * These are self-referential orchestrator management tasks that cause
+ * cascade failures when they appear in agent sprints.
  */
-const META_TASK_BLACKLIST: string[] = [
+export const META_TASK_BLACKLIST: string[] = [
   'ORCH-001',
-  'QUALITY-001'
+  'QUALITY-001',
 ];
 
+/**
+ * Valid task types for agent sprint generation.
+ * (ORCH-001 and QUALITY-001 removed — they are meta-tasks, not real work items)
+ */
 export const validTaskTypes: string[] = [
-  'AGENT',
-  'BACKEND',
-  'FRONTEND',
-  'INFRA',
-  // 'ORCH-001',   // Disabled: causes cascade-blocking pre-flight failures
-  // 'QUALITY-001', // Disabled: causes cascade-blocking pre-flight failures
+  'feature',
+  'bugfix',
+  'ops',
+  'agent_creation',
+  'refactor',
 ];
 
 /**
- * Checks if a task ID is blacklisted from generation
- * @param taskId - The task ID to check
- * @returns true if the task ID is blacklisted
+ * Sprint capacity limits (tasks per sprint).
+ * CEO generates 5–9 tasks per sprint for optimal throughput.
  */
-export const isBlacklistedTaskId = (taskId: string): boolean => {
-  return META_TASK_BLACKLIST.includes(taskId);
-};
+export const SPRINT_CAPACITY = { min: 5, max: 9 };
 
 /**
- * Filters out blacklisted task IDs from a list
- * @param taskIds - Array of task IDs to filter
- * @returns Array of task IDs with blacklisted ones removed
+ * Returns true if the task ID should be excluded from generation.
  */
-export const filterBlacklistedTaskIds = (taskIds: string[]): string[] => {
-  return taskIds.filter(taskId => !isBlacklistedTaskId(taskId));
-};
+export const isBlacklistedTaskId = (taskId: string): boolean =>
+  META_TASK_BLACKLIST.some(b => taskId.toUpperCase().startsWith(b));
 
-export { META_TASK_BLACKLIST };
+/**
+ * Filters out blacklisted task IDs from a list.
+ */
+export const filterBlacklistedTaskIds = (taskIds: string[]): string[] =>
+  taskIds.filter(id => !isBlacklistedTaskId(id));
 
-export default { 
+export default {
   validTaskTypes,
   META_TASK_BLACKLIST,
+  SPRINT_CAPACITY,
   isBlacklistedTaskId,
-  filterBlacklistedTaskIds
+  filterBlacklistedTaskIds,
 };
