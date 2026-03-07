@@ -389,7 +389,8 @@ async function main(): Promise<void> {
   log(`Starting post-sprint pipeline for: ${sprintName}`);
 
   // Load sprint tasks
-  const tasks: Task[] = JSON.parse(readFileSync(sprintFile, 'utf8'));
+  const _raw = JSON.parse(readFileSync(sprintFile, 'utf8'));
+  const tasks: Task[] = Array.isArray(_raw) ? _raw : (_raw.tasks ?? []);
   const doneTasks = tasks.filter(t => t.status === 'done');
   log(`${doneTasks.length} completed tasks to test`);
 

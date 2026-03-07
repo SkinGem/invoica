@@ -345,6 +345,8 @@ module.exports = {
       // Access: ssh -L 3005:localhost:3005 invoica@<server> then open http://localhost:3005
       // Setup (first time only): bash scripts/setup-mission-control.sh
       name: "mission-control",
+      min_uptime: "30s",
+      max_restarts: 20,
       script: "./scripts/run-mission-control.sh",
       interpreter: "bash",
       cwd: "/home/invoica/apps/Invoica",
