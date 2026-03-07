@@ -1546,7 +1546,7 @@ class Orchestrator {
     this.cto = new CTOAgent();
 
     // Execution layer — dynamically load all coding agents from agents/ directory
-    const skipAgents = ['ceo', 'supervisor', 'skills', 'cto', 'cmo'];
+    const skipAgents = ['ceo', 'supervisor', 'cto', 'cmo'];
     const agentDirs = existsSync('./agents') ? readdirSync('./agents').filter(d => {
       if (skipAgents.includes(d)) return false;
       return existsSync(`./agents/${d}/prompt.md`);
