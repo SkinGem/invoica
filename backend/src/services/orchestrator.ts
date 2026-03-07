@@ -99,96 +99,97 @@ export class Orchestrator extends EventEmitter {
     state.pausedUntil = pausedUntil;
     this.rejectionStates.set(agentId, state);
 
-    // Pause the agent's queue in Redis
-    await this.redis.pauseQueue(`agent:${agentId}:queue`, this.PAUSE_DURATION_MS);
+    try {
+      // Pause the agent queue in Redis
+      await this.redis.pauseQueue(`agent:${agentId}`, this.PAUSE_DURATION_MS);
 
-    this.logger.warn('Agent paused due to consecutive rejections', {
-      agentId,
-      consecutiveFailures: state.consecutiveFailures,
-      pausedUntil: pausedUntil.toISOString(),
-      duration: '1 hour'
-    });
-
-    // Emit warning for monitoring systems
-    this.emit('agentPaused', {
-      agentId,
-      reason: 'consecutive_rejections',
-      consecutiveFailures: state.consecutiveFailures,
-      pausedUntil
-    });
-
-    // Schedule automatic resume
-    setTimeout(() => {
-      this.resumeAgent(agentId).catch(error => {
-        this.logger.error('Failed to auto-resume agent', {
-          agentId,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
+      this.logger.error('Agent queue paused due to consecutive rejections', {
+        agentId,
+        consecutiveFailures: state.consecutiveFailures,
+        pausedUntil: pausedUntil.toISOString(),
+        pauseDurationHours: this.PAUSE_DURATION_MS / (60 * 60 * 1000)
       });
-    }, this.PAUSE_DURATION_MS);
-  }
 
-  /**
-   * Resumes paused agent and clears rejection state
-   */
-  private async resumeAgent(agentId: string): Promise<void> {
-    const state = this.rejectionStates.get(agentId);
-    if (!state || !state.isPaused) {
-      return;
+      // Emit warning event for monitoring systems
+      this.emit('agentPaused', {
+        agentId,
+        reason: 'consecutive_rejections',
+        consecutiveFailures: state.consecutiveFailures,
+        pausedUntil
+      });
+
+      // Schedule automatic resume
+      setTimeout(() => {
+        this.resumeAgent(agentId).catch(error => {
+          this.logger.error('Failed to auto-resume agent', {
+            agentId,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        });
+      }, this.PAUSE_DURATION_MS);
+
+    } catch (error) {
+      this.logger.error('Failed to pause agent queue', {
+        agentId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
     }
-
-    // Resume the agent's queue in Redis
-    await this.redis.resumeQueue(`agent:${agentId}:queue`);
-
-    // Clear rejection state
-    this.rejectionStates.delete(agentId);
-
-    this.logger.info('Agent automatically resumed', { agentId });
-
-    this.emit('agentResumed', {
-      agentId,
-      reason: 'automatic_timeout'
-    });
   }
 
   /**
-   * Handles successful task completion by resetting consecutive failures
+   * Handles successful task completion by resetting failure counter
    */
   private async handleSuccess(agentId: string): Promise<void> {
-    const state = this.rejectionStates.get(agentId);
-    if (state && state.consecutiveFailures > 0) {
-      state.consecutiveFailures = 0;
-      this.rejectionStates.set(agentId, state);
+    const currentState = this.rejectionStates.get(agentId);
+    
+    if (currentState && currentState.consecutiveFailures > 0) {
+      this.logger.info('Agent recovered from rejections', {
+        agentId,
+        previousFailures: currentState.consecutiveFailures
+      });
+
+      // Reset failure counter on success
+      currentState.consecutiveFailures = 0;
+      this.rejectionStates.set(agentId, currentState);
+    }
+  }
+
+  /**
+   * Manually resumes a paused agent queue
+   */
+  async resumeAgent(agentId: string): Promise<void> {
+    try {
+      const state = this.rejectionStates.get(agentId);
       
-      this.logger.info('Agent consecutive failures reset after success', { agentId });
-    }
-  }
-
-  /**
-   * Manually clears rejection state for an agent
-   * Used for administrative recovery operations
-   */
-  clearRejectionState(agentId?: string): void {
-    if (agentId) {
-      this.rejectionStates.delete(agentId);
-      this.logger.info('Rejection state cleared for agent', { agentId });
-    } else {
-      this.rejectionStates.clear();
-      this.logger.info('All rejection states cleared');
-    }
-  }
-
-  /**
-   * Checks if the pipeline is healthy (no agents paused due to rejections)
-   */
-  isPipelineHealthy(): boolean {
-    for (const [agentId, state] of this.rejectionStates.entries()) {
-      if (state.isPaused) {
-        this.logger.debug('Pipeline unhealthy due to paused agent', { agentId });
-        return false;
+      if (!state || !state.isPaused) {
+        this.logger.warn('Attempted to resume non-paused agent', { agentId });
+        return;
       }
+
+      // Resume the agent queue in Redis
+      await this.redis.resumeQueue(`agent:${agentId}`);
+
+      // Update state
+      state.isPaused = false;
+      state.pausedUntil = undefined;
+      state.consecutiveFailures = 0; // Reset on manual resume
+      this.rejectionStates.set(agentId, state);
+
+      this.logger.info('Agent queue resumed', { agentId });
+
+      this.emit('agentResumed', {
+        agentId,
+        resumedAt: new Date()
+      });
+
+    } catch (error) {
+      this.logger.error('Failed to resume agent queue', {
+        agentId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      throw error;
     }
-    return true;
   }
 
   /**
@@ -199,19 +200,35 @@ export class Orchestrator extends EventEmitter {
   }
 
   /**
-   * Gets all agents currently paused due to rejections
+   * Gets all paused agents
    */
   getPausedAgents(): Array<{ agentId: string; state: AgentRejectionState }> {
-    const paused: Array<{ agentId: string; state: AgentRejectionState }> = [];
+    const pausedAgents: Array<{ agentId: string; state: AgentRejectionState }> = [];
     
     for (const [agentId, state] of this.rejectionStates.entries()) {
       if (state.isPaused) {
-        paused.push({ agentId, state });
+        pausedAgents.push({ agentId, state });
       }
     }
     
-    return paused;
+    return pausedAgents;
+  }
+
+  /**
+   * Cleans up expired pause states
+   */
+  async cleanupExpiredPauses(): Promise<void> {
+    const now = new Date();
+    const expiredAgents: string[] = [];
+
+    for (const [agentId, state] of this.rejectionStates.entries()) {
+      if (state.isPaused && state.pausedUntil && state.pausedUntil <= now) {
+        expiredAgents.push(agentId);
+      }
+    }
+
+    for (const agentId of expiredAgents) {
+      await this.resumeAgent(agentId);
+    }
   }
 }
-
-export default Orchestrator;
