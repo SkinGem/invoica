@@ -3,6 +3,7 @@ import Hero from '@/components/Hero';
 import Problem from '@/components/Problem';
 import Features from '@/components/Features';
 import CodeExample from '@/components/CodeExample';
+import McpIntegration from '@/components/McpIntegration';
 import Enterprise from '@/components/Enterprise';
 import SocialProof from '@/components/SocialProof';
 import BetaBanner from '@/components/BetaBanner';
@@ -43,13 +44,16 @@ export default function HomePage() {
         {/* 4. Code example — developer experience section */}
         <CodeExample />
 
-        {/* 5. Enterprise value prop — RBAC, compliance, SLA */}
+        {/* 5. MCP Integration — Use Invoica from Claude, Cursor & Windsurf */}
+        <McpIntegration />
+
+        {/* 6. Enterprise value prop — RBAC, compliance, SLA */}
         <Enterprise />
 
-        {/* 6. Social proof — stats + testimonials */}
+        {/* 7. Social proof — stats + testimonials */}
         <SocialProof />
 
-        {/* 7. Closing CTA */}
+        {/* 8. Closing CTA */}
         <BetaBanner />
       </main>
       <Footer />
