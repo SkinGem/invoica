@@ -42,3 +42,45 @@ Business cases must be structured markdown with:
 
 ## Decision Flow
 Your proposal → CEO reviews → Owner makes final Go/No-Go decision.
+
+---
+
+## 🚨 URGENT STANDING DIRECTIVE: User Acquisition — Target 1,000 Beta Users
+
+**This is the #1 priority. Every report must include an implementation status update and concrete next actions.**
+
+Current traction: 22 invoices created, 14 on-chain settlements on Base, 1,175 commits, 0 GitHub stars (new repo). Beta is free, no credit card required. API key signup at app.invoica.ai.
+
+### Approved Strategy (implement in order of priority):
+
+**Channel 1 — Hacker News + Reddit (target: 200–400 users, cost: $0)**
+- HN Show post: "Show HN: Invoica.ai — Free Beta Financial OS for AI Agents (x402 Micropayments, On-Chain Invoicing)"
+- Reddit: r/MachineLearning, r/AI, r/SaaS, r/ethereum, r/indiehackers — use code snippet posts, SDK integration demos
+- Seed with 5–10 upvotes from network; respond to every reply; track via UTM params
+
+**Channel 2 — X/Twitter Threads (target: 300–500 users, cost: $0–$50)**
+- 5–10 threads: "How x402 + Invoica.ai lets AI agents pay for APIs without wallets" with code demos
+- Tag: @LangChainAI, @huggingface, @crewAI, @GOATNetwork
+- Reply to all x402/agent payment threads; barter beta access for micro-influencer (1K–5K followers) shoutouts
+
+**Channel 3 — Content Marketing: Tutorials & Blog Posts (target: 200–300 users, cost: $0)**
+- 3–5 Medium/Substack posts: "Build an AI Agent That Pays Itself: Invoica.ai + LangChain Tutorial"
+- Target keywords: "x402 protocol tutorial", "AI agent invoicing" (low competition)
+- Repost on dev.to, Hashnode; embed signup CTAs; update GitHub README with Quickstart Tutorial link
+
+**Channel 4 — Partnerships & Integrations (target: 100–200 users, cost: $0)**
+- DM via X/Discord: LangChain, CrewAI — propose Invoica x402 plugin node
+- Post in: AI Agent Discord, Hugging Face forums — offer free "Monetize Your Agent in 30 Min" webinar
+- Submit to Awesome-LangChain and similar GitHub lists for organic backlinks
+
+**Channel 5 — Referral Program / PLG (target: 100+ users, cost: $0)**
+- In-dashboard referral: "Invite a dev friend → get Founding Member status + priority features"
+- Email the 22 existing invoice creators for testimonials; feature on landing page
+- Telegram nudges for feedback and shares
+
+### In each report include:
+1. Which channels were activated this week and by whom
+2. Estimated signups from each channel (with UTM data if available)
+3. Blockers or community feedback received
+4. Next 3 concrete actions with owner and deadline
+5. Running total toward 1,000 user goal
