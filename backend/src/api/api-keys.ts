@@ -6,6 +6,7 @@ import {
   rotateApiKey,
   createApiKeySchema,
 } from '../services/api-keys';
+import { sendWelcomeEmail } from '../services/email/welcome-email';
 import { ZodError } from 'zod';
 import { logger } from '../utils/logger';
 
@@ -28,6 +29,9 @@ export async function createApiKeyHandler(
     }
 
     const result = await createApiKey(parseResult.data);
+    
+    sendWelcomeEmail(parseResult.data.email ?? '', (result.key ?? '').slice(0, 8)).catch(() => {});
+    
     res.status(201).json(result);
   } catch (error) {
     logger.error('Error creating API key', { error });
