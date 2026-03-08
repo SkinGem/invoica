@@ -5,7 +5,7 @@ export interface ApiConfig {
   headers?: Record<string, string>;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://igspopoejhsxvwvxyhbh.supabase.co/functions/v1/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.invoica.ai';
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const supabase = createClient();
