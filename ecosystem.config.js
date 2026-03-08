@@ -31,6 +31,9 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: "768M",
+      max_restarts: 10,        // stop crash-looping after 10 failed starts
+      min_uptime: "10s",       // only counts as a stable start if it lives 10s
+      restart_delay: 5000,     // 5s between restart attempts
       error_file: "/home/invoica/apps/Invoica/logs/gateway-error.log",
       out_file: "/home/invoica/apps/Invoica/logs/gateway-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
