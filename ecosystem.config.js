@@ -383,6 +383,26 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
+      // invoica-mcp: local dev/test runner for the MCP server
+      // Not used in production (users run via npx @invoica/mcp)
+      // To test: pm2 start ecosystem.config.js --only invoica-mcp
+      name: "invoica-mcp",
+      script: "./backend/src/mcp/invoica-mcp-server.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json",
+        INVOICA_API_URL: "https://api.invoica.ai",
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/mcp-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/mcp-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
       name: "pm2-process-watchdog",
       script: "./scripts/pm2-process-watchdog.ts",
       interpreter: "node",

@@ -10,7 +10,11 @@
     "sprint:test": "ts-node scripts/orchestrate-agents-v2.ts sprints/migration-test.json --one",
     "test": "echo \"No tests configured yet\" && exit 0"
   },
+  "bin": {
+    "invoica-mcp": "./backend/src/mcp/invoica-mcp-server.ts"
+  },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "@prisma/client": "^5.22.0",
     "@supabase/supabase-js": "^2.98.0",
     "@types/bcrypt": "^6.0.0",
