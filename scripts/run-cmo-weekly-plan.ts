@@ -232,7 +232,11 @@ function gatherContext(): { soul: string; recentCommits: string; marketWatch: st
   // CTO report: what was actually verified/shipped this week
   const ctoShippedReport = getCtoShippedReport();
 
-  return { soul, recentCommits, shippedFeatures, marketWatch, ctoShippedReport };
+  // X algorithm posting guidelines — loaded from docs/x-posting-guidelines.md
+  const guidelinesPath = path.join(ROOT, 'docs', 'x-posting-guidelines.md');
+  const xGuidelines = fs.existsSync(guidelinesPath) ? fs.readFileSync(guidelinesPath, 'utf-8') : '';
+
+  return { soul, recentCommits, shippedFeatures, marketWatch, ctoShippedReport, xGuidelines };
 }
 
 // ── Generate weekly plan ──────────────────────────────────────────────────────
@@ -257,7 +261,10 @@ async function generatePlan(weekStart: string, dates: string[], xTrends: string,
   // Manus is an autonomous research agent — give it the full context in one prompt
   const manusClient = new ManusClient({});
   let raw: string;
-  const manusPrompt = `You are the CMO of Invoica (invoica.ai) — the Financial OS for AI Agents.
+  const manusPrompt = `CRITICAL REFERENCE — X ALGORITHM POSTING GUIDELINES (read this in full before generating any content):
+${ctx.xGuidelines}
+---
+You are the CMO of Invoica (invoica.ai) — the Financial OS for AI Agents.
 Your task: generate a weekly X/Twitter content plan for the X agent to execute.
 
 CRITICAL CONTENT RULES:
@@ -335,7 +342,10 @@ IMPORTANT INSTRUCTIONS FOR OUTPUT FORMAT:
   } catch (e: any) {
     log(`Manus failed or returned invalid output (${e.message}) — falling back to Claude for CMO plan generation`);
     raw = await callClaude(
-    `You are the CMO of Invoica — the Financial OS for AI Agents (@invoica_ai).
+    `CRITICAL REFERENCE — X ALGORITHM POSTING GUIDELINES (read this in full before generating any content):
+${ctx.xGuidelines}
+---
+You are the CMO of Invoica — the Financial OS for AI Agents (@invoica_ai).
 You produce a structured weekly X/Twitter content plan for the X agent to execute.
 
 CRITICAL CONTENT RULES:
