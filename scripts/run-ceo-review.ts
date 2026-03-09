@@ -251,7 +251,7 @@ ${fileTree}
 CRITICAL RULES (MiniMax AI will execute these — it truncates large files):
 - Each task targets EXACTLY ONE file. No multi-file tasks.
 - Keep context under 600 chars per task — be concise and specific.
-- agent must be: backend-core | frontend | agents | infra
+- agent must be: backend-core | backend-ledger | backend-tax | frontend | devops | security
 - type: feature | bugfix | test | docs
 - priority: critical | high | medium | low
 - status: always "pending"
