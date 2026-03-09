@@ -2,16 +2,28 @@ name: Publish invoica-mcp
 
 # Triggered by: git tag npm-vX.Y.Z && git push origin npm-vX.Y.Z
 #
-# REQUIRES: An npm "Automation" token (not a classic "Publish" token).
-#   If your npm account has 2FA enabled, classic tokens will fail on `npm publish`
-#   even though `npm whoami` and dry-run succeed.
-#   Create an Automation token at: https://www.npmjs.com/settings/<user>/tokens
-#   Then update the NPM_TOKEN secret in GitHub repo Settings → Secrets.
+# TOKENLESS — no NPM_TOKEN secret needed.
+# GitHub OIDC lets npm issue a short-lived publish token at runtime.
+# The package is also signed with a Sigstore attestation (provenance)
+# that permanently links this build to the exact commit + workflow run.
+#
+# How it works:
+#   1. id-token: write  → GitHub issues an OIDC JWT for this run
+#   2. npm CLI exchanges that JWT with registry.npmjs.org for a temp token
+#   3. npm publishes the package under your account (OIDC sub = repo identity)
+#   4. npm attaches a Sigstore attestation so anyone can verify the build
+#
+# One-time requirement: your npm account must have GitHub linked at
+#   https://www.npmjs.com/settings/<user>/profile (OAuth → Connect GitHub)
 
 on:
   push:
     tags:
       - 'npm-v*'
+
+permissions:
+  id-token: write   # lets GitHub issue the OIDC token for npm auth + provenance
+  contents: read
 
 jobs:
   publish:
@@ -36,7 +48,6 @@ jobs:
           cat dist/mcp/invoica-mcp-server.js >> mcp-package/index.js
           chmod +x mcp-package/index.js
 
-      - name: Publish to npm
-        run: npm publish mcp-package/
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Publish to npm (tokenless OIDC + provenance)
+        run: npm publish mcp-package/ --provenance --access public
+        # No NODE_AUTH_TOKEN — OIDC JWT from id-token: write handles auth
