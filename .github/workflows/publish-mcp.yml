@@ -57,6 +57,13 @@ jobs:
           cat dist/mcp/invoica-mcp-server.js >> mcp-package/index.js
           chmod +x mcp-package/index.js
 
+      - name: Diagnose npm version + OIDC env
+        run: |
+          echo "npm version: $(npm --version)"
+          echo "node version: $(node --version)"
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL set: $([[ -n \"$ACTIONS_ID_TOKEN_REQUEST_URL\" ]] && echo yes || echo NO)"
+          cat ~/.npmrc 2>/dev/null || echo "no ~/.npmrc"
+
       - name: Publish to npm (Trusted Publishers OIDC + Sigstore provenance)
         run: npm publish mcp-package/ --provenance --access public
         # No NODE_AUTH_TOKEN — npm CLI auto-detects OIDC environment via Trusted Publishers
