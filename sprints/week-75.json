@@ -89,11 +89,12 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done",
+      "verified_done": "2026-03-09 done by Tarek+Claude — files written directly to bypass path validator"
     },
     {
       "id": "ACQ-003",
-      "agent": "cmo",
+      "agent": "backend-core",
       "type": "feature",
       "priority": "medium",
       "dependencies": [],

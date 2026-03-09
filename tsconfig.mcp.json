@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist/mcp",
+    "rootDir": "./backend/src/mcp",
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["backend/src/mcp/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

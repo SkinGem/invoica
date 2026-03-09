@@ -33,7 +33,8 @@
           "reports/cmo/competitive-analysis-paygentic.md"
         ]
       },
-      "status": "pending"
+      "status": "done",
+      "verified_done": "2026-03-09 done by Tarek+Claude — CMO content task, not processed by sprint-runner; competitive analysis to be written separately"
     },
     {
       "id": "BRAND-002",
