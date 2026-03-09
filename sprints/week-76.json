@@ -15,7 +15,7 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "FIX-003",
@@ -32,7 +32,7 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "FIX-002",
@@ -50,7 +50,7 @@
           "scripts/fix-invoice-sequence.md"
         ]
       },
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "FIX-005",
@@ -67,7 +67,7 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "FIX-004",
@@ -84,7 +84,7 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done"
     }
   ]
 }
