@@ -31,27 +31,10 @@ fi
 echo $$ > "$LOCK_FILE"
 trap 'rm -f "$LOCK_FILE"' EXIT
 
-# ── 0. ALWAYS: Self-heal ceo-ai-bot ──────────────────────────────────────────
-# Runs every 5 minutes regardless of whether there are new commits.
-# Ensures the CEO bot is always online — even if it crashed between deploys.
-# NOTE: this block must be BEFORE the "no changes → exit 0" check.
-if pm2 list | grep -q "ceo-ai-bot"; then
-  # Process is registered with PM2 — check if it's actually online
-  if ! pm2 list | grep "ceo-ai-bot" | grep -q "online"; then
-    echo "[$TIMESTAMP] [AutoDeploy] ceo-ai-bot registered but NOT online — restarting"
-    set -a; source .env; set +a
-    pm2 restart ceo-ai-bot --update-env || true
-    pm2 save
-    echo "[$TIMESTAMP] [AutoDeploy] ceo-ai-bot restarted"
-  fi
-else
-  # Process is missing from PM2 entirely — start it
-  echo "[$TIMESTAMP] [AutoDeploy] ceo-ai-bot MISSING from PM2 — starting now"
-  set -a; source .env; set +a
-  pm2 start ecosystem.config.js --only ceo-ai-bot --update-env || true
-  pm2 save
-  echo "[$TIMESTAMP] [AutoDeploy] ceo-ai-bot started"
-fi
+# ── 0. (removed) ceo-ai-bot self-heal ────────────────────────────────────────
+# ceo-ai-bot is managed by root PM2 daemon. This script runs as invoica user
+# and cannot see root PM2 — the old self-heal was spawning duplicate phantom
+# processes in the invoica PM2. Root PM2's autorestart handles recovery.
 
 # ── 1. Fetch remote silently ──────────────────────────────────────────
 git fetch origin main --quiet 2>/dev/null
