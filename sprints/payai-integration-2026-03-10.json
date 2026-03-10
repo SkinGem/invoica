@@ -47,8 +47,8 @@
     {
       "id": "ARB-002",
       "title": "Arb Bot — F-02: Replace CPMM quotes with DLMM swapQuote() for SOL legs",
-      "status": "blocked",
-      "blocked_by": ["ARB-001"],
+      "status": "pending",
+      "blocked_by": [],
       "type": "code",
       "agent": "CTO",
       "estimate_agent_hours": 3,
@@ -59,8 +59,8 @@
     {
       "id": "ARB-003",
       "title": "Arb Bot — F-03: Fix MeteoraPoolManager WSOL/WSOL mint placeholder",
-      "status": "blocked",
-      "blocked_by": ["ARB-001"],
+      "status": "pending",
+      "blocked_by": [],
       "type": "code",
       "agent": "CTO",
       "estimate_agent_hours": 1,
@@ -71,8 +71,8 @@
     {
       "id": "ARB-004",
       "title": "Arb Bot — F-05: Fix BigInt() crash on base58 reserve fields (REST API path)",
-      "status": "blocked",
-      "blocked_by": ["ARB-001"],
+      "status": "pending",
+      "blocked_by": [],
       "type": "code",
       "agent": "CTO",
       "estimate_agent_hours": 1,
@@ -83,8 +83,8 @@
     {
       "id": "ARB-005",
       "title": "Arb Bot — F-06 NEW: Add circuit breaker (consecutive loss pause)",
-      "status": "blocked",
-      "blocked_by": ["ARB-001"],
+      "status": "pending",
+      "blocked_by": [],
       "type": "code",
       "agent": "CTO",
       "estimate_agent_hours": 2,
