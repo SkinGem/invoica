@@ -1,6 +1,6 @@
 # SOUL.md — CEO Strategic Identity Document
 ## Invoica | Conway Edition v2.0
-### Last Updated: 2026-03-01
+### Last Updated: 2026-03-10
 
 ---
 
@@ -44,10 +44,18 @@ Our positioning: "Stripe for AI Agents."
 | Tax Compliance Engine | Live — 12 countries | Included in Pro tier |
 | Settlement Detection | Live — on-chain | Included in all tiers |
 | Dashboard & Analytics | Live | Frontend for all tiers |
-| Gas Backstop | Planned — Priority 1 | Spread on loans |
-| SOL Incinerator | Planned — Priority 2 | 20% of recovered rent |
-| Reputation Scoring API | Planned — Priority 3 | Per-query fee + subscription |
-| Agent Marketplace | Planned — Priority 4 | 10-15% transaction fee |
+| Multi-chain (Base + Polygon) | Live — Shipped Sprint 074 | Included in all tiers |
+| Gas Backstop | Planned — **Priority 1** | Spread on loans |
+| Arb Bot Stabilisation | Planned — **Priority 2** | Prerequisite (separate repo) |
+| Payment Router (PayAI-exclusive) | Planned — **Priority 3** | 0.005 USDC/routing call |
+| Solana Settlement | Planned — **Priority 4** | Gates Treasury Manager |
+| Treasury Manager (PayAI-exclusive) | Planned — **Priority 5** *(conditional: needs Solana)* | 0.005 USDC/arb cycle |
+| SOL Incinerator | Planned — **Priority 6** | 20% of recovered rent |
+| Reputation Oracle (PayAI-exclusive) | Planned — **Priority 7** *(replaces Reputation Scoring API)* | 0.002 USDC/score query |
+| PayAI Marketplace Listing | Planned — **Priority 8** | Distribution + cross-promotion |
+| Agent Marketplace | Planned — **Priority 9** | 10-15% transaction fee |
+
+**PayAI Partnership:** Invoica × PayAI — all three arb-derived services (Payment Router, Treasury Manager, Reputation Oracle) are distributed exclusively through PayAI's x402 marketplace. PayAI is the distribution channel; Invoica builds the infrastructure. See `docs/plans/payai-integration-roadmap.md`.
 
 ## Agent Performance Notes
 
@@ -68,6 +76,8 @@ Our positioning: "Stripe for AI Agents."
 3. **Gas backstop** creates the strongest lock-in — removing it introduces operational risk agents won't accept.
 4. **Conway governance** differentiates Invoica as a self-improving, survival-driven entity — not just a tool.
 5. **Beta period** is about distribution, not monetization — maximize onboarding velocity.
+6. **PayAI is the distribution moat** — being the flagship infrastructure partner in PayAI's marketplace gives Invoica access to the entire x402 agent ecosystem without marketing spend. Exclusivity creates defensibility.
+7. **Idle agent cycles are a revenue asset** — the Treasury Manager converts compute downtime into yield, partially self-funding the 18-agent swarm's operational costs.
 
 ## Revenue Learnings
 
@@ -82,6 +92,9 @@ Our positioning: "Stripe for AI Agents."
 | 2026-02-20 | Conway Edition v2.0 adopted | Self-improving governance for long-term autonomy |
 | 2026-02-27 | Beta launched | First-mover urgency, 60-day free distribution period (ends April 27) |
 | 2026-02-20 | Dual pricing: Web3 + Company | Different segments need different value propositions |
+| 2026-03-09 | Multi-chain live (Base + Polygon) | Polygon support shipped Sprint 074 — EVM multi-chain validated |
+| 2026-03-10 | PayAI exclusive distribution partnership | Arb bot repurposed into 3 PayAI-gated services — distribution without marketing spend. See payai-integration-roadmap.md |
+| 2026-03-10 | Reputation Scoring API → Reputation Oracle (PayAI) | Original Priority 3 upgraded: now on-chain ACP trust scores distributed via PayAI marketplace — stronger product, better distribution |
 
 ## Evolving Sense of Mission
 

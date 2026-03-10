@@ -1,0 +1,180 @@
+{
+  "id": "payai-integration-2026-03-10",
+  "title": "Invoica × PayAI Integration — Arb Bot Repurposing",
+  "created": "2026-03-10",
+  "status": "pending",
+  "priority": "HIGH",
+  "source": "docs/plans/payai-integration-roadmap.md",
+  "human_gate": {
+    "required": true,
+    "action": "PRE Sprint — PayAI Service Registration. Tarek must register 3 services at payai.network using investor relationship. Returns 3 ServiceIDs. See docs/plans/payai-integration-roadmap.md#pre-sprint for exact steps.",
+    "blocking": ["sprint-051", "sprint-052", "sprint-053"]
+  },
+  "context_note": "Arb bot repo not yet located locally. Check github.com/skingem1/ for Solana/Meteora repos before queuing Sprint 050. agent-reputation-dashboard repo exists at github.com/skingem1/agent-reputation-dashboard (foundation for Sprint 053).",
+  "tasks": [
+    {
+      "id": "PRE-001",
+      "title": "PayAI Service Registration — Human Action",
+      "status": "pending",
+      "type": "human",
+      "agent": null,
+      "estimate_human_hours": 2,
+      "description": "Register 3 Invoica services on PayAI partner portal. Use investor relationship for direct access. Get PAYAI_SERVICE_ID_ROUTER, PAYAI_SERVICE_ID_TREASURY, PAYAI_SERVICE_ID_ORACLE. Add to .env.example. Negotiate 50% fee reduction for first 3 months.",
+      "outputs": ["PAYAI_SERVICE_ID_ROUTER", "PAYAI_SERVICE_ID_TREASURY", "PAYAI_SERVICE_ID_ORACLE"],
+      "gate_for": ["SPRINT050-001"]
+    },
+    {
+      "id": "SPRINT050-001",
+      "title": "Arb Bot — Fix F-01: Rotate exposed private key + gitignore",
+      "status": "blocked",
+      "blocked_by": ["PRE-001"],
+      "type": "code",
+      "agent": "CTO",
+      "estimate_agent_hours": 1,
+      "priority": "CRITICAL_SECURITY",
+      "description": "wallet/keypair.json contains a private key committed to the arb bot repo. Add wallet/keypair.json to .gitignore immediately. Document key rotation procedure in README. ROTATE THE KEY before any further commits.",
+      "repo": "arb-bot (locate at github.com/skingem1/)",
+      "files": [".gitignore", "README.md"]
+    },
+    {
+      "id": "SPRINT050-002",
+      "title": "Arb Bot — Fix F-02: Replace CPMM math with DLMM swapQuote()",
+      "status": "blocked",
+      "blocked_by": ["SPRINT050-001"],
+      "type": "code",
+      "agent": "CTO",
+      "estimate_agent_hours": 2,
+      "description": "CPMM x*y=k pricing model used for DLMM pools — categorically wrong. Replace all getAmountOut() calls with dlmm.swapQuote() across quotes.ts, cpmm.ts, and all pool adapters.",
+      "repo": "arb-bot",
+      "files": ["src/quotes.ts", "src/cpmm.ts", "src/adapters/pools/*.ts"]
+    },
+    {
+      "id": "SPRINT050-003",
+      "title": "Arb Bot — Fix F-03: MeteoraPoolManager mint placeholder",
+      "status": "blocked",
+      "blocked_by": ["SPRINT050-001"],
+      "type": "code",
+      "agent": "CTO",
+      "estimate_agent_hours": 1,
+      "description": "meteoraSDK.ts:35 — MeteoraPoolManager passes WSOL as both mints A and B. Pass TOKEN_A_MINT and TOKEN_B_MINT from config. Root cause of all quote failures. Two-line fix.",
+      "repo": "arb-bot",
+      "files": ["src/lib/meteoraSDK.ts"]
+    },
+    {
+      "id": "SPRINT050-004",
+      "title": "Arb Bot — Fix F-05: BigInt() crash on base58 reserve fields",
+      "status": "blocked",
+      "blocked_by": ["SPRINT050-001"],
+      "type": "code",
+      "agent": "CTO",
+      "estimate_agent_hours": 1,
+      "description": "bsol.ts:170 — REST API returns base58 strings in reserve fields. BigInt() conversion crashes. Add type guard before every BigInt() conversion. Validate numeric string first. Log and skip if base58 is returned.",
+      "repo": "arb-bot",
+      "files": ["src/adapters/pools/bsol.ts"]
+    },
+    {
+      "id": "SPRINT050-GATE",
+      "title": "Arb Bot — Validation: 50 clean devnet cycles",
+      "status": "blocked",
+      "blocked_by": ["SPRINT050-002", "SPRINT050-003", "SPRINT050-004"],
+      "type": "human_validation",
+      "estimate_human_hours": 1,
+      "description": "Run 50 simulated cycles on devnet. Confirm quotes non-zero and directionally sane. Confirm circuit breaker triggers after 3 consecutive simulated losses. DO NOT proceed to Sprint 051 until this gate passes.",
+      "gate_for": ["SPRINT051-001"]
+    },
+    {
+      "id": "SPRINT051-001",
+      "title": "Payment Router — payai-gate.ts middleware",
+      "status": "blocked",
+      "blocked_by": ["SPRINT050-GATE", "PRE-001"],
+      "type": "code",
+      "agent": "coding-agent",
+      "estimate_agent_hours": 3,
+      "description": "Create middleware/payai-gate.ts. Uses @payai/x402-sdk verifyPayAI(). Applied to /payai/router/*, /payai/treasury/*, /payai/oracle/*. Returns HTTP 402 without valid PayAI x402 header.",
+      "repo": "Invoica",
+      "files": ["middleware/payai-gate.ts"]
+    },
+    {
+      "id": "SPRINT051-002",
+      "title": "Payment Router — payment-router.ts service",
+      "status": "blocked",
+      "blocked_by": ["SPRINT051-001"],
+      "type": "code",
+      "agent": "coding-agent",
+      "estimate_agent_hours": 4,
+      "description": "Create backend/src/services/payment-router.ts. Wraps arb bot executeSwap() into route(invoiceId, tokenIn, amountIn) returning USDC settled. simulate:true flag by default.",
+      "repo": "Invoica",
+      "files": ["backend/src/services/payment-router.ts"]
+    },
+    {
+      "id": "SPRINT051-003",
+      "title": "Payment Router — wire into settlement route",
+      "status": "blocked",
+      "blocked_by": ["SPRINT051-002"],
+      "type": "code",
+      "agent": "coding-agent",
+      "estimate_agent_hours": 2,
+      "description": "Update settlement route in backend/src/routes/ — call payment-router.ts before booking. If tokenIn is the settlement token, passthrough. Otherwise route via arb bot.",
+      "repo": "Invoica",
+      "files": ["backend/src/routes/[settlement-route].ts"]
+    },
+    {
+      "id": "SPRINT052-001",
+      "title": "Treasury Manager — treasury-yield.ts OpenClaw skill",
+      "status": "blocked",
+      "blocked_by": ["SPRINT051-003", "CEO_SOLANA_SPRINT"],
+      "type": "code",
+      "agent": "coding-agent",
+      "estimate_agent_hours": 4,
+      "description": "CONDITIONAL: CEO Solana sprint must land first. Register invoica-treasury-yield skill via ClawRouter. Trigger: agent wallet above floor AND idle >10min. Calls arb bot fast-loop on Meteora BTC/SOL pool. Deposits yield to agent wallet. Safety rails hardcoded: max 2% drawdown/cycle, circuit breaker after 3 losses.",
+      "repo": "Invoica",
+      "files": ["backend/src/skills/treasury-yield.ts"]
+    },
+    {
+      "id": "SPRINT052-002",
+      "title": "Treasury Manager — treasury-attribution.ts",
+      "status": "blocked",
+      "blocked_by": ["SPRINT052-001"],
+      "type": "code",
+      "agent": "coding-agent",
+      "estimate_agent_hours": 3,
+      "description": "Create backend/src/services/treasury-attribution.ts. Maps yield earned to agent identity. Primary data source for Reputation Oracle in Sprint 053.",
+      "repo": "Invoica",
+      "files": ["backend/src/services/treasury-attribution.ts"]
+    },
+    {
+      "id": "SPRINT053-001",
+      "title": "Reputation Oracle — acp-scorer.ts + oracle route",
+      "status": "blocked",
+      "blocked_by": ["SPRINT052-002"],
+      "type": "code",
+      "agent": "coding-agent",
+      "estimate_agent_hours": 5,
+      "description": "Extend agent-reputation-dashboard (github.com/skingem1/agent-reputation-dashboard) to ingest treasury-attribution.ts output. Build acp-scorer.ts: weighted composite score (40% yield, 30% routing success, 20% settlement time, 10% task completion). Score 0-1000. Build oracle.ts route: GET /payai/oracle/score/:agentId, GET /payai/oracle/leaderboard, POST /payai/oracle/record.",
+      "repo": "Invoica + agent-reputation-dashboard",
+      "files": ["backend/src/routes/oracle.ts", "backend/src/services/acp-scorer.ts"]
+    },
+    {
+      "id": "SPRINT054-001",
+      "title": "Marketplace — public treasury endpoint + frontend tab",
+      "status": "blocked",
+      "blocked_by": ["SPRINT053-001"],
+      "type": "code",
+      "agent": "coding-agent",
+      "estimate_agent_hours": 3,
+      "description": "Create backend/src/routes/treasury-public.ts (no auth). Add /treasury dashboard tab to Next.js frontend. Emergency pause button kills yield engine only. Submit all 3 services to PayAI marketplace with cross-branding.",
+      "repo": "Invoica",
+      "files": ["backend/src/routes/treasury-public.ts", "frontend/app/treasury/"]
+    }
+  ],
+  "sprint_sequence": [
+    "PRE-001 (human, 2 days) → parallel with Gas Backstop",
+    "SPRINT050-001 through SPRINT050-GATE → arb bot stabilisation (separate repo)",
+    "SPRINT051 → Payment Router (Invoica repo, needs PRE + Sprint050)",
+    "CEO Solana Sprint → already planned, now has urgency as gate for Sprint 052",
+    "SPRINT052 → Treasury Manager (conditional, needs Solana + Sprint051)",
+    "SPRINT053 → Reputation Oracle (replaces Priority 3)",
+    "SPRINT054 → Marketplace demo (pitch asset)"
+  ],
+  "ceo_notes": "PayAI integration does NOT displace Gas Backstop (Priority 1). Both tracks run in parallel — Gas Backstop in the Invoica repo, Arb Bot Stabilisation in the separate arb bot repo. PRE sprint is human-only and should start immediately. Flag CTO when CEO Solana sprint ships to confirm wallet interface before Sprint 052."
+}
