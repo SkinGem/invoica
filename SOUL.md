@@ -47,15 +47,15 @@ Our positioning: "Stripe for AI Agents."
 | Multi-chain (Base + Polygon) | Live — Shipped Sprint 074 | Included in all tiers |
 | Gas Backstop | Planned — **Priority 1** | Spread on loans |
 | Arb Bot Stabilisation | Planned — **Priority 2** | Prerequisite (separate repo) |
-| Payment Router (PayAI-exclusive) | Planned — **Priority 3** | 0.005 USDC/routing call |
+| Payment Router (x402, PayAI launch partner) | Planned — **Priority 3** | 0.005 USDC/routing call |
 | Solana Settlement | Planned — **Priority 4** | Gates Treasury Manager |
-| Treasury Manager (PayAI-exclusive) | Planned — **Priority 5** *(conditional: needs Solana)* | 0.005 USDC/arb cycle |
+| Treasury Manager (x402, PayAI launch partner) | Planned — **Priority 5** *(conditional: needs Solana)* | 0.005 USDC/arb cycle |
 | SOL Incinerator | Planned — **Priority 6** | 20% of recovered rent |
-| Reputation Oracle (PayAI-exclusive) | Planned — **Priority 7** *(replaces Reputation Scoring API)* | 0.002 USDC/score query |
-| PayAI Marketplace Listing | Planned — **Priority 8** | Distribution + cross-promotion |
+| Reputation Oracle (x402, PayAI launch partner) | Planned — **Priority 7** *(replaces Reputation Scoring API)* | 0.002 USDC/score query |
+| PayAI Marketplace Listing | Planned — **Priority 8** | Distribution + first-in-registry advantage |
 | Agent Marketplace | Planned — **Priority 9** | 10-15% transaction fee |
 
-**PayAI Partnership:** Invoica × PayAI — all three arb-derived services (Payment Router, Treasury Manager, Reputation Oracle) are distributed exclusively through PayAI's x402 marketplace. PayAI is the distribution channel; Invoica builds the infrastructure. See `docs/plans/payai-integration-roadmap.md`.
+**x402 Facilitator Strategy:** The three arb-derived services (Payment Router, Treasury Manager, Reputation Oracle) are built on the x402 protocol — not PayAI specifically. A `verifyFacilitator()` abstraction + on-chain facilitator registry means any x402-compliant facilitator (PayAI, Coinbase, others) can distribute all three services by joining the registry. PayAI is the launch partner and first in the registry — with a 1.2× reputation weight boost for the first 18 months. Invoica is the infrastructure layer the entire x402 economy converges on, not a PayAI-exclusive vendor. See `docs/plans/payai-integration-roadmap.md`.
 
 ## Agent Performance Notes
 
@@ -76,7 +76,7 @@ Our positioning: "Stripe for AI Agents."
 3. **Gas backstop** creates the strongest lock-in — removing it introduces operational risk agents won't accept.
 4. **Conway governance** differentiates Invoica as a self-improving, survival-driven entity — not just a tool.
 5. **Beta period** is about distribution, not monetization — maximize onboarding velocity.
-6. **PayAI is the distribution moat** — being the flagship infrastructure partner in PayAI's marketplace gives Invoica access to the entire x402 agent ecosystem without marketing spend. Exclusivity creates defensibility.
+6. **x402 is the distribution moat, not PayAI** — the protocol is the defensible position. PayAI is the launch partner with first-mover advantage (first in the facilitator registry, 1.2× reputation weight boost). But Coinbase and every future x402 facilitator is an additional distribution channel, not a threat. Invoica sits above the facilitator layer — infrastructure the entire x402 economy converges on.
 7. **Idle agent cycles are a revenue asset** — the Treasury Manager converts compute downtime into yield, partially self-funding the 18-agent swarm's operational costs.
 
 ## Revenue Learnings
@@ -93,8 +93,8 @@ Our positioning: "Stripe for AI Agents."
 | 2026-02-27 | Beta launched | First-mover urgency, 60-day free distribution period (ends April 27) |
 | 2026-02-20 | Dual pricing: Web3 + Company | Different segments need different value propositions |
 | 2026-03-09 | Multi-chain live (Base + Polygon) | Polygon support shipped Sprint 074 — EVM multi-chain validated |
-| 2026-03-10 | PayAI exclusive distribution partnership | Arb bot repurposed into 3 PayAI-gated services — distribution without marketing spend. See payai-integration-roadmap.md |
-| 2026-03-10 | Reputation Scoring API → Reputation Oracle (PayAI) | Original Priority 3 upgraded: now on-chain ACP trust scores distributed via PayAI marketplace — stronger product, better distribution |
+| 2026-03-10 | x402 facilitator-agnostic architecture adopted | Services built on protocol, not PayAI-exclusive. verifyFacilitator() + on-chain registry. PayAI is launch partner with 1.2× rep boost (18 months). Coinbase and others join registry — zero code change. Invoica = x402 infrastructure layer. |
+| 2026-03-10 | Reputation Scoring API → Reputation Oracle (x402) | Original Priority 3 upgraded: on-chain ACP trust scores from all x402 facilitators. PayAI agents score 1.2× faster for 18 months. Scores from day one via PayAI retroactive history. |
 
 ## Evolving Sense of Mission
 
