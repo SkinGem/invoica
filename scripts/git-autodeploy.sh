@@ -18,7 +18,7 @@ TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # ── Lock file guard — prevent overlapping cron runs ────────────────────────────
 # If a previous deploy is still running (e.g. pm2 save is slow), skip this run.
-LOCK_FILE="/tmp/git-autodeploy.lock"
+LOCK_FILE="$APP_DIR/logs/git-autodeploy.lock"  # app-owned dir — no root/invoica permission conflict
 if [ -f "$LOCK_FILE" ]; then
   LOCK_PID=$(cat "$LOCK_FILE" 2>/dev/null || echo "")
   if [ -n "$LOCK_PID" ] && kill -0 "$LOCK_PID" 2>/dev/null; then
@@ -72,8 +72,31 @@ echo "[$TIMESTAMP] [AutoDeploy] New commit: $LOCAL → $REMOTE"
 # This avoids a race condition where a concurrent push between diff and pull
 # causes CHANGED to miss newly-arrived files. ORIG_HEAD is not reliable
 # with --rebase, so we use the saved $LOCAL hash directly.
+
+# Stash any runtime changes (sprint JSONs, reports, .wallet-alert-state.json)
+# so that git pull --rebase doesn't abort. We restore them after.
+DID_STASH=false
+PORCELAIN=$(git status --porcelain 2>/dev/null || true)
+if [ -n "$PORCELAIN" ]; then
+  if git stash push -m "autodeploy-$(date +%s)" --include-untracked 2>&1; then
+    DID_STASH=true
+    echo "[$TIMESTAMP] [AutoDeploy] Stashed runtime changes before pull"
+  else
+    echo "[$TIMESTAMP] [AutoDeploy] WARNING: stash failed — attempting pull anyway"
+  fi
+fi
+
 git pull origin main --quiet
 echo "[$TIMESTAMP] [AutoDeploy] Pull complete (was $LOCAL, now $(git rev-parse HEAD))"
+
+# Restore runtime changes after pull
+if [ "$DID_STASH" = "true" ]; then
+  git stash pop 2>&1 || {
+    echo "[$TIMESTAMP] [AutoDeploy] Stash pop conflict — dropping stash, keeping pulled changes"
+    git stash drop 2>/dev/null || true
+  }
+  echo "[$TIMESTAMP] [AutoDeploy] Restored runtime changes after pull"
+fi
 
 # Get changed files by comparing pre-pull hash to new HEAD
 CHANGED=$(git diff --name-only "$LOCAL" HEAD)

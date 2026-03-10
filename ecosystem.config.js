@@ -186,7 +186,7 @@ module.exports = {
       cwd: "/home/invoica/apps/Invoica",
       autorestart: false,
       watch: false,
-      cron_restart: "0 7 * * 1",
+      cron_restart: "0 7 * * *",  // daily (was weekly "0 7 * * 1" — missed runs = week without alerts)
       kill_timeout: 60000,     // 1 min: tax reg API scrape — allow for slow responses
       env: {
         TS_NODE_TRANSPILE_ONLY: "true",
@@ -204,7 +204,7 @@ module.exports = {
       cwd: "/home/invoica/apps/Invoica",
       autorestart: false,
       watch: false,
-      cron_restart: "0 8 * * 1",
+      cron_restart: "0 8 * * *",  // daily (was weekly "0 8 * * 1" — missed runs = week without alerts)
       kill_timeout: 60000,     // 1 min: EU/Japan tax API scrape — multi-jurisdiction, allow for slow responses
       env: {
         TS_NODE_TRANSPILE_ONLY: "true",
