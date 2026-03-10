@@ -2,14 +2,19 @@ import { Router, Request, Response, NextFunction } from 'express';
 import https from 'https';
 import { createClient } from '@supabase/supabase-js';
 import { requireX402Payment, get402Response } from '../middleware/x402';
+import { callClawRouter, getCostLog } from '../lib/clawrouter-client';
+import { selectModel } from '../lib/model-router';
 
 const router = Router();
 
+// ── Feature flag: USE_CLAWROUTER ────────────────────────────────────────────
+// Phase 1 (parallel mode): set USE_CLAWROUTER=true to route via ClawRouter x402
+// Phase 2 (full cutover): remove legacy callAnthropic/callMiniMax entirely
+const USE_CLAWROUTER = process.env.USE_CLAWROUTER === 'true';
+
+// Legacy keys — kept as fallback during Phase 1 transition
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY || '';
-// Default model: Claude Haiku for simple tasks, MiniMax-M2.5 for coding tasks
-const DEFAULT_MODEL = 'claude-haiku-4-5';
-// Supported MiniMax model on Coding Plan (hardcoded — do not change to env var)
 const MINIMAX_CODING_MODEL = 'MiniMax-M2.5';
 
 function getSupabase() {
@@ -32,6 +37,7 @@ interface SettlementRecord {
   signature: string;
   prompt: string;
   createdAt: string;
+  outboundCostUsdc?: number;
 }
 
 const BATCH_SIZE = 50;
@@ -70,6 +76,10 @@ async function flushSettlementQueue(): Promise<void> {
       signature: rec.signature.slice(0, 20) + '...',
       prompt: rec.prompt.slice(0, 100),
       eip3009: true,
+      ...(rec.outboundCostUsdc != null && {
+        outboundCostUsdc: rec.outboundCostUsdc,
+        marginUsdc: (Number(rec.value) / 1_000_000) - rec.outboundCostUsdc,
+      }),
     }),
     settledAt: rec.createdAt,
     completedAt: now,
@@ -80,7 +90,6 @@ async function flushSettlementQueue(): Promise<void> {
   const { error } = await sb.from('Invoice').insert(records);
   if (error) {
     console.warn('[ai-inference] Batch settlement insert failed:', error.message);
-    // Re-queue on failure (best-effort)
     settlementQueue.unshift(...batch);
   } else {
     console.log(`[ai-inference] ${batch.length} settlement(s) recorded successfully`);
@@ -89,9 +98,12 @@ async function flushSettlementQueue(): Promise<void> {
 
 /**
  * Enqueue a payment for batched settlement.
- * Auto-flushes when queue reaches BATCH_SIZE; timer ensures max latency of 5 min.
  */
-function enqueueSettlement(payment: NonNullable<Request['x402Payment']>, prompt: string): void {
+function enqueueSettlement(
+  payment: NonNullable<Request['x402Payment']>,
+  prompt: string,
+  outboundCostUsdc?: number
+): void {
   settlementQueue.push({
     from: payment.from,
     to: payment.to,
@@ -100,16 +112,15 @@ function enqueueSettlement(payment: NonNullable<Request['x402Payment']>, prompt:
     signature: payment.signature,
     prompt,
     createdAt: new Date().toISOString(),
+    outboundCostUsdc,
   });
 
-  // Flush immediately if batch is full
   if (settlementQueue.length >= BATCH_SIZE) {
     if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
     flushSettlementQueue().catch(e => console.error('[ai-inference] Flush error:', e));
     return;
   }
 
-  // Start/reset the 5-minute flush timer
   if (!flushTimer) {
     flushTimer = setTimeout(() => {
       flushTimer = null;
@@ -118,17 +129,13 @@ function enqueueSettlement(payment: NonNullable<Request['x402Payment']>, prompt:
   }
 }
 
-// Graceful shutdown: flush remaining settlements before process exits
 process.on('SIGTERM', () => flushSettlementQueue().catch(() => {}));
 process.on('SIGINT',  () => flushSettlementQueue().catch(() => {}));
 
 // ---------------------------------------------------------------------------
-// LLM Clients
+// Legacy LLM Clients (Phase 1 fallback — remove in Phase 2)
 // ---------------------------------------------------------------------------
 
-/**
- * Call Anthropic API (native https, no extra deps -- same pattern as ceoBot.ts)
- */
 async function callAnthropic(prompt: string, model: string): Promise<LLMResult> {
   return new Promise((resolve, reject) => {
     const body = JSON.stringify({
@@ -168,10 +175,6 @@ async function callAnthropic(prompt: string, model: string): Promise<LLMResult> 
   });
 }
 
-/**
- * Call MiniMax API (Coding Plan — MiniMax-M2.5 only)
- * Used for coding/agentic tasks — 1M context window, superior coding performance
- */
 async function callMiniMax(prompt: string, systemPrompt?: string): Promise<LLMResult> {
   if (!MINIMAX_API_KEY) throw new Error('MINIMAX_API_KEY not set');
   const messages: Array<{ role: string; content: string }> = [];
@@ -221,10 +224,10 @@ async function callMiniMax(prompt: string, systemPrompt?: string): Promise<LLMRe
   });
 }
 
-/**
- * Route LLM call: MiniMax for coding tasks, Anthropic for everything else
- */
-async function callLLM(prompt: string, model: string, systemPrompt?: string): Promise<LLMResult & { backend: string }> {
+/** Legacy routing: MiniMax for coding, Anthropic for everything else */
+async function callLLMLegacy(
+  prompt: string, model: string, systemPrompt?: string
+): Promise<LLMResult & { backend: string }> {
   const isMiniMax = model.toLowerCase().startsWith('minimax') || model === 'coding';
   if (isMiniMax) {
     const result = await callMiniMax(prompt, systemPrompt);
@@ -235,28 +238,67 @@ async function callLLM(prompt: string, model: string, systemPrompt?: string): Pr
 }
 
 // ---------------------------------------------------------------------------
+// Unified LLM caller — dispatches to ClawRouter or legacy based on flag
+// ---------------------------------------------------------------------------
+
+async function callLLM(
+  prompt: string,
+  requestedModel: string,
+  systemPrompt?: string
+): Promise<LLMResult & { backend: string; resolvedModel: string; costUsdc?: number }> {
+  if (!USE_CLAWROUTER) {
+    // Phase 1 fallback: legacy direct API calls
+    const result = await callLLMLegacy(prompt, requestedModel, systemPrompt);
+    const resolvedModel = result.backend === 'minimax' ? MINIMAX_CODING_MODEL : requestedModel;
+    return { ...result, resolvedModel };
+  }
+
+  // ClawRouter path: expertise routing → x402 pay-per-call
+  const { model: clawModel, taskType, autoClassified } = selectModel(prompt, requestedModel);
+  console.log(`[ai-inference] ClawRouter routing: ${requestedModel || '(auto)'} → ${clawModel} (task=${taskType}, auto=${autoClassified})`);
+
+  const result = await callClawRouter({
+    model: clawModel,
+    prompt: prompt.trim(),
+    systemPrompt,
+    maxTokens: 4096,
+  });
+
+  return {
+    content: result.content,
+    inputTokens: result.inputTokens,
+    outputTokens: result.outputTokens,
+    backend: result.backend,
+    resolvedModel: result.model,
+    costUsdc: result.costUsdc,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------------
 
 /**
- * GET /v1/ai/inference -- returns 402 payment requirements
+ * GET /v1/ai/inference — returns 402 payment requirements (x402 discovery)
  */
 router.get('/v1/ai/inference', (_req: Request, res: Response) => {
   res.status(402).json(get402Response());
 });
 
 /**
- * POST /v1/ai/inference -- x402-protected LLM inference
- * Requires: X-Payment header with valid EIP-3009 authorization
- * Body: { prompt: string, model?: string, system_prompt?: string }
- * Model routing:
- *   "MiniMax-M2.5" | "minimax" | "coding" → MiniMax Coding Plan (M2.5, 1M context)
- *   anything else (default: "claude-haiku-4-5") → Anthropic
- * Settlement: batched — flushed every 50 calls or every 5 minutes
+ * POST /v1/ai/inference — x402-protected LLM inference
+ *
+ * When USE_CLAWROUTER=true:
+ *   All models routed through ClawRouter via x402. Expertise routing
+ *   auto-classifies prompts to specialist models. Legacy model names
+ *   (MiniMax-M2.5, claude-haiku-4-5) are mapped to ClawRouter IDs.
+ *
+ * When USE_CLAWROUTER=false (default / Phase 1 fallback):
+ *   Direct calls to Anthropic/MiniMax using subscription API keys.
  */
 router.post('/v1/ai/inference', requireX402Payment, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { prompt, model = DEFAULT_MODEL, system_prompt: systemPrompt } = req.body as {
+    const { prompt, model, system_prompt: systemPrompt } = req.body as {
       prompt?: string; model?: string; system_prompt?: string;
     };
 
@@ -266,19 +308,19 @@ router.post('/v1/ai/inference', requireX402Payment, async (req: Request, res: Re
     }
 
     const payment = req.x402Payment!;
-    console.log(`[ai-inference] Processing request from ${payment.from.slice(0, 10)}... model=${model}`);
+    const requestedModel = model || (USE_CLAWROUTER ? undefined : 'claude-haiku-4-5');
+    console.log(`[ai-inference] Processing from ${payment.from.slice(0, 10)}... model=${requestedModel || '(auto)'} clawrouter=${USE_CLAWROUTER}`);
 
-    const llmResult = await callLLM(prompt.trim(), model, systemPrompt);
-    const resolvedModel = llmResult.backend === 'minimax' ? MINIMAX_CODING_MODEL : model;
+    const llmResult = await callLLM(prompt.trim(), requestedModel || '', systemPrompt);
 
-    // Enqueue settlement (batched — non-blocking)
-    enqueueSettlement(payment, prompt);
+    // Enqueue settlement with outbound cost tracking
+    enqueueSettlement(payment, prompt, llmResult.costUsdc);
 
     res.json({
       success: true,
       data: {
         content: llmResult.content,
-        model: resolvedModel,
+        model: llmResult.resolvedModel,
         backend: llmResult.backend,
         usage: {
           input_tokens: llmResult.inputTokens,
@@ -294,10 +336,34 @@ router.post('/v1/ai/inference', requireX402Payment, async (req: Request, res: Re
         chainId: 8453,
         method: 'EIP-3009 TransferWithAuthorization',
       },
+      ...(llmResult.costUsdc != null && {
+        routing: {
+          clawrouter: USE_CLAWROUTER,
+          outboundCostUsdc: llmResult.costUsdc,
+          marginUsdc: (Number(payment.value) / 1_000_000) - llmResult.costUsdc,
+        },
+      }),
     });
   } catch (err) {
     next(err);
   }
+});
+
+/**
+ * GET /v1/ai/inference/costs — outbound cost log for CFO monitoring
+ * Returns recent ClawRouter costs (last 1000 entries).
+ */
+router.get('/v1/ai/inference/costs', (_req: Request, res: Response) => {
+  const log = getCostLog();
+  const totalUsdc = log.reduce((sum, e) => sum + e.costUsdc, 0);
+  res.json({
+    success: true,
+    data: {
+      entries: log.length,
+      totalOutboundUsdc: Math.round(totalUsdc * 1_000_000) / 1_000_000,
+      recent: log.slice(-20),
+    },
+  });
 });
 
 export default router;

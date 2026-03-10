@@ -8,17 +8,23 @@ export interface EnvConfig {
   PORT: number;
   NODE_ENV: 'development' | 'production' | 'test';
   DATABASE_URL: string;
-  ANTHROPIC_API_KEY: string;
-  MINIMAX_API_KEY: string;
+  // Legacy keys — optional when USE_CLAWROUTER=true (Phase 1 transition)
+  ANTHROPIC_API_KEY?: string;
+  MINIMAX_API_KEY?: string;
+  // ClawRouter x402 keys — required when USE_CLAWROUTER=true
+  CLAWROUTER_GATEWAY_URL?: string;
+  X402_OUTBOUND_WALLET_KEY?: string;
+  USE_CLAWROUTER?: string;
   SUPERVISOR_URL?: string;
   LOG_LEVEL: 'debug' | 'info' | 'warn' | 'error';
 }
 
+// Phase 1: only DATABASE_URL and NODE_ENV are universally required.
+// When USE_CLAWROUTER=true, CLAWROUTER_GATEWAY_URL and X402_OUTBOUND_WALLET_KEY are needed.
+// When USE_CLAWROUTER=false (default), ANTHROPIC_API_KEY and MINIMAX_API_KEY are needed.
 const REQUIRED_ENV_VARS: readonly string[] = [
   'NODE_ENV',
   'DATABASE_URL',
-  'ANTHROPIC_API_KEY',
-  'MINIMAX_API_KEY',
 ] as const;
 
 /**
@@ -73,9 +79,21 @@ export function validateEnv(): EnvConfig {
     }
   }
 
+  // Conditional requirements based on routing mode
+  const useClawRouter = process.env.USE_CLAWROUTER === 'true';
+  if (useClawRouter) {
+    // ClawRouter mode: need gateway URL and outbound wallet
+    if (!process.env.X402_OUTBOUND_WALLET_KEY) missingVars.push('X402_OUTBOUND_WALLET_KEY');
+  } else {
+    // Legacy mode: need subscription API keys
+    if (!process.env.ANTHROPIC_API_KEY) missingVars.push('ANTHROPIC_API_KEY');
+    if (!process.env.MINIMAX_API_KEY) missingVars.push('MINIMAX_API_KEY');
+  }
+
   if (missingVars.length > 0) {
     throw new Error(
-      `Missing required environment variables: ${missingVars.join(', ')}`
+      `Missing required environment variables: ${missingVars.join(', ')}` +
+      (useClawRouter ? ' (USE_CLAWROUTER=true mode)' : ' (legacy mode)')
     );
   }
 
@@ -92,8 +110,11 @@ export function validateEnv(): EnvConfig {
     PORT: coercePort(process.env.PORT),
     NODE_ENV: process.env.NODE_ENV as EnvConfig['NODE_ENV'],
     DATABASE_URL: process.env.DATABASE_URL as string,
-    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY as string,
-    MINIMAX_API_KEY: process.env.MINIMAX_API_KEY as string,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    MINIMAX_API_KEY: process.env.MINIMAX_API_KEY,
+    CLAWROUTER_GATEWAY_URL: process.env.CLAWROUTER_GATEWAY_URL,
+    X402_OUTBOUND_WALLET_KEY: process.env.X402_OUTBOUND_WALLET_KEY,
+    USE_CLAWROUTER: process.env.USE_CLAWROUTER,
     SUPERVISOR_URL: process.env.SUPERVISOR_URL,
     LOG_LEVEL: logLevel,
   };

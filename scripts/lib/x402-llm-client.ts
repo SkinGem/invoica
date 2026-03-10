@@ -9,12 +9,19 @@
  *   4. Invoice recorded in Supabase automatically
  *
  * Model routing (handled by the server):
- *   model="MiniMax-M2.5" | "minimax" | "coding" → MiniMax Coding Plan (1M ctx)
- *   model="claude-haiku-4-5" or default          → Anthropic
+ *   When USE_CLAWROUTER=true on server:
+ *     model="code" → deepseek-coder-v2 (via expertise routing)
+ *     model="util" → gemini-flash-lite (fast/cheap)
+ *     model=undefined → server auto-classifies prompt to specialist
+ *     Legacy aliases (MiniMax-M2.5, claude-haiku-4-5) still work → mapped to ClawRouter IDs
+ *   When USE_CLAWROUTER=false (legacy fallback):
+ *     model="MiniMax-M2.5" | "minimax" | "coding" → MiniMax Coding Plan (1M ctx)
+ *     model="claude-haiku-4-5" or default          → Anthropic
  *
  * Usage:
- *   import { x402LLMCall } from './lib/x402-llm-client';
- *   const reply = await x402LLMCall({ agentName: 'cfo', prompt: '...', model: 'coding' });
+ *   import { x402LLMCall, x402SmartCall } from './lib/x402-llm-client';
+ *   const reply = await x402LLMCall({ agentName: 'cfo', prompt: '...', model: 'code' });
+ *   const smart = await x402SmartCall('cfo', 'Explain why this SQL is slow...');
  */
 
 import * as https from 'https';
@@ -32,10 +39,16 @@ export interface X402LLMOptions {
   /** System prompt (optional) */
   systemPrompt?: string;
   /**
-   * Model to use. Routing:
-   *   'MiniMax-M2.5' | 'minimax' | 'coding' → MiniMax Coding Plan (default for coding tasks)
-   *   'claude-haiku-4-5' | 'claude-*'        → Anthropic
-   *   undefined                               → 'coding' (MiniMax-M2.5, best for agentic tasks)
+   * Model to use. When server has USE_CLAWROUTER=true:
+   *   'code'    → deepseek-coder-v2 (expertise routing)
+   *   'reason'  → deepseek-r1
+   *   'util'    → gemini-flash-lite
+   *   'audit'   → claude-sonnet-4
+   *   'content' → claude-haiku
+   *   'lang'    → mistral-large
+   *   'data'    → deepseek-v3
+   *   undefined → server auto-classifies prompt
+   *   Legacy aliases (MiniMax-M2.5, claude-haiku-4-5) still mapped automatically
    */
   model?: string;
   /** Override the inference API URL (default: http://localhost:3001) */
@@ -227,7 +240,7 @@ export async function x402LLMCall(opts: X402LLMOptions): Promise<X402LLMResult> 
     agentName,
     prompt,
     systemPrompt,
-    model = 'coding', // Default: MiniMax-M2.5 Coding Plan
+    model, // Undefined = server auto-classifies via expertise routing
     apiUrl = process.env.INFERENCE_API_URL || 'http://localhost:3001',
     priceAtomic = BigInt(process.env.X402_PRICE_ATOMIC || '1000'),
   } = opts;
@@ -282,8 +295,11 @@ export async function x402LLMCall(opts: X402LLMOptions): Promise<X402LLMResult> 
   };
   const xPaymentHeader = Buffer.from(JSON.stringify(paymentProof)).toString('base64');
 
-  // 5. Call inference endpoint
-  const result = await postInference(apiUrl, { prompt, model, system_prompt: systemPrompt }, xPaymentHeader);
+  // 5. Call inference endpoint (omit model key if undefined → server auto-routes)
+  const payload: { prompt: string; model?: string; system_prompt?: string } = { prompt };
+  if (model) payload.model = model;
+  if (systemPrompt) payload.system_prompt = systemPrompt;
+  const result = await postInference(apiUrl, payload as any, xPaymentHeader);
 
   if (!result.success) {
     throw new Error(`x402 inference failed: ${result.error?.message || JSON.stringify(result)}`);
@@ -302,28 +318,45 @@ export async function x402LLMCall(opts: X402LLMOptions): Promise<X402LLMResult> 
 }
 
 /**
- * Convenience wrapper: call MiniMax-M2.5 via x402 (coding tasks)
+ * Convenience wrapper: coding tasks via x402
+ * Server routes to deepseek-coder-v2 (ClawRouter) or MiniMax-M2.5 (legacy)
  */
 export async function x402CodeCall(agentName: string, systemPrompt: string, userPrompt: string): Promise<string> {
   const result = await x402LLMCall({
     agentName,
     prompt: userPrompt,
     systemPrompt,
-    model: 'MiniMax-M2.5',
+    model: 'code',
   });
   return result.content;
 }
 
 /**
- * Convenience wrapper: call Claude Haiku via x402 (fast tasks)
+ * Convenience wrapper: fast/cheap utility tasks via x402
+ * Server routes to gemini-flash-lite (ClawRouter) or claude-haiku (legacy)
  */
 export async function x402FastCall(agentName: string, prompt: string): Promise<string> {
   const result = await x402LLMCall({
     agentName,
     prompt,
-    model: 'claude-haiku-4-5',
+    model: 'util',
   });
   return result.content;
 }
 
-export default { x402LLMCall, x402CodeCall, x402FastCall };
+/**
+ * Convenience wrapper: auto-routed smart call via x402
+ * Server auto-classifies the prompt and picks the best specialist model.
+ * No model specified — lets the expertise routing matrix decide.
+ */
+export async function x402SmartCall(agentName: string, prompt: string, systemPrompt?: string): Promise<string> {
+  const result = await x402LLMCall({
+    agentName,
+    prompt,
+    systemPrompt,
+    // No model — server auto-classifies via expertise routing
+  });
+  return result.content;
+}
+
+export default { x402LLMCall, x402CodeCall, x402FastCall, x402SmartCall };

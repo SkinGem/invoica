@@ -1,0 +1,140 @@
+/**
+ * model-router.ts — Expertise routing matrix for ClawRouter model selection
+ *
+ * Maps task types to specialist models on ClawRouter. When no model is
+ * explicitly requested, classifies the prompt and routes to the best
+ * specialist. Maintains backwards compatibility with legacy model names
+ * (MiniMax-M2.5, claude-haiku-4-5, etc.).
+ */
+
+// ── Task Types ──────────────────────────────────────────────────────────────
+
+export type TaskType = 'code' | 'reason' | 'lang' | 'util' | 'audit' | 'content' | 'data';
+
+// ── Expertise Routing Matrix ────────────────────────────────────────────────
+
+interface ModelRoute {
+  primary: string;
+  fallback: string;
+}
+
+const EXPERTISE_MODELS: Record<TaskType, ModelRoute> = {
+  code:    { primary: 'deepseek/deepseek-coder-v2',    fallback: 'anthropic/claude-haiku' },
+  reason:  { primary: 'deepseek/deepseek-r1',          fallback: 'anthropic/claude-sonnet-4' },
+  lang:    { primary: 'mistralai/mistral-large',        fallback: 'anthropic/claude-haiku' },
+  util:    { primary: 'google/gemini-3.1-flash-lite',   fallback: 'anthropic/claude-haiku' },
+  audit:   { primary: 'anthropic/claude-sonnet-4',      fallback: 'deepseek/deepseek-v3' },
+  content: { primary: 'anthropic/claude-haiku',         fallback: 'google/gemini-flash' },
+  data:    { primary: 'deepseek/deepseek-v3',           fallback: 'anthropic/claude-haiku' },
+};
+
+// ── Legacy Model Aliases ────────────────────────────────────────────────────
+
+const MODEL_ALIASES: Record<string, string> = {
+  'MiniMax-M2.5':              'minimax/minimax-m2.5',
+  'minimax-m2.5':              'minimax/minimax-m2.5',
+  'minimax-m2.5-lightning':    'minimax/minimax-m2.5-lightning',
+  'minimax':                   'minimax/minimax-m2.5',
+  'coding':                    'deepseek/deepseek-coder-v2',
+  'claude-haiku-4-5':          'anthropic/claude-haiku',
+  'claude-sonnet-4':           'anthropic/claude-sonnet-4',
+  'claude-3-haiku-20240307':   'anthropic/claude-haiku',
+  'claude-3-5-sonnet-20241022':'anthropic/claude-sonnet-4',
+};
+
+// ── Task Classification ─────────────────────────────────────────────────────
+
+const TASK_PATTERNS: Array<{ type: TaskType; keywords: RegExp }> = [
+  {
+    type: 'code',
+    keywords: /\b(code|function|debug|implement|refactor|typescript|javascript|python|rust|fix\s+bug|compile|syntax|class\s+\w+|import\s+|require\(|async\s+function|interface\s+\w+)\b/i,
+  },
+  {
+    type: 'audit',
+    keywords: /\b(security|audit|review|compliance|vulnerability|penetration|cve|owasp|exploit|threat|risk\s+assess)\b/i,
+  },
+  {
+    type: 'data',
+    keywords: /\b(query|sql|database|report|aggregate|join|select\s+|group\s+by|csv|dataframe|pandas|analytics|metrics|dashboard)\b/i,
+  },
+  {
+    type: 'lang',
+    keywords: /\b(translate|translation|french|arabic|spanish|german|chinese|japanese|korean|locali[sz]e|multilingual|i18n)\b/i,
+  },
+  {
+    type: 'reason',
+    keywords: /\b(why|explain|analy[sz]e|tradeoff|trade-off|compare|evaluate|pros\s+and\s+cons|reasoning|think\s+through|step\s+by\s+step)\b/i,
+  },
+  {
+    type: 'content',
+    keywords: /\b(write|draft|compose|blog|caption|essay|article|copy|tweet|post|newsletter|marketing|creative\s+writ)\b/i,
+  },
+  {
+    type: 'util',
+    keywords: /\b(classify|tag|format|parse|extract|convert|summarize|summarise|json|xml|regex|validate|clean|normalize|transform)\b/i,
+  },
+];
+
+/**
+ * Classify a prompt into a task type using keyword matching.
+ * Returns 'util' as the default (cheapest, fastest model) if no match.
+ */
+export function classifyTask(prompt: string): TaskType {
+  for (const { type, keywords } of TASK_PATTERNS) {
+    if (keywords.test(prompt)) return type;
+  }
+  return 'util';
+}
+
+// ── Model Selection ─────────────────────────────────────────────────────────
+
+/**
+ * Select the ClawRouter model ID for a request.
+ *
+ * Priority:
+ *   1. If requestedModel is a ClawRouter ID (contains '/'), pass through
+ *   2. If requestedModel is a legacy alias, map to ClawRouter ID
+ *   3. If requestedModel is a task type name ('code', 'reason'), use expertise matrix
+ *   4. If no model specified, auto-classify the prompt and pick specialist
+ */
+export function selectModel(prompt: string, requestedModel?: string): {
+  model: string;
+  taskType: TaskType;
+  autoClassified: boolean;
+} {
+  // 1. ClawRouter ID passthrough (e.g., 'deepseek/deepseek-coder-v2')
+  if (requestedModel && requestedModel.includes('/')) {
+    return { model: requestedModel, taskType: classifyTask(prompt), autoClassified: false };
+  }
+
+  // 2. Legacy alias mapping
+  if (requestedModel && MODEL_ALIASES[requestedModel]) {
+    return { model: MODEL_ALIASES[requestedModel], taskType: classifyTask(prompt), autoClassified: false };
+  }
+
+  // 3. Task type name (e.g., model='code' → deepseek-coder-v2)
+  if (requestedModel && requestedModel in EXPERTISE_MODELS) {
+    const taskType = requestedModel as TaskType;
+    return { model: EXPERTISE_MODELS[taskType].primary, taskType, autoClassified: false };
+  }
+
+  // 4. Auto-classify prompt
+  const taskType = classifyTask(prompt);
+  return { model: EXPERTISE_MODELS[taskType].primary, taskType, autoClassified: true };
+}
+
+/**
+ * Get the fallback model for a task type (used if primary fails).
+ */
+export function getFallbackModel(taskType: TaskType): string {
+  return EXPERTISE_MODELS[taskType].fallback;
+}
+
+/**
+ * Get all supported legacy aliases (for documentation / API responses).
+ */
+export function getSupportedAliases(): Record<string, string> {
+  return { ...MODEL_ALIASES };
+}
+
+export { EXPERTISE_MODELS };
