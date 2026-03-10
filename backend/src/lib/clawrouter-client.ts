@@ -14,7 +14,7 @@ import https from 'https';
 
 // ── Config ───────────────────────────────────────────────────────────────────
 
-const CLAWROUTER_URL = process.env.CLAWROUTER_GATEWAY_URL || 'http://localhost:18789/v1';
+const CLAWROUTER_URL = process.env.CLAWROUTER_GATEWAY_URL || 'http://localhost:8402/v1';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
