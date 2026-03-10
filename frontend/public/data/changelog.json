@@ -3,66 +3,72 @@
     "version": "1.10.0",
     "date": "2026-03-09",
     "changes": [
-      "X402 algorithm injection: CMO weekly plan generation with X posting guidelines for optimal engagement",
-      "Sprint bug-fix cycle: Week-76 autonomous sprint with 5 API test findings (BUG-001/002/003/005 webhooks/persistence)",
-      "CEO bot enhancements: Daily npm release status reports, improved task iteration capping (25→8), real execution tools",
-      "Backend core orchestration: ORCH-001/004-A multi-task decomposition and graceful no-roadmap guardrails",
-      "TypeScript ecosystem CI: npm publish, ecosystem validation, and pre-deploy syntax gates across all services"
+      "Completed @invoica/sdk TypeScript package with npm publish workflow and GitHub OIDC authentication",
+      "Fixed critical API issues: api-key routes, Supabase persistence, webhook delivery, and invoice SQL queries",
+      "Deployed CEOBot iteration cap optimization (25→8 iterations) with improved model routing and context management",
+      "Integrated X algorithm posting guidelines into CMO weekly plan generation for better engagement",
+      "Added FORCE_SLOT override and hardened CMO no-roadmap guardrails in x-admin agent",
+      "Published invoica-mcp Model Context Protocol server for Claude integration with invoice operations"
     ]
   },
   {
     "version": "1.9.0",
-    "date": "2026-03-08",
+    "date": "2026-03-05",
     "changes": [
-      "MCP server npm publish pipeline: invoica-mcp (unscoped) with GitHub Actions OIDC tokenless publishing",
-      "Invoica MCP capabilities: Complete Model Context Protocol implementation for agent tool frameworks",
-      "SDK TypeScript scaffolding: Full @invoica/sdk build pipeline with dependency cleanup and .gitignore hardening",
-      "Agent onboarding: ONBOARD-001 feature for autonomous customer workflow setup and configuration",
-      "Website brand refresh: ACQ-001 UTM tracking, BRAND-002 hero copy updates, HEALTH-001 agent naming standardization"
+      "Introduced X DM outreach automation with personalization via Claude and state deduplication",
+      "Added TypeScript syntax validation gate with tsc checks before supervisor review and commit",
+      "Implemented landing page narrative overhaul with Public Beta badge and owner-direct governance",
+      "Deployed complexity-aware task routing with CEO cost reduction via MiniMax for simpler tasks",
+      "Added edge function health check with 15-second timeout for improved reliability",
+      "Established sustainable MiniMax pipeline with auto-skip cascades and transitive dependency resolution"
     ]
   },
   {
     "version": "1.8.0",
-    "date": "2026-03-06",
+    "date": "2026-03-02",
     "changes": [
-      "Mission Control dashboard: Real-time orchestrator visibility with agent task tracking and PM2 process metrics",
-      "Post-sprint automation: Test → CTO review → Vercel deploy pipeline closes CEO execution loop",
-      "x-admin autonomous posting: CEO + CTO review gate with content calendar and retry loop (3 attempts)",
-      "CMO X algorithm integration: Weekly plan generation injected with X posting guidelines via CMO agent",
-      "Process watchdog: PM2 restart limits and Telegram alerts for crash loop prevention"
+      "Released Mission Control dashboard for real-time agent operations visibility and orchestration",
+      "Deployed live documentation auto-generation system with data-driven changelog and API reference",
+      "Implemented multi-chain x402 settlement infrastructure with batched USDC processing (50-call batches or 5-min flush)",
+      "Added complexity-aware LLM routing for cost optimization — new files to Claude Sonnet, edits to MiniMax",
+      "Integrated invoices router with corrected v1 API routes and proper route ordering",
+      "Established PM2 ecosystem with self-healing CEO bot, isolated from backend restarts"
     ]
   },
   {
     "version": "1.7.0",
-    "date": "2026-03-05",
+    "date": "2026-03-01",
     "changes": [
-      "Agent memory protocol: All 37 agents write long-term memory after every sprint with unified prompt format",
-      "Orchestrator TypeScript gate: Pre-commit syntax validation with path normalization and deliverable file verification",
-      "X DM outreach: Autonomous Twitter/X direct messaging with Claude personalization and candidate deduplication",
-      "CMO weekly content plan: Sunday 06:00 UTC autonomous generation with CEO approval gate and X posting integration",
-      "Email support monitoring: cto-email-support runner with IMAP/SMTP for support@invoica.ai ticket automation"
+      "Activated x402 agent wallet spending — agents now spend USDC on LLM calls with MiniMax model optimization",
+      "Implemented autonomous post-sprint pipeline with test execution, CTO review, and Vercel auto-deployment",
+      "Added CMO Sunday weekly content plan generator with CEO approval workflow",
+      "Deployed git auto-deploy system with 5-minute GitHub polling for continuous deployment",
+      "Integrated Telegram bot with full team coordination tools (/report, /pm2, /health, /sprint commands)",
+      "Established memory-agent black box system for institutional knowledge persistence across agent runs"
     ]
   },
   {
     "version": "1.6.0",
-    "date": "2026-03-03",
+    "date": "2026-02-28",
     "changes": [
-      "Invoice routing: GET /invoices/number/:number endpoint for number-based lookup before ID shadowing",
-      "API keys dashboard: Full CRUD with revoke, list, and create endpoints for dashboard integration",
-      "Settlement batching: x402 USDC batched settlement queue (0.003 USDC per call) with configurable flush",
-      "Multi-model LLM routing: Complexity-aware task distribution (Claude Sonnet for new files, MiniMax for edits)",
-      "CEO cost reduction: Intelligent task routing to reduce expensive Claude Opus inference calls"
+      "Launched autonomous X (Twitter) posting agent with CEO and CTO review gates",
+      "Added email support monitoring via support@invoica.ai with IMAP/SMTP integration",
+      "Implemented PM2 process watchdog with Telegram alerting for service health",
+      "Added /pull and /sprint commands to CEO bot for sprint management",
+      "Deployed pre-deploy TypeScript validation gate before all production changes",
+      "Hardened security by removing hardcoded wallet addresses and loading from environment variables"
     ]
   },
   {
     "version": "1.5.0",
-    "date": "2026-03-02",
+    "date": "2026-02-27",
     "changes": [
-      "Multi-chain support: Base, Polygon, and Solana integration with unified settlement router",
-      "x402 payments: Agent wallet spending enabled with USDC settlement batching (50 calls or 5 min flush)",
-      "TypeScript SDK (@invoica/sdk) published to npm with full invoicing API coverage",
-      "MCP (Model Context Protocol) server with agent capability framework for AI-native operations",
-      "Admin dashboard with invoice seed data and real-time PM2 process monitoring"
+      "Added Telegram bot integration with CEO assistant and customer support channels",
+      "Implemented real API keys management page with full CRUD operations",
+      "Added system status monitoring pages for dashboard and public website",
+      "Introduced self-service signup and onboarding flow with company profile verification",
+      "Integrated Stripe billing system with usage analytics tracking",
+      "Added support ticket system powered by Supabase backend"
     ]
   },
   {
