@@ -152,6 +152,30 @@ async function callAnthropic(model: string, systemPrompt: string, userPrompt: st
   }
   return rawResponse;
 }
+// Prompt-cached variant — caches system prompt to reduce costs on repeated Sonnet calls
+// (Supervisor review + CEO conflict resolution run same system prompt many times per sprint)
+async function callAnthropicCached(model: string, systemPrompt: string, userPrompt: string, timeoutMs: number): Promise<LLMResponse> {
+  const apiKey = process.env.ANTHROPIC_API_KEY || '';
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set in .env');
+  const body = JSON.stringify({
+    model, max_tokens: 16000,
+    system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+    messages: [{ role: 'user', content: userPrompt }], temperature: 0.3,
+  });
+  const rawResponse = await httpPost('https://api.anthropic.com/v1/messages', {
+    'Content-Type': 'application/json', 'x-api-key': apiKey,
+    'anthropic-version': '2023-06-01', 'anthropic-beta': 'prompt-caching-2024-07-31',
+  }, body, timeoutMs);
+  const anthropicData = rawResponse as any;
+  if (anthropicData.content && Array.isArray(anthropicData.content)) {
+    const textContent = anthropicData.content.filter((b: any) => b.type === 'text').map((b: any) => b.text).join('');
+    return {
+      choices: [{ message: { content: textContent } }],
+      usage: { total_tokens: (anthropicData.usage?.input_tokens || 0) + (anthropicData.usage?.output_tokens || 0) },
+    };
+  }
+  return rawResponse;
+}
 async function callOpenAI(model: string, systemPrompt: string, userPrompt: string, timeoutMs: number): Promise<LLMResponse> {
   const apiKey = process.env.OPENAI_API_KEY || '';
   if (!apiKey) throw new Error('OPENAI_API_KEY not set in .env');
@@ -220,9 +244,9 @@ class SupervisorAgent {
       : '';
     const userPrompt = `Review the following code generated for task ${task.id}.\n\n## Task Spec\n${task.context}\n\n## Generated Files (${files.length})\n${fileContents}${integrityContext}\n\n## Instructions\nCRITICAL CHECK: Does ANY file start with a markdown code fence (\`\`\`tsx, \`\`\`typescript, etc.)? If YES, auto-REJECT — code fences in source files are invalid syntax.\nAlso check: Did the file lose existing functionality? If a file shrank significantly, REJECT.\n\nRespond with a JSON object:\n{\n  "verdict": "APPROVED" or "REJECTED",\n  "score": 0-100,\n  "summary": "brief review summary",\n  "issues": [{"severity": "critical|high|medium|low", "file": "path", "description": "..."}],\n  "strengths": ["..."]\n}`;
     const startTime = Date.now();
-    log(c.gray, '  -> Sending to Claude (Anthropic API)...');
+    log(c.gray, '  -> Sending to Claude (Anthropic API, cached system prompt)...');
     try {
-      const response = await callLLM('anthropic', 'claude-sonnet-4-20250514', this.systemPrompt, userPrompt, 120000);
+      const response = await callAnthropicCached('claude-sonnet-4-20250514', this.systemPrompt, userPrompt, 120000);
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
       log(c.gray, `  -> Review received in ${elapsed}s (${response.usage?.total_tokens || '?'} tokens)`);
       const content = response.choices?.[0]?.message?.content || '';
@@ -445,7 +469,7 @@ Respond with ONE of:
 
 Keep response under 100 words.`;
     try {
-      const response = await callLLM('anthropic', 'claude-sonnet-4-20250514', this.systemPrompt, userPrompt, 60000);
+      const response = await callAnthropicCached('claude-sonnet-4-20250514', this.systemPrompt, userPrompt, 60000);
       const content = response.choices?.[0]?.message?.content || 'No response';
       log(c.magenta, `  CEO conflict resolution: ${content.substring(0, 300)}`);
       return content;
@@ -510,7 +534,8 @@ For EACH proposal, respond with a decision JSON:
 Wrap all decisions in a JSON array. Be concise.`;
 
     try {
-      const response = await callLLM('anthropic', 'claude-sonnet-4-20250514', this.systemPrompt, userPrompt, 60000);
+      // Haiku-4-5: structured JSON decision from pre-analyzed data — no Sonnet needed
+      const response = await callLLM('anthropic', 'claude-haiku-4-5', this.systemPrompt, userPrompt, 60000);
       const content = response.choices?.[0]?.message?.content || 'No response';
       log(c.magenta, `  CEO CTO review: ${content.substring(0, 500)}`);
       return content;
