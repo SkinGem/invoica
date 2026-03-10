@@ -15,14 +15,14 @@
       "deliverables": {
         "code": [
           "backend/src/routes/invoices.ts",
-          "backend/src/routes/ai-inference.ts",
-          "backend/src/services/invoice.ts"
+          "backend/src/routes/ai-inference.ts"
         ],
         "tests": [],
         "docs": [
           "backend/supabase/migrations/004_invoice_number_seq.sql"
         ]
-      }
+      },
+      "context": "SURGICAL FIX \u2014 do NOT rewrite any file. Make minimal targeted changes only.\n\nPROBLEM: Three conflicting invoice number generators:\n  1. backend/src/routes/invoices.ts: uses MAX(invoiceNumber)+1 via Supabase (non-atomic)\n  2. backend/src/routes/ai-inference.ts line 63: uses Math.floor(Date.now() / 1000) + idx (timestamp, non-sequential)\n  3. backend/src/services/invoice.ts: uses nextval('invoice_number_seq') \u2014 THIS IS CORRECT, keep it\n\nFIX 1 \u2014 backend/src/routes/invoices.ts:\nRead the file first. Find the block that does:\n  const { data: maxData } = await sb\n    .from('Invoice')\n    .select('invoiceNumber')\n    .order('invoiceNumber', { ascending: false })\n    .limit(1)\n    .single();\n  const nextNumber = ((maxData?.invoiceNumber as number) || 0) + 1;\n\nReplace those ~8 lines with:\n  const { data: seqData, error: seqErr } = await sb.rpc('next_invoice_number');\n  if (seqErr) throw seqErr;\n  const nextNumber = seqData as number;\n\nThat is the ONLY change in routes/invoices.ts. Do not touch anything else.\n\nFIX 2 \u2014 backend/src/routes/ai-inference.ts:\nRead the file first. Find line ~63 that has:\n  invoiceNumber: Math.floor(Date.now() / 1000) + idx,\n\nReplace that single line with:\n  invoiceNumber: Date.now() * 1000 + idx,\n\nNote: This is a temporary placeholder fix for ai-inference invoice creation which uses fake invoices for agent inference context \u2014 it does not create real DB invoices. The real fix (using the sequence) only applies to routes/invoices.ts. The timestamp approach is acceptable here since these are not persisted invoice numbers.\n\nFIX 3 \u2014 backend/supabase/migrations/004_invoice_number_seq.sql:\nCreate this file with:\n  -- Migration: create invoice_number_seq sequence and RPC function\n  -- Run once on Supabase SQL editor\n\n  CREATE SEQUENCE IF NOT EXISTS invoice_number_seq\n    START WITH 1\n    INCREMENT BY 1\n    NO MINVALUE\n    NO MAXVALUE\n    CACHE 1;\n\n  -- Initialize sequence to current MAX to avoid conflicts with existing invoices\n  SELECT setval('invoice_number_seq', COALESCE((SELECT MAX(invoiceNumber) FROM Invoice), 0) + 1, false);\n\n  -- RPC function callable from Supabase client\n  CREATE OR REPLACE FUNCTION next_invoice_number()\n  RETURNS bigint\n  LANGUAGE sql\n  SECURITY DEFINER\n  AS 42874\n    SELECT nextval('invoice_number_seq');\n  42874;\n\n  GRANT EXECUTE ON FUNCTION next_invoice_number() TO authenticated, anon, service_role;\n\nDELIVERABLES SUMMARY:\n- backend/src/routes/invoices.ts: replace MAX query block (~8 lines) with sb.rpc('next_invoice_number')\n- backend/src/routes/ai-inference.ts: change ONE line (timestamp formula)\n- backend/supabase/migrations/004_invoice_number_seq.sql: new file with sequence DDL above\n\nDo NOT modify backend/src/services/invoice.ts \u2014 it already uses the sequence correctly."
     },
     {
       "id": "TAX-001",
@@ -43,7 +43,8 @@
         "docs": [
           "backend/supabase/migrations/005_invoice_tax_columns.sql"
         ]
-      }
+      },
+      "context": "FILE: backend/prisma/schema.prisma\n\nRead the file first. The Invoice model has these fields (non-exhaustive):\n  id, invoiceNumber, status, amount, currency, customerEmail, customerName,\n  companyId, paymentDetails, settledAt, completedAt, createdAt, updatedAt\n\nAdd these OPTIONAL fields to the Invoice model, BEFORE the closing brace of the Invoice model block:\n  /// Tax amount charged (null for non-taxable)\n  taxAmount       Decimal?   @db.Decimal(19, 4)\n  /// Tax rate applied as a fraction (e.g. 0.20 for 20% VAT)\n  taxRate         Decimal?   @db.Decimal(5, 4)\n  /// Tax jurisdiction code (e.g. 'EU-FR', 'US-CA', 'GB')\n  taxJurisdiction String?\n  /// Buyer country ISO 3166-1 alpha-2 (e.g. 'FR', 'US', 'GB')\n  buyerCountryCode  String?\n  /// US state for nexus determination (e.g. 'CA', 'NY')\n  buyerStateCode    String?\n  /// EU VAT number for reverse charge B2B transactions\n  buyerVatNumber    String?\n\nAfter editing the schema, run:\n  cd backend && npx prisma generate\n\nDo NOT run prisma migrate. Do NOT modify WebhookRegistration or any other model.\n\nAlso create backend/supabase/migrations/005_invoice_tax_columns.sql with:\n  -- Add tax fields to Invoice table\n  ALTER TABLE Invoice\n    ADD COLUMN IF NOT EXISTS taxAmount        DECIMAL(19, 4),\n    ADD COLUMN IF NOT EXISTS taxRate          DECIMAL(5, 4),\n    ADD COLUMN IF NOT EXISTS taxJurisdiction  TEXT,\n    ADD COLUMN IF NOT EXISTS buyerCountryCode TEXT,\n    ADD COLUMN IF NOT EXISTS buyerStateCode   TEXT,\n    ADD COLUMN IF NOT EXISTS buyerVatNumber   TEXT;\n\nThat is all. Two deliverables: schema edit + SQL migration file. Nothing else."
     },
     {
       "id": "TAX-002",
