@@ -73,6 +73,15 @@
   },
   {
     "method": "GET",
+    "path": "/v1/gas/status",
+    "description": "GET /v1/gas/status",
+    "auth": "None",
+    "tags": [
+      "gas backstop"
+    ]
+  },
+  {
+    "method": "GET",
     "path": "/v1/health",
     "description": "Health check — returns API status and uptime",
     "auth": "None",

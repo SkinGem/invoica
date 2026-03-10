@@ -2,32 +2,53 @@
 
 All notable changes to Invoica are documented here.
 
-## [1.7.0] — 2026-03-06
+## [1.10.0] — 2026-03-09
 
-- Completed multi-chain architecture support: Base, Polygon, and Solana payment settlement
-- Added TypeScript syntax gate in orchestrator with deliverable file verification in git
-- Implemented X DM outreach automation with Claude-personalized message generation
-- Added admin dashboard with clean seed data and improved invoice management
-- Fixed invoices router with proper v1 route ordering and GET /invoices/number/:number lookup
-- Hardened PM2 process watchdog with restart limits and JSON parse guards
+- X402 algorithm injection: CMO weekly plan generation with X posting guidelines for optimal engagement
+- Sprint bug-fix cycle: Week-76 autonomous sprint with 5 API test findings (BUG-001/002/003/005 webhooks/persistence)
+- CEO bot enhancements: Daily npm release status reports, improved task iteration capping (25→8), real execution tools
+- Backend core orchestration: ORCH-001/004-A multi-task decomposition and graceful no-roadmap guardrails
+- TypeScript ecosystem CI: npm publish, ecosystem validation, and pre-deploy syntax gates across all services
 
-## [1.6.0] — 2026-03-01
+## [1.9.0] — 2026-03-08
 
-- Deployed autonomous post-sprint CI/CD pipeline: test → CTO review → Vercel deploy
-- Added CMO weekly content plan generator with CEO→X-admin approval workflow
-- Launched Mission Control agent ops visibility dashboard with live PM2 process monitoring
-- Implemented memory protocol across all 37 agents for institutional knowledge persistence
-- Added git-autodeploy system with self-healing cron checks every 5 minutes
-- Integrated Telegram bot with live wallet balance alerts and sprint command execution
+- MCP server npm publish pipeline: invoica-mcp (unscoped) with GitHub Actions OIDC tokenless publishing
+- Invoica MCP capabilities: Complete Model Context Protocol implementation for agent tool frameworks
+- SDK TypeScript scaffolding: Full @invoica/sdk build pipeline with dependency cleanup and .gitignore hardening
+- Agent onboarding: ONBOARD-001 feature for autonomous customer workflow setup and configuration
+- Website brand refresh: ACQ-001 UTM tracking, BRAND-002 hero copy updates, HEALTH-001 agent naming standardization
 
-## [1.5.0] — 2026-02-27
+## [1.8.0] — 2026-03-06
 
-- Added Telegram bot integration with CEO assistant and customer support capabilities
-- Implemented x402 payment protocol with agent wallet spending for LLM calls
-- Added email support monitoring via IMAP/SMTP for support@invoica.ai
-- Launched public beta with new onboarding flow: company profile → pricing → API key
-- Added company registry verification across 12 countries during signup
-- Implemented Stripe billing integration with usage analytics dashboard
+- Mission Control dashboard: Real-time orchestrator visibility with agent task tracking and PM2 process metrics
+- Post-sprint automation: Test → CTO review → Vercel deploy pipeline closes CEO execution loop
+- x-admin autonomous posting: CEO + CTO review gate with content calendar and retry loop (3 attempts)
+- CMO X algorithm integration: Weekly plan generation injected with X posting guidelines via CMO agent
+- Process watchdog: PM2 restart limits and Telegram alerts for crash loop prevention
+
+## [1.7.0] — 2026-03-05
+
+- Agent memory protocol: All 37 agents write long-term memory after every sprint with unified prompt format
+- Orchestrator TypeScript gate: Pre-commit syntax validation with path normalization and deliverable file verification
+- X DM outreach: Autonomous Twitter/X direct messaging with Claude personalization and candidate deduplication
+- CMO weekly content plan: Sunday 06:00 UTC autonomous generation with CEO approval gate and X posting integration
+- Email support monitoring: cto-email-support runner with IMAP/SMTP for support@invoica.ai ticket automation
+
+## [1.6.0] — 2026-03-03
+
+- Invoice routing: GET /invoices/number/:number endpoint for number-based lookup before ID shadowing
+- API keys dashboard: Full CRUD with revoke, list, and create endpoints for dashboard integration
+- Settlement batching: x402 USDC batched settlement queue (0.003 USDC per call) with configurable flush
+- Multi-model LLM routing: Complexity-aware task distribution (Claude Sonnet for new files, MiniMax for edits)
+- CEO cost reduction: Intelligent task routing to reduce expensive Claude Opus inference calls
+
+## [1.5.0] — 2026-03-02
+
+- Multi-chain support: Base, Polygon, and Solana integration with unified settlement router
+- x402 payments: Agent wallet spending enabled with USDC settlement batching (50 calls or 5 min flush)
+- TypeScript SDK (@invoica/sdk) published to npm with full invoicing API coverage
+- MCP (Model Context Protocol) server with agent capability framework for AI-native operations
+- Admin dashboard with invoice seed data and real-time PM2 process monitoring
 
 ## [1.4.0] — 2026-02-20
 

@@ -1,10 +1,10 @@
 # Invoica API Contract
 
-*Auto-generated 2026-03-08 from backend/src/routes/*
+*Auto-generated 2026-03-10 from backend/src/routes/*
 
 ## Base URL
 ```
-https://api.invoica.ai/v1
+https://invoica.wp1.host/v1
 ```
 
 ## Authentication
@@ -50,6 +50,12 @@ Revoke an API key
 
 ### `DELETE /v1/api-keys/:id`
 DELETE /v1/api-keys/:id
+**Auth:** None
+
+## Gas backstop
+
+### `GET /v1/gas/status`
+GET /v1/gas/status
 **Auth:** None
 
 ## Health
