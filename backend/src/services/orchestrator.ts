@@ -29,13 +29,10 @@ interface QualityCheckResult {
   reason?: string;
 }
 
-/**
- * Helper type for normalizing agent names between camelCase and kebab-case
- */
-type AgentNameNormalizer = {
-  toKebabCase: (camelCase: string) => string;
-  toCamelCase: (kebabCase: string) => string;
-};
+interface NormalizedAgentName {
+  camelCase: string;
+  kebabCase: string;
+}
 
 /**
  * Orchestrates task execution and manages agent health monitoring
@@ -55,15 +52,27 @@ export class Orchestrator extends EventEmitter {
 
   /**
    * Normalizes agent names between camelCase and kebab-case formats
+   * Detects input format and returns both versions
+   * @param agentName - Agent name in either camelCase or kebab-case format
+   * @returns Object containing both camelCase and kebab-case versions
    */
-  private readonly agentNameNormalizer: AgentNameNormalizer = {
-    toKebabCase: (camelCase: string): string => {
-      return camelCase.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
-    },
-    toCamelCase: (kebabCase: string): string => {
-      return kebabCase.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+  normalizeAgentName(agentName: string): NormalizedAgentName {
+    const isKebabCase = agentName.includes('-');
+    
+    if (isKebabCase) {
+      const camelCase = agentName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+      return {
+        camelCase,
+        kebabCase: agentName
+      };
+    } else {
+      const kebabCase = agentName.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+      return {
+        camelCase: agentName,
+        kebabCase
+      };
     }
-  };
+  }
 
   /**
    * Processes task result and checks for rejection patterns
@@ -103,36 +112,43 @@ export class Orchestrator extends EventEmitter {
 
     for (const task of tasks) {
       try {
-        const qualityResult = await this.performQualityCheck(task);
-        results.push(qualityResult);
-
-        if (!qualityResult.passed) {
-          // Mark only this specific task as rejected
-          await this.processTaskResult({
-            agentId: task.agentId,
+        // Basic validation - check if content exists and has required fields
+        if (!task.content || typeof task.content !== 'object') {
+          results.push({
             taskId: task.taskId,
-            status: 'rejected',
-            timestamp: new Date(),
-            error: qualityResult.reason
+            passed: false,
+            reason: 'Task content is missing or invalid'
           });
-
-          this.logger.warn('Task failed quality check', {
-            taskId: task.taskId,
-            agentId: task.agentId,
-            reason: qualityResult.reason
-          });
+          continue;
         }
+
+        // Check if agent is currently paused
+        const rejectionState = this.rejectionStates.get(task.agentId);
+        if (rejectionState?.isPaused && rejectionState.pausedUntil && new Date() < rejectionState.pausedUntil) {
+          results.push({
+            taskId: task.taskId,
+            passed: false,
+            reason: `Agent ${task.agentId} is temporarily paused due to consecutive failures`
+          });
+          continue;
+        }
+
+        // Task passes validation
+        results.push({
+          taskId: task.taskId,
+          passed: true
+        });
       } catch (error) {
-        this.logger.error('Quality check failed', {
+        this.logger.error('Error validating task quality', {
           taskId: task.taskId,
           agentId: task.agentId,
           error: error instanceof Error ? error.message : 'Unknown error'
         });
-
+        
         results.push({
           taskId: task.taskId,
           passed: false,
-          reason: 'Quality check system error'
+          reason: 'Validation error occurred'
         });
       }
     }
@@ -141,123 +157,123 @@ export class Orchestrator extends EventEmitter {
   }
 
   /**
-   * Handles agent rejection by tracking consecutive failures
-   * Pauses agent if threshold is exceeded
+   * Validates task input and normalizes agent name format
    */
-  private async handleRejection(result: TaskResult): Promise<void> {
-    const state = this.rejectionStates.get(result.agentId) || {
-      consecutiveFailures: 0,
-      lastFailureTime: new Date(),
-      isPaused: false
-    };
+  async validateTask(input: TaskInput): Promise<boolean> {
+    try {
+      if (!input.agentName || typeof input.agentName !== 'string') {
+        return false;
+      }
 
-    state.consecutiveFailures++;
-    state.lastFailureTime = result.timestamp;
+      // Normalize agent name to handle both formats
+      const normalized = this.normalizeAgentName(input.agentName);
+      
+      // Check if agent exists in either format
+      const agentExists = await this.checkAgentExists(normalized.camelCase) || 
+                         await this.checkAgentExists(normalized.kebabCase);
 
-    if (state.consecutiveFailures >= this.REJECTION_THRESHOLD) {
-      state.isPaused = true;
-      state.pausedUntil = new Date(Date.now() + this.PAUSE_DURATION_MS);
-
-      this.logger.warn('Agent paused due to consecutive rejections', {
-        agentId: result.agentId,
-        consecutiveFailures: state.consecutiveFailures,
-        pausedUntil: state.pausedUntil
+      return agentExists;
+    } catch (error) {
+      this.logger.error('Error validating task', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        input
       });
-
-      this.emit('agentPaused', {
-        agentId: result.agentId,
-        reason: 'consecutive_rejections',
-        pausedUntil: state.pausedUntil
-      });
+      return false;
     }
-
-    this.rejectionStates.set(result.agentId, state);
   }
 
   /**
-   * Handles successful task completion by resetting rejection state
+   * Checks if an agent exists in the system
+   */
+  private async checkAgentExists(agentName: string): Promise<boolean> {
+    try {
+      const exists = await this.redis.exists(`agent:${agentName}`);
+      return exists === 1;
+    } catch (error) {
+      this.logger.error('Error checking agent existence', {
+        agentName,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Handles successful task completion
+   * Resets consecutive failure count for the agent
    */
   private async handleSuccess(agentId: string): Promise<void> {
     const state = this.rejectionStates.get(agentId);
     if (state) {
-      // Reset consecutive failures on success
+      // Reset failure count on success
       state.consecutiveFailures = 0;
       state.isPaused = false;
       state.pausedUntil = undefined;
-      this.rejectionStates.set(agentId, state);
+      
+      this.logger.info('Agent failure count reset after success', { agentId });
+    }
+  }
 
-      this.logger.info('Agent rejection state reset after success', {
-        agentId
+  /**
+   * Handles task rejection and implements cascade failure prevention
+   * Pauses agents that exceed the rejection threshold
+   */
+  private async handleRejection(result: TaskResult): Promise<void> {
+    const agentId = result.agentId;
+    let state = this.rejectionStates.get(agentId);
+
+    if (!state) {
+      state = {
+        consecutiveFailures: 0,
+        lastFailureTime: new Date(),
+        isPaused: false
+      };
+      this.rejectionStates.set(agentId, state);
+    }
+
+    state.consecutiveFailures++;
+    state.lastFailureTime = new Date();
+
+    this.logger.warn('Agent task rejected', {
+      agentId,
+      consecutiveFailures: state.consecutiveFailures,
+      taskId: result.taskId,
+      error: result.error
+    });
+
+    // Check if agent should be paused
+    if (state.consecutiveFailures >= this.REJECTION_THRESHOLD) {
+      state.isPaused = true;
+      state.pausedUntil = new Date(Date.now() + this.PAUSE_DURATION_MS);
+
+      this.logger.error('Agent paused due to consecutive failures', {
+        agentId,
+        consecutiveFailures: state.consecutiveFailures,
+        pausedUntil: state.pausedUntil
+      });
+
+      // Emit warning for monitoring systems
+      this.emit('agentPaused', {
+        agentId,
+        consecutiveFailures: state.consecutiveFailures,
+        pausedUntil: state.pausedUntil
       });
     }
   }
 
   /**
-   * Performs quality check on task content
+   * Gets the current rejection state for an agent
    */
-  private async performQualityCheck(task: { taskId: string; agentId: string; content: any }): Promise<QualityCheckResult> {
-    // Basic quality checks
-    if (!task.content) {
-      return {
-        taskId: task.taskId,
-        passed: false,
-        reason: 'Empty task content'
-      };
-    }
-
-    if (typeof task.content === 'string' && task.content.trim().length < 10) {
-      return {
-        taskId: task.taskId,
-        passed: false,
-        reason: 'Task content too short'
-      };
-    }
-
-    // Additional quality checks can be added here
-    return {
-      taskId: task.taskId,
-      passed: true
-    };
+  getAgentRejectionState(agentId: string): AgentRejectionState | undefined {
+    return this.rejectionStates.get(agentId);
   }
 
   /**
-   * Checks if an agent is currently paused
+   * Manually resets an agent's rejection state
+   * Useful for administrative intervention
    */
-  isAgentPaused(agentId: string): boolean {
-    const state = this.rejectionStates.get(agentId);
-    if (!state || !state.isPaused) {
-      return false;
-    }
-
-    // Check if pause period has expired
-    if (state.pausedUntil && new Date() > state.pausedUntil) {
-      state.isPaused = false;
-      state.pausedUntil = undefined;
-      this.rejectionStates.set(agentId, state);
-      return false;
-    }
-
-    return true;
-  }
-
-  /**
-   * Gets agent rejection statistics
-   */
-  getAgentStats(agentId: string): AgentRejectionState | null {
-    return this.rejectionStates.get(agentId) || null;
-  }
-
-  /**
-   * Normalizes agent name to kebab-case
-   */
-  normalizeAgentName(agentName: string): string {
-    return this.agentNameNormalizer.toKebabCase(agentName);
-  }
-
-  /**
-   * Converts kebab-case agent name to camelCase
-   */
-  denormalizeAgentName(kebabCaseName: string): string {
-    return this.agentNameNormalizer.toCamelCase(kebabCaseName);
+  resetAgentState(agentId: string): void {
+    this.rejectionStates.delete(agentId);
+    this.logger.info('Agent state manually reset', { agentId });
   }
 }
