@@ -32,7 +32,19 @@ const LOCK       = join(ROOT, 'logs', 'sprint-runner.lock');
 const LOG        = join(ROOT, 'logs', 'sprint-runner.log');
 const MAX_HOURS  = 6; // kill orchestrator if it runs longer than this
 
-interface Task { id: string; status: string; agent?: string; [k: string]: unknown; }
+interface Task { id: string; status: string; type?: string; agent?: string; blocked_by?: string[]; [k: string]: unknown; }
+
+const HUMAN_TYPES = new Set(['human', 'human_validation', 'human_gate']);
+
+/** Tasks that agents can actually execute right now */
+function executablePending(tasks: Task[]): Task[] {
+  const doneIds = new Set(tasks.filter(t => t.status === 'done' || t.status === 'approved').map(t => t.id));
+  return tasks.filter(t =>
+    t.status === 'pending' &&
+    !HUMAN_TYPES.has(t.type || '') &&
+    (!t.blocked_by || (t.blocked_by as string[]).every(dep => doneIds.has(dep)))
+  );
+}
 
 // ── Logging ─────────────────────────────────────────────────────────────────
 function ts(): string {
@@ -108,7 +120,7 @@ function findPendingSprint(): SprintInfo | null {
       const raw   = readFileSync(fpath, 'utf8');
       const data  = JSON.parse(raw);
       const tasks: Task[] = Array.isArray(data) ? data : (data.tasks || []);
-      const pending = tasks.filter(t => t.status === 'pending').length;
+      const pending = executablePending(tasks).length;
       const done    = tasks.filter(t => t.status === 'done').length;
       if (pending > 0) {
         return { file: fpath, pending, done, total: tasks.length };
@@ -176,26 +188,29 @@ async function main(): Promise<void> {
   // Read final state
   const elapsed = Math.round((Date.now() - startMs) / 1000 / 60);
   let doneCount  = sprint.done;
-  let pendingCount = sprint.pending;
+  let execPendingCount = sprint.pending;
+  let humanCount = 0;
   try {
     const raw   = readFileSync(sprint.file, 'utf8');
     const data  = JSON.parse(raw);
     const tasks: Task[] = Array.isArray(data) ? data : (data.tasks || []);
-    doneCount    = tasks.filter(t => t.status === 'done').length;
-    pendingCount = tasks.filter(t => t.status === 'pending').length;
+    doneCount        = tasks.filter(t => t.status === 'done').length;
+    execPendingCount = executablePending(tasks).length;
+    humanCount       = tasks.filter(t => t.status === 'pending' && HUMAN_TYPES.has(t.type || '')).length;
   } catch { /* use estimates */ }
 
   const emoji = exitCode === 0 ? '✅' : '⚠️';
+  const humanNote = humanCount > 0 ? ` | ${humanCount} awaiting human` : '';
   const summary = `${emoji} *Sprint complete: ${sprintName}*\n` +
-    `Done: ${doneCount}/${sprint.total} | Pending: ${pendingCount}\n` +
+    `Done: ${doneCount}/${sprint.total} | Agent-pending: ${execPendingCount}${humanNote}\n` +
     `Time: ${elapsed} min`;
 
-  log(`Finished. Done: ${doneCount}/${sprint.total}, Pending: ${pendingCount}, Exit: ${exitCode}, Time: ${elapsed}min`);
+  log(`Finished. Done: ${doneCount}/${sprint.total}, Agent-pending: ${execPendingCount}, Human-pending: ${humanCount}, Exit: ${exitCode}, Time: ${elapsed}min`);
   sendTelegram(summary);
 
   // ── Post-Sprint Pipeline: tests → CTO review → deploy ───────────────────
-  // Only run pipeline if sprint made progress (at least some tasks done)
-  if (exitCode === 0 && doneCount > 0 && pendingCount === 0) {
+  // Only run pipeline if all agent-executable tasks are done
+  if (exitCode === 0 && doneCount > 0 && execPendingCount === 0) {
     log('All tasks done — launching post-sprint pipeline (test → CTO review → deploy)...');
     sendTelegram(`🔬 *Post-sprint pipeline started for ${sprintName}*\nRunning tests → CTO review → auto-deploy`);
 
@@ -217,8 +232,8 @@ async function main(): Promise<void> {
       log(`Post-sprint pipeline error: ${msg}`);
       sendTelegram(`⚠️ *Post-sprint pipeline error*: ${msg}`);
     }
-  } else if (pendingCount > 0) {
-    log(`${pendingCount} tasks still pending — skipping post-sprint pipeline (will re-run next cycle)`);
+  } else if (execPendingCount > 0) {
+    log(`${execPendingCount} agent-executable tasks still pending — skipping post-sprint pipeline (will re-run next cycle)`);
   }
 }
 
