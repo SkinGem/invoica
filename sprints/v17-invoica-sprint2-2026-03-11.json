@@ -1,0 +1,91 @@
+{
+  "tasks": [
+    {
+      "id": "V17-S2-001",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Add classifyTaskSmart() to backend/src/lib/model-router.ts — nano classifier via qwen3:0.6b",
+      "context": "FILE: backend/src/lib/model-router.ts (EDIT existing — 143 lines)\n\nAdd ONE new exported async function at the END of the file (after the last export statement).\n\nFirst add this import at the top of the file (after the existing TaskType export):\n  import { callOllama } from '../../scripts/lib/ollama-client';\n\nThen at the end of the file, add:\n\n  /**\n   * Smart task classifier — uses regex first, falls back to qwen3:0.6b nano model\n   * when regex returns the uncertain default 'util'.\n   */\n  export async function classifyTaskSmart(prompt: string): Promise<TaskType> {\n    // 1. Try regex keywords first (instant, no model call)\n    const regexResult = classifyTask(prompt);\n    if (regexResult !== 'util') return regexResult; // 'util' is the uncertain fallback\n\n    // 2. If regex is uncertain, ask qwen3:0.6b (~120 tok/s, <1s, free)\n    try {\n      const result = await callOllama({\n        model: 'qwen3:0.6b',\n        prompt: `Classify this task into exactly one category: code, reason, lang, util, audit, content, data.\\nTask: \"${prompt.slice(0, 300)}\"\\nCategory:`,\n        maxTokens: 10,\n        temperature: 0.0,\n      });\n      const classified = result.content.trim().toLowerCase() as TaskType;\n      if (['code','reason','lang','util','audit','content','data'].includes(classified)) {\n        return classified;\n      }\n    } catch {\n      // Ollama unavailable — fall through to regex result\n    }\n\n    return regexResult;\n  }\n\nDo NOT modify any existing function. Do NOT change any other line.",
+      "deliverables": {
+        "code": [
+          "backend/src/lib/model-router.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "V17-S2-002",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Add localQAGate() function to scripts/orchestrate-agents-v2.ts — Step 4 QA via qwen3:4b",
+      "context": "FILE: scripts/orchestrate-agents-v2.ts (EDIT existing)\n\nAdd a new standalone async function. Insert it IMMEDIATELY BEFORE the line:\n  // ===== MiniMax Coding Agent (ONE FILE PER API CALL) =====\n(which is around line 1197)\n\nInsert this exact function:\n\n  // ===== Local QA Gate (Pipeline Step 4 — qwen3:4b, $0) =====\n\n  interface QAResult {\n    pass: boolean;\n    issues: string[];\n    severity: 'none' | 'minor' | 'systemic' | 'architecture';\n  }\n\n  async function localQAGate(\n    taskTitle: string,\n    generatedCode: string,\n    deliverablePath: string,\n  ): Promise<QAResult> {\n    const isOllamaUp = await ollamaIsAvailable();\n    if (!isOllamaUp) return { pass: true, issues: [], severity: 'none' }; // graceful skip\n\n    const qaPrompt = `You are a code reviewer. Review this code output for a task.\nTask: ${taskTitle}\nExpected file: ${deliverablePath}\nCode:\n\\`\\`\\`\n${generatedCode.slice(0, 4000)}\n\\`\\`\\`\n\nCheck for:\n1. Syntax errors (missing brackets, invalid TypeScript)\n2. Missing imports or undefined references  \n3. Logic errors (wrong variable names, incorrect conditions)\n4. Does the code match the task description?\n\nRespond in JSON only (no markdown): {\"pass\": true/false, \"issues\": [\"issue1\"], \"severity\": \"none|minor|systemic|architecture\"}`;\n\n    try {\n      const result = await callOllama({ model: 'qwen3:4b', prompt: qaPrompt, maxTokens: 500 });\n      const jsonMatch = result.content.match(/\\{[\\s\\S]*\\}/);\n      if (!jsonMatch) return { pass: true, issues: [], severity: 'none' };\n      const parsed = JSON.parse(jsonMatch[0]);\n      return {\n        pass:     Boolean(parsed.pass),\n        issues:   Array.isArray(parsed.issues) ? parsed.issues : [],\n        severity: parsed.severity || 'none',\n      };\n    } catch {\n      return { pass: true, issues: [], severity: 'none' }; // parse error → don't block\n    }\n  }\n\nDo NOT modify any other function. Do NOT change any other lines.",
+      "deliverables": {
+        "code": [
+          "scripts/orchestrate-agents-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "V17-S2-003",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [
+        "V17-S2-002"
+      ],
+      "description": "Add tieredDebug() function to scripts/orchestrate-agents-v2.ts — Step 5 tiered debugger",
+      "context": "FILE: scripts/orchestrate-agents-v2.ts (EDIT existing)\n\nAdd a new standalone async function. Insert it IMMEDIATELY AFTER the localQAGate() function added in V17-S2-002 (and still before the CodingAgent class).\n\nInsert this exact function:\n\n  // ===== Tiered Debugger (Pipeline Step 5) =====\n\n  function classifyBugSeverity(qaIssues: string[]): 'minor' | 'systemic' | 'architecture' {\n    const text = qaIssues.join(' ').toLowerCase();\n    if (/architecture|design|cross.module|restructure|rethink/.test(text)) return 'architecture';\n    if (/logic|approach|algorithm|flow|state|wrong.method/.test(text)) return 'systemic';\n    return 'minor';\n  }\n\n  async function tieredDebug(\n    taskTitle: string,\n    taskContext: string,\n    code: string,\n    qaIssues: string[],\n    severity: 'minor' | 'systemic' | 'architecture',\n  ): Promise<string> {\n    const debugPrompt = `Fix the following code issues.\nTask: ${taskTitle}\nContext: ${taskContext.slice(0, 500)}\n\nIssues to fix:\n${qaIssues.map(i => `- ${i}`).join('\\n')}\n\nCode to fix:\n\\`\\`\\`typescript\n${code.slice(0, 3000)}\n\\`\\`\\`\n\nReturn ONLY the fixed code in a single fenced code block.`;\n\n    switch (severity) {\n      case 'minor':\n        // 70% of bugs — wrong variable, missing import, type error\n        return (await callOllama({ model: 'qwen3:14b', prompt: debugPrompt, maxTokens: 4096 })).content;\n\n      case 'systemic':\n        // 25% — logic error, wrong approach\n        return (await callOllama({ model: 'deepseek-r1:14b', prompt: debugPrompt, maxTokens: 4096 })).content;\n\n      case 'architecture':\n        // 5% — design flaw, escalate to cloud\n        try {\n          const crResult = await callClawRouter({\n            model: 'anthropic/claude-sonnet-4.6',\n            prompt: debugPrompt,\n            systemPrompt: 'You are a senior architect. Fix the architecture-level issue.',\n            maxTokens: 4096,\n          });\n          walletState.spentThisMonth += crResult.costUsdc;\n          return crResult.content;\n        } catch {\n          // ClawRouter unavailable — fall back to deepseek local\n          return (await callOllama({ model: 'deepseek-r1:14b', prompt: debugPrompt, maxTokens: 4096 })).content;\n        }\n    }\n  }\n\nDo NOT modify any other function. Do NOT change any other lines.",
+      "deliverables": {
+        "code": [
+          "scripts/orchestrate-agents-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "V17-S2-004",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Add compressContext() to scripts/orchestrate-agents-v2.ts — context compression via qwen3:4b",
+      "context": "FILE: scripts/orchestrate-agents-v2.ts (EDIT existing)\n\nAdd a new standalone async function. Insert it IMMEDIATELY AFTER the tieredDebug() function (and still before the CodingAgent class).\n\nInsert this exact function:\n\n  // ===== Context Compression (qwen3:4b — reduces cloud token costs by 70-80%) =====\n\n  async function compressContext(context: string, taskTitle: string): Promise<string> {\n    if (context.length < 1000) return context; // short enough, skip\n    const isOllamaUp = await ollamaIsAvailable();\n    if (!isOllamaUp) return context; // graceful skip if Ollama down\n\n    try {\n      const result = await callOllama({\n        model: 'qwen3:4b',\n        prompt: `Compress the following context for a coding task. Keep file paths, function names, error messages, and technical details verbatim. Remove prose, filler, and redundant explanations. Target: ≤500 tokens.\n\nTask: ${taskTitle}\nContext:\n${context.slice(0, 6000)}\n\nCompressed context:`,\n        maxTokens: 600,\n        temperature: 0.1,\n      });\n      return result.content.trim() || context;\n    } catch {\n      return context; // compression failed → use original\n    }\n  }\n\nDo NOT modify any other function. Do NOT change any other lines.",
+      "deliverables": {
+        "code": [
+          "scripts/orchestrate-agents-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "V17-S2-005",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "medium",
+      "dependencies": [],
+      "description": "Enhance postProcessContent() in orchestrate-agents-v2.ts with nano JSON validation (qwen3:0.6b)",
+      "context": "FILE: scripts/orchestrate-agents-v2.ts (EDIT existing)\n\nFind the postProcessContent() function (search for 'function postProcessContent' or 'postProcessContent'). Do NOT modify the existing function. Instead, add a NEW async function immediately after it:\n\n  async function smartPostProcess(content: string, deliverablePath: string): Promise<string> {\n    // Step 1: Run existing regex-based post-processing\n    let processed = postProcessContent(content, deliverablePath);\n\n    // Step 2: If output is a JSON file, validate and auto-fix with nano model\n    if (deliverablePath.endsWith('.json')) {\n      try {\n        JSON.parse(processed);\n        // JSON is valid — no fix needed\n      } catch {\n        const isOllamaUp = await ollamaIsAvailable();\n        if (isOllamaUp) {\n          try {\n            const fix = await callOllama({\n              model: 'qwen3:0.6b',\n              prompt: `Fix this invalid JSON. Return ONLY valid JSON, nothing else:\\n${processed.slice(0, 2000)}`,\n              maxTokens: 2100,\n              temperature: 0.0,\n            });\n            const jsonMatch = fix.content.match(/\\{[\\s\\S]*\\}|\\[[\\s\\S]*\\]/);\n            if (jsonMatch) processed = jsonMatch[0];\n          } catch { /* nano fix failed — return original processed */ }\n        }\n      }\n    }\n\n    return processed;\n  }\n\nDo NOT modify any other function. Do NOT change any other lines.",
+      "deliverables": {
+        "code": [
+          "scripts/orchestrate-agents-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    }
+  ]
+}

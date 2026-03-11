@@ -1,0 +1,91 @@
+{
+  "tasks": [
+    {
+      "id": "V17-S3-001",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "description": "CEO intent once per sprint — make Phase 5 (final assessment) conditional in orchestrate-agents-v2.ts",
+      "context": "FILE: scripts/orchestrate-agents-v2.ts (EDIT existing)\n\nThe CEO currently runs a final assessment (Phase 5) at the end of every sprint. Change it to only run if the sprint had >= 2 rejected tasks.\n\nSearch for the Phase 5 call — it looks like:\n  const finalAssessment = await this.ceo.assessProgress(...);\nor\n  await this.ceo.generateDailyReport(...);\n\nFind the section in the main run() method where the CEO final assessment / Phase 5 is called. Look for a comment like '// Phase 5' or '// Final CEO assessment' or 'CEO final'.\n\nWrap the CEO final assessment call in a conditional:\n  if (this.stats.rejected >= 2) {\n    // CEO final assessment — only needed when there are notable failures\n    const finalAssessment = await this.ceo.assessProgress(...);\n    // ... existing code ...\n  } else {\n    log(c.gray, '  [CEO] Skipping final assessment — sprint clean (< 2 rejections)');\n  }\n\nDo NOT skip the Phase 1 CEO call (initial assessment — this IS the \"once per sprint\" intent). Only skip Phase 5 when clean.\nDo NOT modify any other logic.",
+      "deliverables": {
+        "code": [
+          "scripts/orchestrate-agents-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "V17-S3-002",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Replace dual supervisor with DeepSeek verification via ClawRouter in orchestrate-agents-v2.ts",
+      "context": "FILE: scripts/orchestrate-agents-v2.ts (EDIT existing)\n\nThe current pipeline runs dual supervisor review (Claude Sonnet + Codex) for every task. Replace with a single DeepSeek verification via ClawRouter, retaining Claude only for 'audit' tasks.\n\nFind the supervisor review loop — it is called after CodingAgent.execute() completes. Look for:\n  const review1 = await this.supervisor.review(...);\n  const review2 = await this.supervisor2.review(...);\nor similar dual-review calls.\n\nReplace the dual review with a new verifyTask() helper. Add this function BEFORE the main Swarm class (or wherever the supervisor calls happen):\n\n  async function verifyTask(\n    task: AgentTask,\n    generatedCode: string,\n    supervisor: SupervisorAgent,\n    callAnthropicCachedFn: (prompt: string, systemPrompt: string) => Promise<any>\n  ): Promise<ReviewResult> {\n    // Audit tasks always use Claude for review\n    if (task.task_type === 'audit') {\n      return callAnthropicCachedFn(\n        `Review this code for security and correctness:\\n${generatedCode.slice(0, 6000)}`,\n        'You are a security auditor. Return JSON with verdict APPROVED or REJECTED.'\n      );\n    }\n\n    // Standard tasks: DeepSeek via ClawRouter (~$0.02, down from ~$0.07 dual review)\n    const useClawRouter = process.env.USE_CLAWROUTER === 'true';\n    if (useClawRouter) {\n      try {\n        const reviewPrompt = `Review this code for task: ${task.id}\\nTask: ${task.description}\\nCode:\\n${generatedCode.slice(0, 5000)}\\n\\nRespond in JSON: {\"verdict\": \"APPROVED|REJECTED\", \"score\": 0-100, \"summary\": \"brief summary\", \"issues\": [], \"strengths\": []}`;\n        const crResult = await callClawRouter({\n          model: 'deepseek/deepseek-chat',\n          prompt: reviewPrompt,\n          systemPrompt: 'You are a code reviewer. Respond ONLY with valid JSON.',\n          maxTokens: 1000,\n        });\n        walletState.spentThisMonth += crResult.costUsdc;\n        const jsonMatch = crResult.content.match(/\\{[\\s\\S]*\\}/);\n        if (jsonMatch) return JSON.parse(jsonMatch[0]);\n      } catch {\n        // ClawRouter failed — fall through to Claude supervisor\n      }\n    }\n\n    // Fallback: single Claude supervisor (not dual)\n    return supervisor.review(task, generatedCode);\n  }\n\nThen in the main task execution loop, replace the dual-review call with a call to verifyTask().\n\nIMPORTANT: Do NOT delete the SupervisorAgent or Supervisor2Agent classes — keep them for fallback and audit tasks. Only change where they are called in the pipeline.",
+      "deliverables": {
+        "code": [
+          "scripts/orchestrate-agents-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "V17-S3-003",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Add parallel task fan-out to orchestrate-agents-v2.ts — Promise.all for independent tasks",
+      "context": "FILE: scripts/orchestrate-agents-v2.ts (EDIT existing)\n\nFind the main task execution loop in the Swarm.run() method. It currently processes tasks sequentially. Replace it with a parallel fan-out for independent tasks.\n\nFind the loop that iterates over pending tasks. It looks like:\n  for (const task of pendingTasks) {\n    await this.executeTask(task);\n  }\nor similar.\n\nReplace with parallel execution for independent tasks:\n\n  // Group tasks by dependency status\n  const independent = pendingTasks.filter((t: AgentTask) => !t.dependencies?.length || t.dependencies.every((d: string) => completedIds.has(d)));\n  const dependent = pendingTasks.filter((t: AgentTask) => t.dependencies?.length && !t.dependencies.every((d: string) => completedIds.has(d)));\n\n  // Detect file conflicts in independent tasks — serialize tasks writing the same file\n  function detectFileConflicts(tasks: AgentTask[]): AgentTask[][] {\n    const groups: AgentTask[][] = [];\n    const seen = new Set<string>();\n    let currentGroup: AgentTask[] = [];\n    for (const task of tasks) {\n      const files = [...(task.deliverables.code || []), ...(task.deliverables.tests || []), ...(task.deliverables.docs || [])];\n      const hasConflict = files.some(f => seen.has(f));\n      if (hasConflict) {\n        if (currentGroup.length) groups.push(currentGroup);\n        currentGroup = [task];\n        files.forEach(f => seen.add(f));\n      } else {\n        files.forEach(f => seen.add(f));\n        currentGroup.push(task);\n      }\n    }\n    if (currentGroup.length) groups.push(currentGroup);\n    return groups;\n  }\n\n  // Fan out independent tasks in parallel (within each conflict-free group)\n  const conflictGroups = detectFileConflicts(independent);\n  for (const group of conflictGroups) {\n    await Promise.all(group.map((t: AgentTask) => this.executeTask(t)));\n  }\n\n  // Process dependent tasks sequentially\n  for (const task of dependent) {\n    await this.executeTask(task);\n  }\n\nWhere completedIds is a Set tracking completed/approved task IDs. Adapt the code to use however the current loop tracks completed tasks.\n\nIMPORTANT: If the current code does not have an executeTask() helper method, do NOT refactor the whole loop. Instead, just add a Promise.all wrapper for the clearly independent tasks (dependencies === [] or dependencies.length === 0) and leave dependent tasks sequential.",
+      "deliverables": {
+        "code": [
+          "scripts/orchestrate-agents-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "V17-S3-004",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Create scripts/lib/wallet-state.ts — CFO budget tracking with persistence",
+      "context": "FILE: scripts/lib/wallet-state.ts (CREATE NEW — does not exist yet)\n\nCreate a TypeScript wallet state manager. Max 120 lines.\n\nExport interface:\n  export interface WalletState {\n    monthlyBudget: number;\n    spentThisMonth: number;\n    callCount: number;\n    lastReset: string;  // ISO date YYYY-MM-DD\n  }\n\nConst (internal):\n  const STATE_FILE = './logs/wallet/state.json';\n\nExport function:\n  export function loadWalletState(): WalletState\n  // Read STATE_FILE if it exists, parse JSON\n  // Check lastReset date — if it's a different month, reset spentThisMonth and callCount to 0\n  // If file doesn't exist, return default: { monthlyBudget: Number(process.env.CEO_WALLET_BUDGET_USDC || 0), spentThisMonth: 0, callCount: 0, lastReset: today ISO date }\n  // Use mkdirSync to ensure ./logs/wallet/ directory exists\n\nExport function:\n  export function saveWalletState(state: WalletState): void\n  // writeFileSync(STATE_FILE, JSON.stringify(state, null, 2))\n  // Use mkdirSync({ recursive: true }) to ensure directory exists\n\nExport function:\n  export function recordCloudCall(state: WalletState, costUsdc: number): WalletState\n  // Return new object: { ...state, spentThisMonth: state.spentThisMonth + costUsdc, callCount: state.callCount + 1 }\n  // Does NOT persist — caller must call saveWalletState() themselves\n\nExport function:\n  export function getWalletReport(state: WalletState): string\n  // Return formatted string:\n  // `Wallet: $${state.spentThisMonth.toFixed(4)} / $${state.monthlyBudget} budget (${burnPct}%) | ${state.callCount} cloud calls this month`\n  // burnPct = state.monthlyBudget > 0 ? ((state.spentThisMonth / state.monthlyBudget) * 100).toFixed(1) : 'N/A'\n\nExport constants:\n  export function isFrozen(state: WalletState): boolean\n  // state.monthlyBudget > 0 && state.spentThisMonth / state.monthlyBudget >= 0.95\n\n  export function isDegraded(state: WalletState): boolean\n  // state.monthlyBudget > 0 && state.spentThisMonth / state.monthlyBudget >= 0.80\n\nImports needed: readFileSync, writeFileSync, existsSync, mkdirSync from 'fs'",
+      "deliverables": {
+        "code": [
+          "scripts/lib/wallet-state.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "V17-S3-005",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "medium",
+      "dependencies": [
+        "V17-S3-004"
+      ],
+      "description": "Add --sovereign CLI flag and wallet auto-enforcement to orchestrate-agents-v2.ts",
+      "context": "FILE: scripts/orchestrate-agents-v2.ts (EDIT existing)\n\nAdd sovereign mode support. Make THREE targeted changes:\n\nCHANGE 1 — Add import at the top (after existing imports):\n  import { loadWalletState, saveWalletState, recordCloudCall, getWalletReport, isFrozen, isDegraded } from './lib/wallet-state';\n\nCHANGE 2 — At startup in the main run() method or module-level init, replace the simple walletState object (added in V17-S1-004) with:\n  const walletState = loadWalletState();\n  const sovereignMode = process.argv.includes('--sovereign') || isFrozen(walletState);\n  if (sovereignMode) {\n    log(c.yellow, '  [SOVEREIGN] All inference running locally — $0 cloud spend floor');\n  } else if (isDegraded(walletState)) {\n    log(c.yellow, `  [CFO] Wallet at ${((walletState.spentThisMonth / walletState.monthlyBudget) * 100).toFixed(1)}% — non-critical tasks rerouted to local`);\n  }\n  log(c.gray, `  ${getWalletReport(walletState)}`);\n\nCHANGE 3 — In assessTaskComplexity() (the function modified in V17-S1-004), add sovereign mode check at the TOP of the function (before all other logic):\n  if (sovereignMode) {\n    const { model } = selectLocalModel(taskType);\n    return { provider: 'ollama', model, routingReason: 'sovereign mode — all local' };\n  }\n\nWhere sovereignMode is the module-level boolean declared above.\n\nCHANGE 4 — After every callClawRouter() call that deducts from walletState, also call saveWalletState(walletState) to persist the updated spend.\n\nDo NOT modify any other logic.",
+      "deliverables": {
+        "code": [
+          "scripts/orchestrate-agents-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    }
+  ]
+}

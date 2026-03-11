@@ -1,0 +1,40 @@
+{
+  "tasks": [
+    {
+      "id": "V17-S4-001",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "medium",
+      "dependencies": [],
+      "description": "Create scripts/lib/byterover-client.ts — optional ByteRover context injection (graceful skip if not installed)",
+      "context": "FILE: scripts/lib/byterover-client.ts (CREATE NEW — does not exist yet)\n\nCreate a TypeScript wrapper for the ByteRover CLI (brv command). Max 100 lines. This is an OPTIONAL integration — the pipeline must work perfectly when brv is not installed.\n\nImports needed: execSync from 'child_process', existsSync from 'fs'.\n\nExport function:\n  export async function brvIsAvailable(): Promise<boolean>\n  // Try: execSync('which brv', { stdio: 'pipe' }) — returns true if exit code 0\n  // Catch any error → return false\n  // Cache result in module-level boolean after first check\n\nExport function:\n  export async function brvQuery(taskObjective: string): Promise<string | null>\n  // If not available → return null immediately\n  // Try: execSync(`brv query \"${taskObjective.slice(0, 200).replace(/\"/g, \"'\")}\" --headless --format json`, { timeout: 15000, encoding: 'utf8', stdio: 'pipe' })\n  // Parse JSON output: { context: string } or { results: [{ content: string }] }\n  // Return the context string (first result content, or context field)\n  // If any error (brv not responding, timeout, parse error) → return null (never throw)\n  // Log: console.log('[ByteRover] Context injected:', context.slice(0, 100) + '...')\n\nExport function:\n  export async function brvCurate(taskId: string, decision: string, fileRefs: string[]): Promise<void>\n  // If not available → return immediately (no-op)\n  // Try: execSync(`brv curate \"[${taskId}] ${decision.slice(0, 150)} | files: ${fileRefs.join(', ')}\" --headless`, { timeout: 10000, stdio: 'pipe' })\n  // Catch any error → log warning but do NOT throw (curate is best-effort)\n  // Log: console.log('[ByteRover] Learning captured for:', taskId)\n\nNote: brv command may not be installed (package not published yet). ALL functions must handle absence gracefully with null returns and no exceptions.",
+      "deliverables": {
+        "code": [
+          "scripts/lib/byterover-client.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "V17-S4-002",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "medium",
+      "dependencies": [
+        "V17-S4-001"
+      ],
+      "description": "Wire ByteRover into orchestrate-agents-v2.ts — Steps 0 and 7 of V17 pipeline",
+      "context": "FILE: scripts/orchestrate-agents-v2.ts (EDIT existing)\n\nWire ByteRover as optional Step 0 (context injection before task execution) and Step 7 (capture learning after task completes).\n\nCHANGE 1 — Add import at top (after existing imports):\n  import { brvQuery, brvCurate } from './lib/byterover-client';\n\nCHANGE 2 — In the task execution loop (in CodingAgent.execute() or the loop calling it), BEFORE the coding agent runs on a task, add Step 0:\n  // Step 0: ByteRover context injection (optional)\n  const brvContext = await brvQuery(`${task.id}: ${task.description}`);\n  if (brvContext) {\n    task.context = (task.context || '') + `\\n\\n## ByteRover Context\\n${brvContext}`;\n    log(c.gray, `  [BRV] Context injected (${brvContext.length} chars)`);\n  }\n\nCHANGE 3 — AFTER a task is successfully completed (status set to 'done' or 'approved'), add Step 7:\n  // Step 7: ByteRover curate (capture learning, optional)\n  const deliverableFiles = [...(task.deliverables.code || []), ...(task.deliverables.tests || [])];\n  await brvCurate(task.id, `Task completed: ${task.description}`, deliverableFiles);\n\nBoth calls are wrapped in try-catch by the byterover-client.ts itself, so no try-catch needed here. If brv is not installed, both calls return immediately without blocking the pipeline.\n\nDo NOT modify any other logic. Do NOT change the task execution flow — ByteRover is additive only.",
+      "deliverables": {
+        "code": [
+          "scripts/orchestrate-agents-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    }
+  ]
+}
