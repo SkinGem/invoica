@@ -3,7 +3,8 @@ import { generateSignature, verifySignature, generateWebhookSecret, SIGNATURE_HE
 
 describe('webhook-signature', () => {
   const payload = JSON.stringify({ event: 'invoice.created', id: 'inv_123' });
-  const secret = 'whsec_testsecret1234567890123456789012';
+  // Use the module's own generator — no hardcoded secrets in source
+  const secret = generateWebhookSecret();
 
   describe('generateSignature', () => {
     it('produces sha256= prefix followed by 64 hex chars', () => {
@@ -37,7 +38,7 @@ describe('webhook-signature', () => {
 
     it('returns false for wrong secret', () => {
       const sig = generateSignature(payload, secret);
-      expect(verifySignature(payload, 'whsec_wrongsecret123456789012', sig)).toBe(false);
+      expect(verifySignature(payload, generateWebhookSecret(), sig)).toBe(false);
     });
 
     it('returns false for malformed signature', () => {
