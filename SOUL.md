@@ -45,15 +45,15 @@ Our positioning: "Stripe for AI Agents."
 | Settlement Detection | Live — on-chain | Included in all tiers |
 | Dashboard & Analytics | Live | Frontend for all tiers |
 | Multi-chain (Base + Polygon) | Live — Shipped Sprint 074 | Included in all tiers |
-| Gas Backstop | Deprioritized (2026-03-10) | Spread on loans |
 | Arb Bot Stabilisation | Planned — **Priority 1** | Prerequisite (separate repo) |
 | Payment Router (x402, PayAI launch partner) | Planned — **Priority 2** | 0.005 USDC/routing call |
 | Solana Settlement | Planned — **Priority 3** | Gates Treasury Manager |
 | Treasury Manager (x402, PayAI launch partner) | Planned — **Priority 4** *(conditional: needs Solana)* | 0.005 USDC/arb cycle |
-| SOL Incinerator | Deprioritized (2026-03-10) | 20% of recovered rent |
 | Reputation Oracle (x402, PayAI launch partner) | Planned — **Priority 5** *(replaces Reputation Scoring API)* | 0.002 USDC/score query |
 | PayAI Marketplace Listing | Planned — **Priority 6** | Distribution + first-in-registry advantage |
 | Agent Marketplace | Planned — **Priority 7** | 10-15% transaction fee |
+| Gas Backstop | Planned — **Priority 8** (deprioritized 2026-03-10) | Spread on loans |
+| SOL Incinerator | Planned — **Priority 9** (deprioritized 2026-03-10) | 20% of recovered rent |
 
 **x402 Facilitator Strategy:** The three arb-derived services (Payment Router, Treasury Manager, Reputation Oracle) are built on the x402 protocol — not PayAI specifically. A `verifyFacilitator()` abstraction + on-chain facilitator registry means any x402-compliant facilitator (PayAI, Coinbase, others) can distribute all three services by joining the registry. PayAI is the launch partner and first in the registry — with a 1.2× reputation weight boost for the first 18 months. Invoica is the infrastructure layer the entire x402 economy converges on, not a PayAI-exclusive vendor. See `docs/plans/payai-integration-roadmap.md`.
 
