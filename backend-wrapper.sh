@@ -20,9 +20,10 @@ else
 fi
 
 # Wait for port 3001 to be free (graceful wait, then force-kill only if needed).
+# Uses lsof (more reliable than fuser on Debian/Ubuntu).
 PORT_FREE=false
-for i in $(seq 1 15); do
-  if ! fuser 3001/tcp >/dev/null 2>&1; then
+for i in $(seq 1 20); do
+  if ! lsof -ti :3001 >/dev/null 2>&1; then
     PORT_FREE=true
     break
   fi
@@ -30,8 +31,8 @@ for i in $(seq 1 15); do
 done
 
 if [ "$PORT_FREE" = "false" ]; then
-  echo "[backend-wrapper] Port 3001 still busy after 15s — force-killing holder"
-  fuser -k 3001/tcp 2>/dev/null || true
+  echo "[backend-wrapper] Port 3001 still busy after 20s — force-killing holder"
+  lsof -ti :3001 | xargs kill -9 2>/dev/null || true
   sleep 2
 fi
 

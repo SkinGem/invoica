@@ -1,5 +1,14 @@
 import { app } from './app';
 
+process.on('uncaughtException', (err: Error) => {
+  console.error('[FATAL] Uncaught exception:', err.message, err.stack);
+  setTimeout(() => process.exit(1), 500);
+});
+
+process.on('unhandledRejection', (reason: unknown) => {
+  console.error('[FATAL] Unhandled rejection:', reason);
+  setTimeout(() => process.exit(1), 500);
+});
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
