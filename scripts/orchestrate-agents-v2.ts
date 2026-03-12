@@ -33,6 +33,7 @@ import { callOllama, ollamaIsAvailable } from './lib/ollama-client';
 import { shouldRunLocally, selectLocalModel, WalletState } from './lib/local-model-router';
 import { selectModel, classifyTask } from '../backend/src/lib/model-router';
 import { callClawRouter } from '../backend/src/lib/clawrouter-client';
+import { loadWalletState, saveWalletState, getWalletReport, isFrozen, isDegraded } from './lib/wallet-state';
 
 // ===== Types =====
 
@@ -121,13 +122,11 @@ interface TaskRun {
 // Reset at process start; each sprint run is a fresh process so no cross-run bleed.
 const runStats = { totalTokens: 0 };
 
-// Module-level wallet state — tracks API spend for local/cloud routing decisions
-const walletState: WalletState = {
-  monthlyBudget:  Number(process.env.CEO_WALLET_BUDGET_USDC || 0),
-  spentThisMonth: 0,
-  callCount:      0,
-  lastReset:      new Date().toISOString(),
-};
+// Module-level wallet state — loaded from disk, tracks cumulative monthly spend
+const walletState: WalletState = loadWalletState();
+
+// Sovereign mode: --sovereign flag OR wallet frozen at 95% budget
+const sovereignMode = process.argv.includes('--sovereign') || isFrozen(walletState);
 
 // ===== Colors =====
 
@@ -1199,6 +1198,13 @@ function assessTaskComplexity(
   task: AgentTask,
   deliverables: string[],
 ): { provider: 'minimax' | 'anthropic' | 'ollama' | 'clawrouter'; model: string; routingReason: string } {
+  // Sovereign mode: all inference runs locally — zero cloud spend
+  if (sovereignMode) {
+    const taskType = task.task_type || classifyTask(task.context || task.description || '');
+    const { model } = selectLocalModel(taskType);
+    return { provider: 'ollama', model, routingReason: 'sovereign mode — all local' };
+  }
+
   const taskType = task.task_type || classifyTask(task.context || task.description || '');
 
   // task_target explicit override
@@ -1332,6 +1338,7 @@ Return ONLY the fixed code in a single fenced code block.`;
           maxTokens: 4096,
         });
         walletState.spentThisMonth += crResult.costUsdc;
+        saveWalletState(walletState);
         return crResult.content;
       } catch {
         return (await callOllama({ model: 'deepseek-r1:14b', prompt: debugPrompt, maxTokens: 4096 })).content;
@@ -1510,6 +1517,7 @@ Write ONLY the content for "${filepath}". Rules:
           const crResult = await callClawRouter({ model, prompt: userPrompt, systemPrompt: this.systemPrompt });
           walletState.spentThisMonth += crResult.costUsdc;
           walletState.callCount++;
+          saveWalletState(walletState);
           response = { choices: [{ message: { content: crResult.content } }], usage: { total_tokens: crResult.inputTokens + crResult.outputTokens } };
         } else {
           response = await callLLM(provider, model, this.systemPrompt, userPrompt, 180000);
@@ -1796,6 +1804,50 @@ Continue from where it left off and output ONLY the remaining code (no duplicate
     }
   }
 }
+// ===== Unified Task Verifier (V17-S3-002 — replaces dual supervisor) =====
+
+async function verifyTask(
+  task: AgentTask,
+  files: string[],
+  supervisor: SupervisorAgent,
+): Promise<ReviewResult> {
+  // Audit tasks always use Claude for thorough security review
+  if (task.task_type === 'audit') {
+    return supervisor.reviewTask(task, files);
+  }
+
+  // Standard tasks: DeepSeek via ClawRouter (~$0.02, down from ~$0.07 dual review)
+  if (process.env.USE_CLAWROUTER === 'true') {
+    try {
+      const fileContents = files.map(filepath => {
+        const content = existsSync(filepath) ? readFileSync(filepath, 'utf-8') : '';
+        return `### ${filepath}\n\`\`\`typescript\n${content.substring(0, 4000)}\n\`\`\``;
+      }).join('\n\n');
+      const reviewPrompt = `Review this code for task: ${task.id}\nTask: ${task.description || (task.context || '').substring(0, 200)}\nCode:\n${fileContents.substring(0, 5000)}\n\nRespond in JSON: {"verdict": "APPROVED|REJECTED", "score": 0-100, "summary": "brief summary", "issues": [], "strengths": []}`;
+      const crResult = await callClawRouter({
+        model: 'deepseek/deepseek-chat',
+        prompt: reviewPrompt,
+        systemPrompt: 'You are a code reviewer. Respond ONLY with valid JSON.',
+        maxTokens: 1000,
+      });
+      walletState.spentThisMonth += crResult.costUsdc;
+      walletState.callCount++;
+      saveWalletState(walletState);
+      const jsonMatch = crResult.content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const review = JSON.parse(jsonMatch[0]) as ReviewResult;
+        log(c.cyan, `  [DeepSeek] ${review.verdict} (${review.score}/100) — ${(crResult.costUsdc * 100).toFixed(3)}¢`);
+        return review;
+      }
+    } catch {
+      // ClawRouter failed — fall through to Claude supervisor
+    }
+  }
+
+  // Fallback: single Claude supervisor (not dual)
+  return supervisor.reviewTask(task, files);
+}
+
 // ===== Orchestrator (Dynamic Agent Pipeline) =====
 
 class Orchestrator {
@@ -2053,18 +2105,10 @@ ONLY output the JSON array. No markdown, no explanation.`;
         return false;
       }
 
-      // Dual supervisor review — wrapped in try/catch so a CEO/supervisor API
-      // timeout during reconciliation never crashes the subtask executor silently.
+      // Unified verifier (DeepSeek via ClawRouter, falls back to Claude supervisor)
       let review: ReviewResult;
       try {
-        const [review1, review2] = await Promise.all([
-          this.supervisor.reviewTask(subtask, result.files),
-          this.supervisor2.reviewTask(subtask, result.files),
-        ]);
-        const dualResult = await reconcileSupervisorReviews(review1, review2, subtask, this.ceo);
-        review = dualResult.finalReview;
-        if (!dualResult.consensus) this.stats.conflicts++;
-        if (dualResult.escalatedToCEO) this.stats.escalations++;
+        review = await verifyTask(subtask, result.files, this.supervisor);
         lastReview = review;
       } catch (reviewErr: any) {
         log(c.yellow, `  ⚠ Sub-task ${subtask.id}: supervisor review failed (${reviewErr.message?.substring(0, 80)}) — treating as rejection`);
@@ -2234,19 +2278,11 @@ ONLY output the JSON array. No markdown, no explanation.`;
       }
 
       // Dual Supervisor review (Claude + Codex in parallel)
-      // Wrapped in try/catch: CEO API timeout during reconciliation must not crash the
-      // entire sprint — treat it as a rejection so the task loops back for another attempt.
+      // Unified verifier (DeepSeek via ClawRouter, falls back to Claude supervisor)
       task.status = 'review';
       let review: ReviewResult;
       try {
-        const [review1, review2] = await Promise.all([
-          this.supervisor.reviewTask(task, result.files),
-          this.supervisor2.reviewTask(task, result.files),
-        ]);
-        const dualResult = await reconcileSupervisorReviews(review1, review2, task, this.ceo);
-        review = dualResult.finalReview;
-        if (!dualResult.consensus) this.stats.conflicts++;
-        if (dualResult.escalatedToCEO) this.stats.escalations++;
+        review = await verifyTask(task, result.files, this.supervisor);
       } catch (reviewErr: any) {
         log(c.yellow, `\n⚠ Task ${task.id}: supervisor review failed (${reviewErr.message?.substring(0, 80)}) — treating as rejection`);
         task.status = 'pending'; // reset so it will be retried
@@ -2400,6 +2436,14 @@ ONLY output the JSON array. No markdown, no explanation.`;
       return;
     }
 
+    // Sovereign / degraded mode banners
+    if (sovereignMode) {
+      log(c.yellow, '  [SOVEREIGN] All inference running locally — $0 cloud spend floor');
+    } else if (isDegraded(walletState)) {
+      log(c.yellow, `  [CFO] Wallet at ${((walletState.spentThisMonth / walletState.monthlyBudget) * 100).toFixed(1)}% — non-critical tasks rerouted to local`);
+    }
+    log(c.gray, `  ${getWalletReport(walletState)}`);
+
     // 2. CEO initial assessment
     log(c.magenta, '\n--- Phase 1: CEO Initial Assessment ---');
     await this.ceo.reviewSprintProgress(this.tasks);
@@ -2431,10 +2475,71 @@ ONLY output the JSON array. No markdown, no explanation.`;
     // Filter out human-gate tasks — agents cannot action them (same logic as sprint-runner's executablePending)
     const HUMAN_TASK_TYPES = new Set(['human', 'human_validation', 'human_gate']);
     const pending = this.tasks.filter(t => t.status === 'pending' && !HUMAN_TASK_TYPES.has(t.type));
-    for (const task of pending) {
-      // Check dependencies
-      const deps = task.dependencies || [];
-      const unmetDeps = deps.filter(d => {
+
+    // Helper: cascade rejected/skipped deps after a batch completes
+    const cascadeRejected = () => {
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const t of this.tasks) {
+          if (t.status !== 'pending') continue;
+          const blocked = (t.dependencies || []).filter(d => {
+            const dep = this.tasks.find(x => x.id === d);
+            return dep && (dep.status === 'rejected' || dep.status === 'skipped');
+          });
+          if (blocked.length > 0) {
+            t.status = 'skipped';
+            (t as any).skippedReason = `Blocked by: ${blocked.join(', ')}`;
+            log(c.yellow, `  Auto-skipped ${t.id}: blocked by rejected/skipped deps [${blocked.join(', ')}]`);
+            changed = true;
+          }
+        }
+      }
+    };
+
+    // Split: independent (all deps done) vs dependent (waiting on deps)
+    const completedIds = new Set(this.tasks.filter(t => ['done', 'approved'].includes(t.status)).map(t => t.id));
+    const independent = pending.filter((t: AgentTask) =>
+      !t.dependencies?.length || t.dependencies.every((d: string) => completedIds.has(d))
+    );
+    const dependent = pending.filter((t: AgentTask) =>
+      t.dependencies?.length && !t.dependencies.every((d: string) => completedIds.has(d))
+    );
+
+    // Detect file conflicts — tasks writing the same file must be serialized
+    function detectFileConflicts(tasks: AgentTask[]): AgentTask[][] {
+      const groups: AgentTask[][] = [];
+      const seen = new Set<string>();
+      let currentGroup: AgentTask[] = [];
+      for (const task of tasks) {
+        const files = [...(task.deliverables.code || []), ...(task.deliverables.tests || []), ...(task.deliverables.docs || [])];
+        const hasConflict = files.some(f => seen.has(f));
+        if (hasConflict) {
+          if (currentGroup.length) groups.push(currentGroup);
+          currentGroup = [task];
+          files.forEach(f => seen.add(f));
+        } else {
+          files.forEach(f => seen.add(f));
+          currentGroup.push(task);
+        }
+      }
+      if (currentGroup.length) groups.push(currentGroup);
+      return groups;
+    }
+
+    // Fan-out independent tasks in parallel (within each conflict-free group)
+    const conflictGroups = detectFileConflicts(independent);
+    for (const group of conflictGroups) {
+      if (group.length > 1) {
+        log(c.cyan, `  [Parallel] Fanning out ${group.length} independent tasks: ${group.map(t => t.id).join(', ')}`);
+      }
+      await Promise.all(group.map((t: AgentTask) => this.executeTask(t)));
+      cascadeRejected();
+    }
+
+    // Process dependent tasks sequentially
+    for (const task of dependent) {
+      const unmetDeps = (task.dependencies || []).filter(d => {
         const depTask = this.tasks.find(t => t.id === d);
         return depTask && !['approved', 'done'].includes(depTask.status);
       });
@@ -2443,26 +2548,7 @@ ONLY output the JSON array. No markdown, no explanation.`;
         continue;
       }
       await this.executeTask(task);
-
-      // After each task, cascade any newly-rejected dependencies
-      cascaded = true;
-      while (cascaded) {
-        cascaded = false;
-        for (const t of this.tasks) {
-          if (t.status !== 'pending') continue;
-          const tDeps = t.dependencies || [];
-          const tBlocked = tDeps.filter(d => {
-            const depTask = this.tasks.find(x => x.id === d);
-            return depTask && (depTask.status === 'rejected' || depTask.status === 'skipped');
-          });
-          if (tBlocked.length > 0) {
-            t.status = 'skipped';
-            (t as any).skippedReason = `Blocked by: ${tBlocked.join(', ')}`;
-            log(c.yellow, `  Auto-skipped ${t.id}: blocked by rejected/skipped deps [${tBlocked.join(', ')}]`);
-            cascaded = true;
-          }
-        }
-      }
+      cascadeRejected();
     }
     // 4. CTO data-driven analysis + CMO reports
     log(c.cyan, '\n--- Phase 3: CTO Data-Driven Analysis + CMO Reports ---');
@@ -2536,9 +2622,13 @@ ONLY output the JSON array. No markdown, no explanation.`;
       ctoDecisions = 'CTO analysis was not performed this run.';
     }
 
-    // 6. CEO final assessment
-    log(c.magenta, '\n--- Phase 5: CEO Final Assessment ---');
-    await this.ceo.reviewSprintProgress(this.tasks);
+    // 6. CEO final assessment — only when sprint had notable failures (saves ~$0.03/sprint)
+    if (this.stats.rejected >= 2) {
+      log(c.magenta, '\n--- Phase 5: CEO Final Assessment ---');
+      await this.ceo.reviewSprintProgress(this.tasks);
+    } else {
+      log(c.gray, '  [CEO] Skipping final assessment — sprint clean (< 2 rejections)');
+    }
 
     // 6b. CTO autonomous post-sprint analysis (runs after EVERY sprint)
     log(c.cyan, '\n--- Phase 5b: CTO Post-Sprint Analysis (Autonomous) ---');
