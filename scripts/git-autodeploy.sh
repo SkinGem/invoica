@@ -56,30 +56,13 @@ echo "[$TIMESTAMP] [AutoDeploy] New commit: $LOCAL → $REMOTE"
 # causes CHANGED to miss newly-arrived files. ORIG_HEAD is not reliable
 # with --rebase, so we use the saved $LOCAL hash directly.
 
-# Stash any runtime changes (sprint JSONs, reports, .wallet-alert-state.json)
-# so that git pull --rebase doesn't abort. We restore them after.
-DID_STASH=false
-PORCELAIN=$(git status --porcelain 2>/dev/null || true)
-if [ -n "$PORCELAIN" ]; then
-  if git stash push -m "autodeploy-$(date +%s)" --include-untracked 2>&1; then
-    DID_STASH=true
-    echo "[$TIMESTAMP] [AutoDeploy] Stashed runtime changes before pull"
-  else
-    echo "[$TIMESTAMP] [AutoDeploy] WARNING: stash failed — attempting pull anyway"
-  fi
-fi
-
-git pull origin main --quiet
-echo "[$TIMESTAMP] [AutoDeploy] Pull complete (was $LOCAL, now $(git rev-parse HEAD))"
-
-# Restore runtime changes after pull
-if [ "$DID_STASH" = "true" ]; then
-  git stash pop 2>&1 || {
-    echo "[$TIMESTAMP] [AutoDeploy] Stash pop conflict — dropping stash, keeping pulled changes"
-    git stash drop 2>/dev/null || true
-  }
-  echo "[$TIMESTAMP] [AutoDeploy] Restored runtime changes after pull"
-fi
+# Hard-reset to origin/main. This is safer than git pull --rebase when the
+# sprint runner has local commits (agent code, sprint JSON updates). Rebase
+# was causing interactive-rebase conflicts blocking all future deploys.
+# Runtime files (.wallet-alert-state.json, sprints/*.json, reports/) are
+# untracked or gitignored so they survive the reset.
+git reset --hard origin/main --quiet
+echo "[$TIMESTAMP] [AutoDeploy] Hard-reset to origin/main (was $LOCAL, now $(git rev-parse HEAD))"
 
 # Get changed files by comparing pre-pull hash to new HEAD
 CHANGED=$(git diff --name-only "$LOCAL" HEAD)
