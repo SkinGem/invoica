@@ -9,6 +9,7 @@ import aiInferenceRoutes from './routes/ai-inference';
 import ledgerRoutes from './routes/ledger';
 import adminRoutes from './routes/admin';
 import gasBackstopRouter from './routes/gas-backstop';
+import reputationRoutes from './routes/reputation';
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use(aiInferenceRoutes);
 app.use(ledgerRoutes);
 app.use(adminRoutes);
 app.use(gasBackstopRouter);
+app.use(reputationRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, error: { message: 'Not found', code: 'NOT_FOUND' } });

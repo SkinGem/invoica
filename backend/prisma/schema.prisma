@@ -39,6 +39,8 @@ model Invoice {
   settledAt       DateTime?
   /// Timestamp when invoice processing was completed
   completedAt     DateTime?
+  /// Agent identifier (for reputation tracking)
+  agentId         String?
   /// Timestamp when invoice was created
   createdAt       DateTime      @default(now())
   /// Timestamp when invoice was last updated
@@ -48,6 +50,7 @@ model Invoice {
   @@index([companyId])
   @@index([customerEmail])
   @@index([invoiceNumber])
+  @@index([agentId])
 }
 
 /// Webhook registration for event notifications
@@ -68,4 +71,30 @@ model WebhookRegistration {
   updatedAt DateTime @updatedAt
 
   @@index([isActive])
+}
+
+/// Reputation score for an AI agent — updated on each settlement
+model AgentReputation {
+  /// Unique identifier
+  id                   String   @id @default(uuid())
+  /// Agent identifier (matches agentId field on invoices)
+  agentId              String   @unique
+  /// Normalized reputation score 0.0–100.0
+  score                Float    @default(0.0)
+  /// Tier: "unrated" | "bronze" | "silver" | "gold" | "platinum"
+  tier                 String   @default("unrated")
+  /// Total invoices successfully settled
+  invoicesCompleted    Int      @default(0)
+  /// Total invoices disputed or refunded
+  invoicesDisputed     Int      @default(0)
+  /// Total USDC value settled (sum of amount for SETTLED/COMPLETED invoices)
+  totalValueSettled    Float    @default(0.0)
+  /// Timestamp of last score recalculation
+  lastUpdated          DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([agentId])
+  @@index([tier])
+  @@index([score])
 }
