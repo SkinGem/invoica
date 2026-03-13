@@ -1,0 +1,24 @@
+{
+  "run_id": "868804c2-2ad6-4d18-95ab-a02bd91e8493",
+  "project": "invoica",
+  "sprint_file": "sprints/test-report-validation-2026-03-12.json",
+  "started_at": "2026-03-12T13:34:19.948Z",
+  "finished_at": "2026-03-12T13:34:22.867Z",
+  "duration_seconds": 3,
+  "git_branch": "main",
+  "git_head_before": "3f9e7ee",
+  "git_head_after": "3f9e7ee",
+  "daily_plan_loaded": "plans/daily/2026-03-12.md",
+  "pending_cto_proposals": 24,
+  "wallet": "Wallet: $0.0000 / $10 budget (0.0%) | 0 cloud calls this month",
+  "summary": {
+    "total_tasks": 1,
+    "done": 1,
+    "rejected": 0,
+    "skipped": 0,
+    "human_pending": 0,
+    "approval_rate": 0,
+    "total_tokens": 0
+  },
+  "tasks": []
+}

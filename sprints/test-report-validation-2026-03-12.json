@@ -1,0 +1,20 @@
+{
+  "tasks": [
+    {
+      "id": "TEST-001",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "low",
+      "dependencies": [],
+      "description": "Validation test task — verifies report generation pipeline",
+      "context": "This task exists only to trigger a swarm run and validate that latest-run.json, routing logs, and daily aggregate reports are generated correctly. No code changes needed.",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": []
+      },
+      "status": "done",
+      "status_note": "Pre-approved — test task only, no work needed."
+    }
+  ]
+}

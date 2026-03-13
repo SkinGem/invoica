@@ -1,0 +1,21 @@
+{
+  "run_id": "963fe207-64f3-454d-bd19-4f1f783e1e82",
+  "project": "invoica",
+  "sprint_file": "sprints/test-report-validation-2026-03-12.json",
+  "started_at": "2026-03-12T13:08:16.568Z",
+  "finished_at": "2026-03-12T13:08:19.509Z",
+  "duration_seconds": 3,
+  "git_branch": "main",
+  "git_head_before": "3f9e7ee",
+  "git_head_after": "3f9e7ee",
+  "summary": {
+    "total_tasks": 1,
+    "done": 1,
+    "rejected": 0,
+    "skipped": 0,
+    "human_pending": 0,
+    "approval_rate": 0,
+    "total_tokens": 0
+  },
+  "tasks": []
+}
