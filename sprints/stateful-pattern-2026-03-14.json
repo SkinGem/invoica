@@ -1,0 +1,37 @@
+{
+  "sprint_id": "stateful-pattern-2026-03-14",
+  "title": "Stateful Pattern Detection + Max-Retry Auto-Suspend",
+  "description": "Consolidates 8 CTO proposals (CTO-STATEFUL-CLUSTER). Adds stateful keyword pre-screening to route failing test patterns to Claude instead of local models, and caps retries at 5 with CEO-queue suspension on persistent failure.",
+  "created": "2026-03-14",
+  "status": "done",
+  "tasks": [
+    {
+      "id": "SP-001",
+      "title": "Add stateful keyword detection to assessTaskComplexity()",
+      "description": "In scripts/orchestrate-agents-v2.ts, inside the assessTaskComplexity() function (around line 1292), add a stateful pattern check AFTER the sovereign-mode early return and BEFORE the task_target override block. If the task description or ID contains stateful keywords AND test keywords, force routing to provider='anthropic', model='claude-sonnet-4-20250514', with routingReason='stateful pattern detected — cloud-exec override'. Log a [STATEFUL] warning to the console.\n\nStateful keywords to detect (case-insensitive, check task.description + task.id):\n- 'circuit-breaker'\n- 'state-machine'\n- 'retry-logic'\n- 'rate-limiter'\n- 'connection-pool'\n- 'stateful'\n\nTest keywords (at least one must also be present):\n- 'test'\n- 'spec'\n- 'verif'\n\nAdd a constant at the top of the function:\nconst STATEFUL_KEYWORDS = ['circuit-breaker', 'state-machine', 'retry-logic', 'rate-limiter', 'connection-pool', 'stateful'];\nconst TEST_KEYWORDS = ['test', 'spec', 'verif'];\n\nLogic:\nconst taskText = `${task.id} ${task.description}`.toLowerCase();\nconst isStateful = STATEFUL_KEYWORDS.some(kw => taskText.includes(kw));\nconst isTest = TEST_KEYWORDS.some(kw => taskText.includes(kw));\nif (isStateful && isTest) {\n  log(c.yellow, `  [STATEFUL] Pattern detected in ${task.id} — routing to Claude Sonnet`);\n  return { provider: 'anthropic', model: 'claude-sonnet-4-20250514', routingReason: 'stateful pattern detected — cloud-exec override' };\n}\n\nOnly modify the assessTaskComplexity() function. Do not touch anything else.",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "status": "done",
+      "dependencies": [],
+      "deliverables": {
+        "code": ["scripts/orchestrate-agents-v2.ts"]
+      },
+      "context": "assessTaskComplexity() starts at line 1281. The sovereign mode block is lines 1286-1290. The task_target override block is lines 1294-1310. Insert the stateful check between lines 1290 and 1294 (after sovereign mode return, before task_target switch). The function signature is: function assessTaskComplexity(task: AgentTask, deliverables: string[]). The log function signature is: log(c.yellow, message: string). The c.yellow color constant is already available in scope."
+    },
+    {
+      "id": "SP-002",
+      "title": "Reduce MAX_RETRIES to 5 and add suspended status on final failure",
+      "description": "In scripts/orchestrate-agents-v2.ts, make two targeted edits:\n\n1. Line 2260: Change `const MAX_RETRIES = 10;` to `const MAX_RETRIES = 5;`\n\n2. Around lines 2483-2485 (the final failure block after the retry loop), change the rejection block from:\n  task.status = 'rejected';\n  log(c.red, `\\n✗ Task ${task.id} FAILED after ${MAX_RETRIES} attempts`);\n  taskRun.status = 'rejected';\n\nTo:\n  task.status = 'suspended';\n  log(c.red, `\\n⏸ Task ${task.id} SUSPENDED after ${MAX_RETRIES} attempts — queued for CEO review`);\n  taskRun.status = 'suspended';\n  taskRun.rejection_reason = `Auto-suspended: ${MAX_RETRIES} consecutive failures. Last rejection: ${lastReview?.summary || 'unknown'}`;\n\nAlso add 'suspended' to the SprintTask status union type at line 54:\nChange: status: 'pending' | 'in_progress' | 'review' | 'approved' | 'rejected' | 'done' | 'skipped';\nTo: status: 'pending' | 'in_progress' | 'review' | 'approved' | 'rejected' | 'done' | 'skipped' | 'suspended';\n\nOnly make these three surgical edits. Do not touch anything else.",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "status": "done",
+      "dependencies": [],
+      "deliverables": {
+        "code": ["scripts/orchestrate-agents-v2.ts"]
+      },
+      "context": "The MAX_RETRIES constant is at line 2260. The final failure block is at lines 2483-2485. The SprintTask interface status union is at line 54. The variable lastReview is declared at line 2263 as `let lastReview: ReviewResult | undefined`. The TaskRun interface at line 106 has a status field — also add 'suspended' to that union if present. taskRun.rejection_reason is already typed as `string | null` (line 120)."
+    }
+  ]
+}

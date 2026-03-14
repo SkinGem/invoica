@@ -51,7 +51,7 @@ interface AgentTask {
     tests?: string[];
     docs?: string[];
   };
-  status: 'pending' | 'in_progress' | 'review' | 'approved' | 'rejected' | 'done' | 'skipped';
+  status: 'pending' | 'in_progress' | 'review' | 'approved' | 'rejected' | 'done' | 'skipped' | 'suspended';
   output?: {
     files: string[];
     commit: string;
@@ -1289,6 +1289,16 @@ function assessTaskComplexity(
     return { provider: 'ollama', model, routingReason: 'sovereign mode — all local' };
   }
 
+  const STATEFUL_KEYWORDS = ['circuit-breaker', 'state-machine', 'retry-logic', 'rate-limiter', 'connection-pool', 'stateful'];
+  const TEST_KEYWORDS = ['test', 'spec', 'verif'];
+  const taskText = `${task.id} ${task.description}`.toLowerCase();
+  const isStateful = STATEFUL_KEYWORDS.some(kw => taskText.includes(kw));
+  const isTest = TEST_KEYWORDS.some(kw => taskText.includes(kw));
+  if (isStateful && isTest) {
+    log(c.yellow, `  [STATEFUL] Pattern detected in ${task.id} — routing to Claude Sonnet`);
+    return { provider: 'anthropic', model: 'claude-sonnet-4-20250514', routingReason: 'stateful pattern detected — cloud-exec override' };
+  }
+
   const taskType = task.task_type || classifyTask(task.context || task.description || '');
 
   // task_target explicit override
@@ -2257,7 +2267,7 @@ ONLY output the JSON array. No markdown, no explanation.`;
       return;
     }
 
-    const MAX_RETRIES = 10;
+    const MAX_RETRIES = 5;
     const TRUNCATION_THRESHOLD = 3;
     let truncationCount = 0;
     let lastReview: ReviewResult | undefined;
@@ -2480,9 +2490,10 @@ ONLY output the JSON array. No markdown, no explanation.`;
       }
     }
 
-    task.status = 'rejected';
-    log(c.red, `\n✗ Task ${task.id} FAILED after ${MAX_RETRIES} attempts`);
-    taskRun.status = 'rejected';
+    task.status = 'suspended';
+    log(c.red, `\n⏸ Task ${task.id} SUSPENDED after ${MAX_RETRIES} attempts — queued for CEO review`);
+    taskRun.status = 'suspended';
+    taskRun.rejection_reason = `Auto-suspended: ${MAX_RETRIES} consecutive failures. Last rejection: ${lastReview?.summary || 'unknown'}`;
     taskRun.duration_seconds = Math.round((Date.now() - taskStartMs) / 1000);
     this.taskRuns.push(taskRun);
   }
