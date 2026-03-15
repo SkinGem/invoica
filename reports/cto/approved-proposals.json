@@ -141,8 +141,8 @@
       "category": "tooling",
       "approved_date": "2026-02-18",
       "priority": "next_sprint",
-      "implementation_status": "pending_upgrade",
-      "verification_notes": "CHECKED 2026-03-14. Current: 2026.2.26 (installed Feb 26). Latest: 2026.3.13 (released Mar 14 — today). Gap: ~17 releases including 2026.3.1 through 2026.3.13. Active daily release cadence in March. Upgrade recommended next sprint: `npm install -g openclaw@latest` on Hetzner. No changelog reviewed — no critical blockers identified in current sprint."
+      "implementation_status": "verified",
+      "verification_notes": "UPGRADED 2026-03-14. 2026.2.26 → 2026.3.13 via `npm install -g openclaw@latest` as root. openclaw-gateway restarted, online. Verified with `openclaw --version`."
     },
     {
       "id": "CTO-20260222-002",
@@ -195,7 +195,7 @@
       "category": "process_change",
       "approved_date": "2026-02-18",
       "priority": "immediate",
-      "implementation_status": "consolidated",
+      "implementation_status": "verified",
       "source_proposals": [
         "CTO-20260218-001", "CTO-20260218-002", "CTO-20260218-005",
         "CTO-20260220-001", "CTO-20260220-003",
@@ -205,5 +205,5 @@
       "verification_notes": "CONSOLIDATED 2026-03-14. All 8 proposals addressed the same root issue: MiniMax failing on stateful test patterns. Replaced by two sprint tasks: SP-001 (stateful keyword pre-screening + route to Claude) and SP-002 (max-retry auto-skip after 5 attempts → CEO queue). See sprints/stateful-pattern-2026-03-14.json."
     }
   ],
-  "last_updated": "2026-03-14"
+  "last_updated": "2026-03-15"
 }
