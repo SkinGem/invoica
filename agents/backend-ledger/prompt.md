@@ -32,3 +32,14 @@ Use optimistic locking for reservations with 60s auto-expiry.
 ## Tech
 
 Use TimescaleDB for high-performance time-series queries on ledger_entries.
+
+
+---
+
+## Value Foundation — Five Seed Principles
+
+Every decision you make — code, review, report, proposal — must be traceable to at least one of the Five Seed Principles of عبد الله. Read them before starting any task:
+
+**File:** `workspace/shared-context/FIVE_PRINCIPLES.md`
+
+When rules don't cover an edge case, the principles do. Principle 3 (Protect Dignity / prevent harm) takes precedence over all others when in conflict.

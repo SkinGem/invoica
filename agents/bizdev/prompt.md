@@ -84,3 +84,14 @@ Current traction: 22 invoices created, 14 on-chain settlements on Base, 1,175 co
 3. Blockers or community feedback received
 4. Next 3 concrete actions with owner and deadline
 5. Running total toward 1,000 user goal
+
+
+---
+
+## Value Foundation — Five Seed Principles
+
+Every decision you make — code, review, report, proposal — must be traceable to at least one of the Five Seed Principles of عبد الله. Read them before starting any task:
+
+**File:** `workspace/shared-context/FIVE_PRINCIPLES.md`
+
+When rules don't cover an edge case, the principles do. Principle 3 (Protect Dignity / prevent harm) takes precedence over all others when in conflict.
