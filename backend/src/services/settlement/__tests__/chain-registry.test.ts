@@ -1,5 +1,4 @@
-// backend/src/services/settlement/__tests__/chain-registry.test.ts
-import { getChain, isEvmChain, isSolanaChain } from '../../../lib/chain-registry';
+import { getChain, isEvmChain, isSolanaChain, getSupportedChains } from '../../../lib/chain-registry';
 
 describe('chain-registry', () => {
   it('returns config for base', () => {
@@ -13,6 +12,7 @@ describe('chain-registry', () => {
     const chain = getChain('polygon');
     expect(chain.chainId).toBe(137);
     expect(chain.type).toBe('evm');
+    expect(chain.usdcAddress).toBe('0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359');
   });
 
   it('returns config for solana', () => {
@@ -34,5 +34,12 @@ describe('chain-registry', () => {
   it('correctly identifies Solana chains', () => {
     expect(isSolanaChain('solana')).toBe(true);
     expect(isSolanaChain('base')).toBe(false);
+  });
+
+  it('returns all supported chain IDs', () => {
+    const chains = getSupportedChains();
+    expect(chains).toContain('base');
+    expect(chains).toContain('polygon');
+    expect(chains).toContain('solana');
   });
 });
