@@ -228,3 +228,15 @@
 - Health check post: ✅ 90/90 suites, disk 80% free
 - Issues: Chain mock needed .range() after filters (not before) — fixed by reordering in route handler
 - Timestamp: 2026-03-16T14:35:00Z
+
+## Sprint 020 — Invoice Stats Endpoint (INVOICE-003)
+- Status: PASS
+- Branch: sprint-020-invoice-stats → merged to main
+- Commit: f50b5fb
+- Files created: backend/src/routes/invoice-stats.ts (59 lines), backend/src/routes/__tests__/invoice-stats.test.ts (4 tests)
+- Files modified: backend/src/app.ts (+2 lines: import + use invoiceStatsRoutes before invoiceRoutes)
+- Tests: 91/91 suites, 633/633 — ALL PASS (4 new tests)
+- Health check pre: ✅ 90/90 suites, disk 80% free
+- Health check post: ✅ 91/91 suites, disk 80% free
+- Issues: None — clean implementation
+- Timestamp: 2026-03-16T14:50:00Z

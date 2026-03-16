@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: 596bf73 on main, pushed to origin (clean)
-- **Tests**: 90/90 suites, 629/629 tests — ALL PASS
+- **Git**: f50b5fb on main, pushed to origin (clean)
+- **Tests**: 91/91 suites, 633/633 tests — ALL PASS
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
@@ -44,6 +44,7 @@
 23. Sprint 017 — Ledger query (19 tests) + GasManager (10 tests) (852cbc4)
 24. Sprint 018 — week-77.json created: 5 tasks queued (INVOICE-002, INVOICE-003, REP-002, ENFORCE-001, SETTLE-002) (fa32113)
 25. Sprint 019 — INVOICE-002: Enhanced GET /v1/invoices filters (companyId, date range, chain, amount, sort) + 7 tests (596bf73)
+26. Sprint 020 — INVOICE-003: GET /v1/invoices/stats endpoint (totals, revenue, byStatus) + 4 tests (f50b5fb)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
@@ -89,9 +90,9 @@
 - jest.config.js: uuid added to transformIgnorePatterns (ESM fix)
 - Tests: 87/87 suites, 593/593 pass (41 new tests)
 
-## Next Sprint: Sprint 020
-- week-77.json: INVOICE-002 ✅ done, 4 remaining (INVOICE-003, REP-002, ENFORCE-001, SETTLE-002)
-- Next: INVOICE-003 (stats endpoint) — high priority
+## Next Sprint: Sprint 021
+- week-77.json: INVOICE-002 ✅, INVOICE-003 ✅, 3 remaining (REP-002, ENFORCE-001, SETTLE-002)
+- Next: REP-002 (reputation leaderboard) or ENFORCE-001 (enforcement tests)
 
 ## V17 + Solana Migration — COMPLETE
 - All 4 V17 sprints COMPLETE

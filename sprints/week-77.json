@@ -26,7 +26,7 @@
       "priority": "high",
       "dependencies": [],
       "description": "Add GET /v1/invoices/stats endpoint — invoice totals and revenue metrics by company",
-      "context": "AI agents using Invoica need a quick summary view: how many invoices, total revenue, breakdown by status, and average invoice size. This powers dashboard widgets and enables agents to track their earnings autonomously.\n\nCREATE: backend/src/routes/invoice-stats.ts (max 180 lines)\n\nEndpoint: GET /v1/invoices/stats?companyId=XXX\n\nQuery Supabase 'Invoice' table, group by status:\n\nRouter setup:\n  import { Router, Request, Response, NextFunction } from 'express';\n  import { createClient } from '@supabase/supabase-js';\n  const router = Router();\n\n  function getSupabase() {\n    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;\n    const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;\n    if (!url || !key) throw new Error('Supabase env vars not set');\n    return createClient(url, key);\n  }\n\n  router.get('/v1/invoices/stats', async (req, res, next) => {\n    try {\n      const companyId = req.query.companyId as string | undefined;\n      const sb = getSupabase();\n\n      let query = sb.from('Invoice').select('status, amount');\n      if (companyId) query = query.eq('companyId', companyId);\n\n      const { data, error } = await query;\n      if (error) throw error;\n\n      const invoices = data || [];\n      const statusCounts: Record<string, number> = {};\n      const statusRevenue: Record<string, number> = {};\n      let totalRevenue = 0;\n\n      for (const inv of invoices) {\n        const amt = parseFloat(inv.amount as string) || 0;\n        statusCounts[inv.status] = (statusCounts[inv.status] || 0) + 1;\n        statusRevenue[inv.status] = (statusRevenue[inv.status] || 0) + amt;\n        if (inv.status === 'COMPLETED' || inv.status === 'SETTLED') totalRevenue += amt;\n      }\n\n      res.json({\n        success: true,\n        data: {\n          total: invoices.length,\n          totalRevenue,\n          averageAmount: invoices.length > 0 ? totalRevenue / invoices.length : 0,\n          byStatus: Object.keys(statusCounts).map(status => ({\n            status,\n            count: statusCounts[status],\n            revenue: statusRevenue[status] || 0,\n          })),\n        },\n      });\n    } catch (err) {\n      next(err);\n    }\n  });\n\n  export default router;\n\nEDIT: backend/src/app.ts\nRegister the new route. Add import and app.use() line near the other route registrations.\n\nCREATE: backend/src/routes/__tests__/invoice-stats.test.ts (max 100 lines)\n\nTests:\n1. GET /v1/invoices/stats — returns totals with empty data (returns zeros)\n2. GET /v1/invoices/stats — with mock data: 3 COMPLETED + 1 PENDING — verify total=4, totalRevenue=sum of COMPLETED/SETTLED\n3. GET /v1/invoices/stats?companyId=co-1 — verifies companyId filter passed to Supabase\n4. GET /v1/invoices/stats — Supabase error returns 500",
+      "context": "DONE — Sprint 020 (f50b5fb). GET /v1/invoices/stats + 4 tests passing.",
       "deliverables": {
         "code": [
           "backend/src/routes/invoice-stats.ts",
@@ -37,7 +37,7 @@
         ],
         "docs": []
       },
-      "status": "pending"
+      "status": "approved"
     },
     {
       "id": "REP-002",
