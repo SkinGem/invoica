@@ -292,6 +292,35 @@ router.get('/v1/metrics/compare', async (req: Request, res: Response): Promise<v
 });
 
 /**
+ * GET /v1/metrics/chains
+ * Invoice counts grouped by blockchain (paymentDetails.chain), sorted by count DESC.
+ */
+router.get('/v1/metrics/chains', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const sb = getSb();
+    const { data, error } = await sb.from('Invoice').select('amount, paymentDetails');
+    if (error) throw error;
+
+    const chainMap = new Map<string, { chain: string; invoiceCount: number; totalAmount: number }>();
+    for (const row of (data || [])) {
+      const pd = row.paymentDetails
+        ? (typeof row.paymentDetails === 'string' ? JSON.parse(row.paymentDetails) : row.paymentDetails)
+        : {};
+      const chain = (pd.chain || pd.network || 'unknown').toLowerCase();
+      if (!chainMap.has(chain)) chainMap.set(chain, { chain, invoiceCount: 0, totalAmount: 0 });
+      const entry = chainMap.get(chain)!;
+      entry.invoiceCount += 1;
+      entry.totalAmount += row.amount || 0;
+    }
+
+    const sorted = Array.from(chainMap.values()).sort((a, b) => b.invoiceCount - a.invoiceCount);
+    res.json({ success: true, data: sorted });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } });
+  }
+});
+
+/**
  * GET /v1/metrics/top-currencies
  * Most used payment currencies by invoice count, sorted DESC.
  */
