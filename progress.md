@@ -981,3 +981,14 @@
 - Health check post: 158/158 suites, 1328/1328 tests — ALL PASS
 - Notes: week-88.json created with 5 tasks. Batch lookup max 50 agents, omits missing agents.
 - Timestamp: 2026-03-16T19:35:00Z
+
+## Sprint 085 — INVOICE-SEARCH-001
+- Status: PASS
+- Branch: sprint-085-invoice-search-001 → merged to main
+- Commit: 9afe2c0
+- Files created: backend/src/routes/__tests__/invoice-search.test.ts
+- Files modified: backend/src/routes/invoices.ts (+GET /v1/invoices/search, moved before /:id)
+- Tests: 6 new tests (200-email, 200-name, 200-empty, 400-short, 400-missing, 500-error) — PASS
+- Health check post: 159/159 suites, 1334/1334 tests — ALL PASS
+- Notes: Search route registered before /:id param route to prevent Express clash. ilike filter on customerEmail + customerName.
+- Timestamp: 2026-03-16T19:50:00Z
