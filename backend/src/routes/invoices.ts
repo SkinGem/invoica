@@ -309,6 +309,39 @@ router.get('/v1/invoices/stats/void', async (_req: Request, res: Response, next:
 });
 
 /**
+ * GET /v1/invoices/stats/by-company
+ * Invoice stats grouped by companyId: count, totalAmount, settledCount, settledAmount.
+ * Sorted by totalAmount desc. Optional ?limit= (default 10, max 50).
+ */
+router.get('/v1/invoices/stats/by-company', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = Math.min(parseInt((req.query.limit as string) || '10', 10), 50);
+    const sb = getSupabase();
+    const { data, error } = await sb.from('Invoice').select('companyId, amount, status');
+    if (error) throw error;
+
+    const SETTLED = ['SETTLED', 'COMPLETED'];
+    const map = new Map<string, { companyId: string; count: number; totalAmount: number; settledCount: number; settledAmount: number }>();
+
+    for (const row of (data || [])) {
+      const key = row.companyId || 'unknown';
+      const entry = map.get(key) || { companyId: key, count: 0, totalAmount: 0, settledCount: 0, settledAmount: 0 };
+      const amt = Number(row.amount) || 0;
+      entry.count += 1;
+      entry.totalAmount += amt;
+      if (SETTLED.includes(row.status)) { entry.settledCount += 1; entry.settledAmount += amt; }
+      map.set(key, entry);
+    }
+
+    const result = Array.from(map.values())
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, limit);
+
+    res.json({ success: true, data: result });
+  } catch (err) { next(err); }
+});
+
+/**
  * GET /v1/invoices/stats/aging
  * Invoice aging report: bucket PENDING invoices by days outstanding.
  * Buckets: 0_30, 31_60, 61_90, over_90 — each has count + totalAmount.
