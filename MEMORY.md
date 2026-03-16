@@ -1,14 +1,15 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: 5bd8139 on main, pushed to origin (clean)
-- **Tests**: 125/125 suites, 1042/1042 tests — ALL PASS
+- **Git**: ab74057 on main, pushed to origin (clean)
+- **Tests**: 126/126 suites, 1053/1053 tests — ALL PASS (+11 Sprint 052)
 - **TypeScript**: 0 source errors
-- **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
-- **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
+- **Backend**: Running on Hetzner (port 3001), health OK at /v1/health — DB connected, Redis not_configured
+- **OpenClaw**: Online (v2026.3.13, port 18789 WebSocket, 1 restart post pm2 resurrect)
 - **Frontend**: Vercel (no local node_modules — deps installed by Vercel)
-- **Sprint Runner**: Waiting (cron */30)
+- **Sprint Runner**: Waiting restart — no PID (investigate if needed)
 - **git-autodeploy**: Stopped (not critical)
+- **AMD-02 Skill Bank**: assets committed (skill-crystalliser.ts, skill-bank/)
 
 ## Infrastructure
 - **Server**: Hetzner VPS 65.108.90.178, disk ~19%
@@ -71,7 +72,7 @@
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
 - .env not in repo (only .env.example) — local dev can't run full stack
-- openclaw-gateway: PM2 shows "waiting" state (24 restarts) but gateway IS functional
+- openclaw-gateway: Recovered via pm2 kill+resurrect — now online (1 restart, port 18789 bound)
 - CMO-001: Reactivate Manus CMO blocked — needs MANUS_API_KEY (human action)
 
 ## Week-76 Status — ALL DONE

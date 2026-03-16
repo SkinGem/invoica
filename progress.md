@@ -627,3 +627,16 @@
 - MILESTONE: Broke 1000 tests at Sprint 049 (model-router)
 - Files covered: location-resolver, welcome-email, dashboard-stats, webhooks-get, api-keys handlers, dashboard-activity, utils/task-complexity-validator, lib/logger, lib/pagination, lib/email, lib/redis, lib/model-router, invoiceEvents, config/chains, queue/invoice.queue
 - Commit range: 397ae82 → 5bd8139
+
+## Sprint 052 — API-ROUTER-001 (router registration tests)
+- Status: PASS
+- Branch: sprint-052-api-router-001 → merged to main
+- Commit: ab74057
+- Files created: backend/src/api/__tests__/router.test.ts
+- Files added: scripts/lib/skill-crystalliser.ts, skill-bank/schema.json (AMD-02 assets)
+- Files modified: sprints/week-83.json (approved WEBHOOK-EVENTS-001, DASHBOARD-ACTIVITY-001)
+- Tests: 11 new tests — route registration (GET /health, settlements, invoices, merchants, dashboard, api-keys, webhooks), error handler (ApiError → statusCode+code, unknown → 500)
+- Health check pre: ✅ backend online, openclaw port 18789 listening
+- Health check post: ✅ all 5 critical services online, disk 19%
+- Issues: openclaw-gateway was in "waiting restart" — resolved by haiku via pm2 kill+resurrect
+- Timestamp: 2026-03-16T15:40:00Z
