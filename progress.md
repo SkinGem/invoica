@@ -495,3 +495,15 @@
 - Health check post: ✅ 109/109, 882/882
 - Issues: Fixed 2 test bugs during run (env timing + nonce replay)
 - Timestamp: 2026-03-16T19:55:00Z
+
+## Sprint 042 — TAX-VAT-001 (VatValidator unit tests)
+- Status: PASS
+- Branch: sprint-042-vat-validator-tests → merged to main
+- Commit: b537625
+- Files created: backend/src/services/tax/__tests__/vat-validator.test.ts
+- Tests: 110/110 suites, 895/895 — ALL PASS (13 new tests)
+- Coverage added: VatValidator constructor/config, singleton factory, evidence store (getEvidence/getEvidenceById), validateVat country normalization, VAT number stripping, API response mapping, 400 error → isValid:false, evidence stored + retrievable
+- Health check pre: ✅ 109/109, 882/882
+- Health check post: ✅ 110/110, 895/895
+- Issues: None
+- Timestamp: 2026-03-16T20:05:00Z
