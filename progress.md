@@ -821,3 +821,15 @@
 - Health check post: 144/144 suites, 1248/1248 tests — ALL PASS
 - Notes: First feature sprint. GET /v1/invoices/export now live. week-84 remaining: REP-HISTORY-001, DASHBOARD-REFRESH-001
 - Timestamp: 2026-03-16T00:05:00Z
+
+## Sprint 070 — HEALTH-DETAIL-001
+- Status: PASS
+- Branch: sprint-070-health-detail-001 → merged to main
+- Commit: 14cd9bb
+- Files created: backend/src/routes/__tests__/health-detailed.test.ts
+- Files modified: backend/src/routes/health.ts (+49 lines: /v1/health/detailed handler)
+- Tests: 8 new tests (200+ok-all-healthy, 200+degraded-openclaw, 200+degraded-redis, 503+degraded-db, redis-not_configured, response-shape, openclaw-ok-404, 503-both-down) — PASS
+- Health check pre: ✅ Backend online port 3001, OpenClaw stable, DB ok, Disk 19%
+- Health check post: 145/145 suites, 1256/1256 tests — ALL PASS
+- Notes: Added GET /v1/health/detailed with openclaw probe (port 18791), degraded logic, 1s timeout
+- Timestamp: 2026-03-16T17:10:00Z

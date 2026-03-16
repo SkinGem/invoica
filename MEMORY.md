@@ -137,13 +137,18 @@
 - DASHBOARD-ACTIVITY-001 ✅ (Sprint 046), UTILS-TASK-VALID-001 ✅ (Sprint 046)
 - WEBHOOK-EVENTS-001 pending, API-ROUTER-001 pending, DASHBOARD-ACTIVITY-001 ✅
 
-## Next Sprint: Sprint 070
-- INVOICE-EXPORT-001 ✅ (Sprint 069) — GET /v1/invoices/export feature + 8 tests
-- MILESTONE: 1248 tests across 144 suites
-- Session 064-069: 6 sprints this session, +206 tests total (1042 → 1248)
-- Tests SATURATED. Pivoting to feature work.
-- Week-84 backlog remaining: HEALTH-DETAIL-001 (routes/health.ts already covers this), REP-HISTORY-001, DASHBOARD-REFRESH-001
-- Next priority: REP-HISTORY-001 (GET /v1/reputation/:agentId/history) or DASHBOARD-REFRESH-001
+## Next Sprint: Sprint 071
+- HEALTH-DETAIL-001 ✅ (Sprint 070) — GET /v1/health/detailed (openclaw probe + degraded logic) + 8 tests
+- MILESTONE: 1256 tests across 145 suites
+- Week-84 backlog remaining: REP-HISTORY-001, DASHBOARD-REFRESH-001
+- Next priority: REP-HISTORY-001 (GET /v1/reputation/:agentId/history)
+
+## Current State (2026-03-16 — Sprint 070)
+- **Git**: 14cd9bb on main, pushed to origin (clean)
+- **Tests**: 145/145 suites, 1256/1256 tests — ALL PASS
+- **New endpoint**: GET /v1/health/detailed — openclaw probe, degraded/ok logic LIVE
+- **Backend port**: 3001. Health: /v1/health (basic) + /v1/health/detailed (new)
+- **Week-84**: INVOICE-SCHEMA-EDGE-001 ✅, INVOICE-EXPORT-001 ✅, HEALTH-DETAIL-001 ✅
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)

@@ -15,8 +15,8 @@
       "title": "GET /v1/health/detailed endpoint",
       "description": "Add a detailed health endpoint that returns per-service status (database, redis, openclaw). Response: { status: 'ok'|'degraded', services: { database: 'ok'|'error', redis: 'ok'|'not_configured', openclaw: 'ok'|'error' }, version, uptime }. File: backend/src/api/health.ts + tests. Max 60 lines.",
       "file": "backend/src/api/health.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "done",
+      "sprint": "070"
     },
     {
       "id": "INVOICE-EXPORT-001",
