@@ -1285,3 +1285,13 @@
 - Health check post: 225/225 suites, 1664/1664 tests — ALL PASS
 - Notes: Hotfix: registered before /:id to avoid param capture. Removed duplicate endpoint at bottom.
 - Timestamp: 2026-03-16T21:45:00Z
+## Sprint 152 — INVOICE-PAYMENT-LAG-001
+- Status: PASS
+- Branch: sprint-152-invoice-payment-lag-001 → merged to main
+- Commit: 13adef8
+- Files created: backend/src/routes/__tests__/invoice-payment-lag.test.ts
+- Files modified: backend/src/routes/invoices.ts (+GET /v1/invoices/stats/payment-lag)
+- Tests: 5 new tests (200-returns-shape, 200-correct-avg, 200-empty-state, 200-min-max, 500-db-error) — PASS
+- Health check post: 226/226 suites, 1669/1669 tests — ALL PASS
+- Notes: Returns null for all stats when no settled invoices. Uses settledAt || completedAt.
+- Timestamp: 2026-03-16T22:00:00Z
