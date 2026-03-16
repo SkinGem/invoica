@@ -362,3 +362,15 @@
 - Coverage: META_TASK_BLACKLIST shape, validTaskTypes shape, SPRINT_CAPACITY min/max, isBlacklistedTaskId (exact/startsWith/case-insensitive/negative), filterBlacklistedTaskIds (mixed/empty/clean/all-blacklisted)
 - Issues: None
 - Timestamp: 2026-03-16T17:30:00Z
+
+## Sprint 031 — API-REPO-001: SupabaseApiKeyRepository Unit Tests
+- Status: PASS
+- Branch: sprint-031-api-repo-tests → merged to main
+- Commit: 5e94886
+- Files created: backend/src/services/__tests__/api-key-repo-supabase.test.ts (176 lines, 14 tests)
+- Tests: 99/99 suites, 730/730 — ALL PASS (14 new tests)
+- Health check pre: ✅ 98/98 suites
+- Health check post: ✅ 99/99 suites
+- Coverage: findById (null/mapped), findByCustomerId (array/empty), findByKeyPrefix (null/found), create (error/success), update (error/success), delete (true/false), rotate (not-found), rowToApiKey email default
+- Issues: None
+- Timestamp: 2026-03-16T17:45:00Z
