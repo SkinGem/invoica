@@ -342,6 +342,49 @@ router.get('/v1/ledger/export.csv', requireApiKey, async (req: AuthedRequest, re
 });
 
 // ─────────────────────────────────────────────
+// GET /v1/ledger/summary/:agentId
+// Per-agent ledger summary (debit, credit, net, txCount, currency)
+// Must be before /:agentId/balance to avoid double-segment param conflict
+// ─────────────────────────────────────────────
+router.get('/v1/ledger/summary/:agentId', async (req: Request, res: Response): Promise<void> => {
+  const { agentId } = req.params;
+  const sb = getSb();
+
+  const { data, error } = await sb
+    .from('Invoice')
+    .select('status, amount, currency')
+    .eq('agentId', agentId);
+
+  if (error) {
+    res.status(500).json({ success: false, error: { message: error.message, code: 'DB_ERROR' } });
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    res.status(404).json({ success: false, error: { message: 'Agent not found', code: 'NOT_FOUND' } });
+    return;
+  }
+
+  let debit = 0;
+  let credit = 0;
+  const currency = data[0].currency || 'USD';
+
+  for (const row of data) {
+    const amt = row.amount || 0;
+    if (['PENDING', 'PROCESSING', 'SETTLED', 'COMPLETED'].includes(row.status)) {
+      debit += amt;
+    } else if (row.status === 'REFUNDED') {
+      credit += amt;
+    }
+  }
+
+  res.json({
+    success: true,
+    data: { agentId, debit, credit, net: credit - debit, txCount: data.length, currency },
+  });
+});
+
+// ─────────────────────────────────────────────
 // GET /v1/ledger/:agentId/balance
 // Net balance for an agent across all companies
 // ─────────────────────────────────────────────

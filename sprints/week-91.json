@@ -15,8 +15,8 @@
       "title": "GET /v1/ledger/summary/:agentId — per-agent ledger summary",
       "description": "New endpoint: GET /v1/ledger/summary/:agentId. Returns ledger summary for a specific agent: { agentId, debit, credit, net, txCount, currency }. Reads from Invoice table filtering by agentId. Returns 404 if no invoices found. Tests: 200-with-entries, 200-returns-net, 200-currency-from-first-entry, 404-not-found, 500-db-error. File: backend/src/routes/ledger.ts (add route before /:agentId/balance) + tests.",
       "file": "backend/src/routes/ledger.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "done",
+      "sprint": 99
     },
     {
       "id": "REPUTATION-AGENT-STATS-001",
