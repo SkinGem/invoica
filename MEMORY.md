@@ -150,13 +150,13 @@
 - All 5 tasks done (4 pre-existing + Sprint 078)
 
 ## Week-87 Status — IN PROGRESS
-- INVOICE-BY-ID-TESTS-001 ✅ (Sprint 079)
-- ORACLE-SCORES-TESTS-001 pending, WEBHOOK-PING-001 pending, INVOICE-METADATA-001 pending, METRICS-AGENT-001 pending
+- INVOICE-BY-ID-TESTS-001 ✅ (Sprint 079), ORACLE-SCORES-TESTS-001 ✅ (Sprint 080)
+- WEBHOOK-PING-001 pending, INVOICE-METADATA-001 pending, METRICS-AGENT-001 pending
 
-## Current State (2026-03-16 — Sprint 079)
-- **Git**: 0a7b4c1 on main, pushed to origin (clean)
-- **Tests**: 153/153 suites, 1305/1305 tests — ALL PASS
-- **Next priority**: ORACLE-SCORES-TESTS-001 then WEBHOOK-PING-001 (new feature)
+## Current State (2026-03-16 — Sprint 080)
+- **Git**: c7d272c on main, pushed to origin (clean)
+- **Tests**: 154/154 suites, 1309/1309 tests — ALL PASS
+- **Next priority**: WEBHOOK-PING-001 (new endpoint)
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)

@@ -928,3 +928,12 @@
 - Tests: 5 new tests (200-found, 404-not-found, paymentDetails-shape, settledAt, response-fields) — PASS
 - Health check post: 153/153 suites, 1305/1305 tests — ALL PASS
 - Timestamp: 2026-03-16T18:45:00Z
+
+## Sprint 080 — ORACLE-SCORES-TESTS-001
+- Status: PASS
+- Branch: sprint-080-oracle-scores-tests-001 → merged to main
+- Commit: c7d272c
+- Files created: backend/src/routes/__tests__/oracle-scores.test.ts
+- Tests: 4 new tests (200-array, 200-empty, response-fields, 500-error) — PASS
+- Health check post: 154/154 suites, 1309/1309 tests — ALL PASS
+- Timestamp: 2026-03-16T18:55:00Z
