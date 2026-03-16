@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: da5c10c on main, pushed to origin (clean)
-- **Tests**: 105/105 suites, 835/835 tests — ALL PASS
+- **Git**: 28d59f6 on main, pushed to origin (clean)
+- **Tests**: 106/106 suites, 851/851 tests — ALL PASS
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
@@ -63,6 +63,7 @@
 42. Sprint 036 — logger coverage: 5 new tests (production JSON, dev meta, pino-style messages) (caddf66)
 43. Sprint 037 — week-80.json + 4 new test suites: apiKeyAuth (12), lib/errors (12), chain-registry (13), chain-validator (11) = 48 tests (e4fd741)
 44. Sprint 038 — API-INVOICES-LIST-001: listInvoices unit tests (10 tests: response shape, pagination, empty, error) (da5c10c)
+45. Sprint 039 — week-81.json + ORCH-001: Orchestrator unit tests (16 tests: normalizeAgentName, processTaskResult, cascade prevention, validateTaskQuality, validateTask, resetAgentState) (28d59f6)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
@@ -122,9 +123,9 @@
 ## Week-79 Status — ALL DONE ✅
 - ORCH-CONFIG-001, API-REPO-001, SETTLE-POLL-001 — all complete (Sprints 030-032)
 
-## Next Sprint: Sprint 039
-- week-80 COMPLETE ✅ (all 5 tasks done across Sprints 037-038)
-- Next: create week-81.json — candidates: middleware/x402.ts (EVM payment middleware), services/orchestrator.ts (279 lines, most complex, untested), services/tax/vat-validator.ts (346 lines), services/settlement/evm-detector.ts
+## Next Sprint: Sprint 040
+- week-81 in progress: ORCH-001 ✅ (Sprint 039)
+- Remaining week-81 tasks: SETTLE-EVM-001, MIDDLEWARE-X402-001, SOLANA-PDA-001, TAX-VAT-001
 
 ## Week-80 Status — ALL DONE ✅
 - MIDDLEWARE-AUTH-001 ✅ (Sprint 037)
