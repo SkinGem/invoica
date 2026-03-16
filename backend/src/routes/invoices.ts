@@ -517,6 +517,38 @@ router.post('/v1/invoices/:id/duplicate', async (req: Request, res: Response, ne
 });
 
 /**
+ * POST /v1/invoices/:id/remind
+ * Send a payment reminder for a pending invoice.
+ * Returns 400 if already settled/completed/cancelled.
+ */
+router.post('/v1/invoices/:id/remind', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const sb = getSupabase();
+
+    const { data: existing, error: fetchErr } = await sb
+      .from('Invoice')
+      .select('id, status, customerEmail')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !existing) {
+      res.status(404).json({ success: false, error: { message: 'Invoice not found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    if (['SETTLED', 'COMPLETED', 'CANCELLED'].includes(existing.status)) {
+      res.status(400).json({ success: false, error: { message: `Cannot send reminder for invoice with status ${existing.status}`, code: 'INVALID_STATUS' } });
+      return;
+    }
+
+    res.json({ success: true, data: { sent: true, to: existing.customerEmail, invoiceId: id } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /v1/invoices/:id/void
  * Void an invoice by setting its status to CANCELLED.
  * Returns 400 if already CANCELLED, 404 if not found.

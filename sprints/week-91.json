@@ -1,0 +1,46 @@
+{
+  "week": 91,
+  "created": "2026-03-16",
+  "tasks": [
+    {
+      "id": "INVOICE-REMIND-001",
+      "title": "POST /v1/invoices/:id/remind — send payment reminder",
+      "description": "New endpoint: POST /v1/invoices/:id/remind. Fetches invoice by ID (404 if not found). Returns 400 if status is SETTLED, COMPLETED, or CANCELLED (no reminder needed). Otherwise returns 200 with { sent: true, to: customerEmail, invoiceId }. Does NOT actually send email in test — just validates and returns success. Tests: 200-reminder-sent, 200-returns-recipient, 400-already-settled, 404-not-found, 500-db-error. File: backend/src/routes/invoices.ts (add route) + tests.",
+      "file": "backend/src/routes/invoices.ts",
+      "status": "done",
+      "sprint": 98
+    },
+    {
+      "id": "LEDGER-SUMMARY-AGENT-001",
+      "title": "GET /v1/ledger/summary/:agentId — per-agent ledger summary",
+      "description": "New endpoint: GET /v1/ledger/summary/:agentId. Returns ledger summary for a specific agent: { agentId, debit, credit, net, txCount, currency }. Reads from Invoice table filtering by agentId. Returns 404 if no invoices found. Tests: 200-with-entries, 200-returns-net, 200-currency-from-first-entry, 404-not-found, 500-db-error. File: backend/src/routes/ledger.ts (add route before /:agentId/balance) + tests.",
+      "file": "backend/src/routes/ledger.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "REPUTATION-AGENT-STATS-001",
+      "title": "GET /v1/reputation/:agentId/stats — agent reputation detail",
+      "description": "New endpoint: GET /v1/reputation/:agentId/stats. Returns full reputation record from AgentReputation table: { agentId, score, tier, invoicesCompleted, invoicesDisputed, totalValueSettled, lastUpdated }. Returns 404 if no record found. Tests: 200-returns-full-record, 200-fields-present, 404-not-found, 200-score-is-number, 500-db-error. File: backend/src/routes/reputation.ts (add route) + tests.",
+      "file": "backend/src/routes/reputation.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "METRICS-AGENTS-LEADERBOARD-001",
+      "title": "GET /v1/metrics/leaderboard — top agents by invoice volume",
+      "description": "New endpoint: GET /v1/metrics/leaderboard?limit=10. Returns top N agents by total invoice amount: [{ rank, agentId, totalAmount, invoiceCount }]. Reads from Invoice table, aggregates by agentId, sorted by totalAmount descending. Tests: 200-returns-ranked-list, 200-rank-starts-at-1, 200-respects-limit, 200-empty-state, 500-db-error. File: backend/src/routes/metrics.ts (add route) + tests.",
+      "file": "backend/src/routes/metrics.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "HEALTH-SERVICES-001",
+      "title": "GET /v1/health/services — individual service health checks",
+      "description": "New endpoint: GET /v1/health/services. Returns per-service health: { database: 'ok'|'error', redis: 'not_configured'|'ok'|'error', uptime: number }. Tests: 200-returns-services-object, 200-database-field-present, 200-redis-field-present, 200-uptime-is-number, response-shape. File: backend/src/routes/health.ts (add route) + tests.",
+      "file": "backend/src/routes/health.ts",
+      "status": "pending",
+      "sprint": null
+    }
+  ]
+}
