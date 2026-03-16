@@ -1253,3 +1253,15 @@
 - Health check post: 222/222 suites, 1649/1649 tests — ALL PASS
 - Notes: Buckets PENDING invoices by age: 0_30, 31_60, 61_90, over_90 — each has count + totalAmount
 - Timestamp: 2026-03-16T21:00:00Z
+
+## Sprint 149 — METRICS-GROWTH-001
+- Status: PASS
+- Branch: sprint-149-metrics-growth-001 → merged to main
+- Commit: e70f46c
+- Files created: backend/src/routes/__tests__/metrics-growth.test.ts
+- Files modified: backend/src/routes/metrics.ts (+GET /v1/metrics/growth handler)
+- Tests: 5 new tests (200-returns-shape, 200-positive-growth, 200-negative-growth, 200-zero-previous, 500-db-error) — PASS
+- Health check pre: 222/222 suites, 1649/1649 tests ALL PASS
+- Health check post: 223/223 suites, 1654/1654 tests — ALL PASS
+- Notes: Zero-param WoW growth. growthPct=null when previous=0. 4 parallel Supabase queries.
+- Timestamp: 2026-03-16T21:15:00Z
