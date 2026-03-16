@@ -1,0 +1,46 @@
+{
+  "week": 100,
+  "created": "2026-03-16",
+  "tasks": [
+    {
+      "id": "INVOICE-VOID-STATS-001",
+      "title": "GET /v1/invoices/stats/void — count of voided invoices and total amount",
+      "description": "New endpoint: GET /v1/invoices/stats/void. Returns { total, totalAmount, last24h: { count, amount }, last7d: { count, amount } } for CANCELLED+REFUNDED invoices. Tests: 200-returns-shape, 200-has-total, 200-has-total-amount, 200-zero-when-empty, 500-db-error. File: backend/src/routes/invoices.ts (add after /v1/invoices/stats/currency) + tests at backend/src/routes/__tests__/invoice-stats-void.test.ts.",
+      "file": "backend/src/routes/invoices.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "AGENTS-TOP-EARNERS-001",
+      "title": "GET /v1/agents/top-earners — top N agents by settled revenue",
+      "description": "New endpoint: GET /v1/agents/top-earners. Returns top N agents by total settled+completed revenue: [{ agentId, totalRevenue, invoiceCount, avgRevenue }], sorted by totalRevenue DESC. Accepts ?limit=N (default 10, max 50). Tests: 200-returns-array, 200-sorted-by-revenue, 200-has-avg-revenue, 200-respects-limit, 500-db-error. File: backend/src/routes/agents.ts (add before /:agentId routes) + tests at backend/src/routes/__tests__/agents-top-earners.test.ts.",
+      "file": "backend/src/routes/agents.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "METRICS-CONVERSION-001",
+      "title": "GET /v1/metrics/conversion — invoice conversion rates (created→settled)",
+      "description": "New endpoint: GET /v1/metrics/conversion. Returns conversion stats: { total, settled, cancelled, pending, conversionRate (settled/total as %), avgTimeToSettle }. Tests: 200-returns-shape, 200-has-conversion-rate, 200-rate-is-percentage, 200-zero-when-empty, 500-db-error. File: backend/src/routes/metrics.ts (add after /v1/metrics/weekly) + tests at backend/src/routes/__tests__/metrics-conversion.test.ts.",
+      "file": "backend/src/routes/metrics.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "SETTLEMENTS-TIMELINE-001",
+      "title": "GET /v1/settlements/timeline — settlement activity over a date range",
+      "description": "New endpoint: GET /v1/settlements/timeline. Accepts ?from=ISO&to=ISO (defaults: last 30 days). Returns daily settlement counts and amounts: [{ date: '2026-03-01', count, amount }], zero-filled for days with no activity. Tests: 200-returns-array, 200-has-date-field, 200-has-count-field, 200-empty-range, 500-db-error. File: backend/src/routes/settlements.ts (add before /v1/settlements/stats) + tests at backend/src/routes/__tests__/settlements-timeline.test.ts.",
+      "file": "backend/src/routes/settlements.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "INVOICE-CUSTOMER-STATS-001",
+      "title": "GET /v1/invoices/stats/customers — top customers by invoice count and value",
+      "description": "New endpoint: GET /v1/invoices/stats/customers. Returns top customers: [{ customerEmail, customerName, count, totalAmount }], sorted by totalAmount DESC. Accepts ?limit=N (default 10, max 50). Tests: 200-returns-array, 200-has-customer-email, 200-sorted-by-amount, 200-respects-limit, 500-db-error. File: backend/src/routes/invoices.ts (add in stats section) + tests at backend/src/routes/__tests__/invoice-customer-stats.test.ts.",
+      "file": "backend/src/routes/invoices.ts",
+      "status": "pending",
+      "sprint": null
+    }
+  ]
+}

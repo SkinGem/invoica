@@ -243,6 +243,38 @@ router.get('/v1/invoices/stats/currency', async (_req: Request, res: Response, n
 });
 
 /**
+ * GET /v1/invoices/stats/void
+ * Count and amount of CANCELLED+REFUNDED invoices with recent breakdowns.
+ * Registered before /:id.
+ */
+router.get('/v1/invoices/stats/void', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb.from('Invoice').select('amount, status, updatedAt').in('status', ['CANCELLED', 'REFUNDED']);
+    if (error) throw error;
+
+    const rows = data || [];
+    const now = Date.now();
+    const ms24h = 24 * 60 * 60 * 1000;
+    const ms7d  = 7  * 24 * 60 * 60 * 1000;
+
+    let totalAmount = 0;
+    const last24h = { count: 0, amount: 0 };
+    const last7d  = { count: 0, amount: 0 };
+
+    for (const r of rows) {
+      const amt = Number(r.amount) || 0;
+      totalAmount += amt;
+      const age = now - new Date(r.updatedAt).getTime();
+      if (age <= ms24h) { last24h.count++; last24h.amount += amt; }
+      if (age <= ms7d)  { last7d.count++;  last7d.amount  += amt; }
+    }
+
+    res.json({ success: true, data: { total: rows.length, totalAmount, last24h, last7d } });
+  } catch (err) { next(err); }
+});
+
+/**
  * GET /v1/invoices/overdue
  * Returns PENDING invoices older than 24 hours. Registered before /:id.
  */
