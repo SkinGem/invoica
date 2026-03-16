@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: afa1076 on main, pushed to origin (clean)
-- **Tests**: 111/111 suites, 916/916 tests — ALL PASS
+- **Git**: 4d793d7 on main, pushed to origin (clean)
+- **Tests**: 113/113 suites, 928/928 tests — ALL PASS
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
@@ -126,10 +126,12 @@
 ## Week-79 Status — ALL DONE ✅
 - ORCH-CONFIG-001, API-REPO-001, SETTLE-POLL-001 — all complete (Sprints 030-032)
 
-## Next Sprint: Sprint 044
+## Next Sprint: Sprint 045
 - week-82.json created ✅ (5 tasks queued)
 - TAX-LOC-001 ✅ (Sprint 043 — location-resolver 21 tests)
-- Next: EMAIL-WELCOME-001 (welcome-email.ts tests) + API-DASH-STATS-001 (dashboard-stats.ts tests)
+- EMAIL-WELCOME-001 ✅ (Sprint 044 — welcome-email 5 tests)
+- API-DASH-STATS-001 ✅ (Sprint 044 — dashboard-stats 7 tests)
+- Next: WEBHOOKS-GET-001 + API-KEYS-FULL-001
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)

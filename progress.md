@@ -520,3 +520,16 @@
 - Health check post: ✅ 111/111 suites, 916/916
 - Issues: None
 - Timestamp: 2026-03-16T20:20:00Z
+
+## Sprint 044 — EMAIL-WELCOME-001 + API-DASH-STATS-001
+- Status: PASS
+- Branch: sprint-044-email-dashboard-tests → merged to main
+- Commit: 4d793d7
+- Files created: backend/src/services/email/__tests__/welcome-email.test.ts, backend/src/api/__tests__/dashboard-stats.test.ts
+- Files modified: None
+- Tests: 113/113 suites, 928/928 — ALL PASS (12 new tests)
+- Coverage added: welcome-email (SMTP skip, create transporter + send, apiKeyPrefix in body, error resilience/no-throw, default SMTP host); dashboard-stats (json called once, all 5 fields present with correct types and values)
+- Health check pre: ✅ 111/111, 916/916
+- Health check post: ✅ 113/113, 928/928
+- Issues: None
+- Timestamp: 2026-03-16T20:35:00Z
