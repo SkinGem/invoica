@@ -142,12 +142,16 @@
 - HEALTH-DETAIL-001 ✅ (Sprint 070), REP-HISTORY-001 ✅ (Sprint 071)
 - DASHBOARD-REFRESH-001 ✅ (Sprint 072)
 
-## Current State (2026-03-16 — Sprint 072)
-- **Git**: 79de69f on main, pushed to origin (clean)
-- **Tests**: 146/146 suites, 1261/1261 tests — ALL PASS
+## Week-85 Status — IN PROGRESS
+- INVOICE-STATUS-TESTS-001 ✅ (Sprint 073)
+- WEBHOOK-TESTS-002 pending, METRICS-001 pending, INVOICE-PATCH-VALIDATOR-001 pending, SETTLEMENT-FILTER-001 pending
+
+## Current State (2026-03-16 — Sprint 073)
+- **Git**: b40948d on main, pushed to origin (clean)
+- **Tests**: 147/147 suites, 1270/1270 tests — ALL PASS
 - **New endpoints**: GET /v1/health/detailed + GET /v1/reputation/:agentId/history LIVE
-- **Frontend**: Dashboard page now polls every NEXT_PUBLIC_DASHBOARD_POLL_INTERVAL_MS ms (default 30s)
-- **Next**: Need new week-85 sprint backlog
+- **Frontend**: Dashboard page polls every NEXT_PUBLIC_DASHBOARD_POLL_INTERVAL_MS ms (default 30s)
+- **Next priority**: WEBHOOK-TESTS-002 or METRICS-001
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)

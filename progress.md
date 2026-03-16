@@ -856,3 +856,14 @@
 - Health check post: 146/146 suites, 1261/1261 — ALL PASS
 - Notes: Week-84 ALL DONE (5/5 tasks complete). Need week-85 backlog.
 - Timestamp: 2026-03-16T17:30:00Z
+
+## Sprint 073 — INVOICE-STATUS-TESTS-001
+- Status: PASS
+- Branch: sprint-073-invoice-status-tests-001 → merged to main
+- Commit: b40948d
+- Files created: backend/src/routes/__tests__/invoice-status.test.ts, sprints/week-85.json
+- Tests: 9 new tests (400-invalid-status, 400-missing, 404-not-found, 400-invalid-transition, 200-PENDING→PROCESSING, 200-settledAt-SETTLED, 200-completedAt-COMPLETED, response-shape, 500-db-error) — PASS
+- Health check pre: ✅ infra healthy
+- Health check post: 147/147 suites, 1270/1270 tests — ALL PASS
+- Notes: week-84 COMPLETE. week-85 created (5 tasks). PATCH /v1/invoices/:id/status now fully tested.
+- Timestamp: 2026-03-16T17:40:00Z
