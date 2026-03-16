@@ -15,8 +15,8 @@
       "title": "GET /v1/invoices/search/advanced — multi-field invoice search",
       "description": "New endpoint: GET /v1/invoices/search/advanced. Accepts query params: q (text search in customerEmail+customerName+invoiceNumber), status, currency, minAmount, maxAmount, fromDate, toDate. Returns matching invoices with pagination: { data: Invoice[], meta: { total, limit, offset } }. Defaults: limit=20, max 100. Tests: 200-returns-array, 200-filters-by-status, 200-filters-by-amount-range, 200-empty-state, 500-db-error. File: backend/src/routes/invoices.ts (add before /v1/invoices/search) + tests at backend/src/routes/__tests__/invoice-search-advanced.test.ts.",
       "file": "backend/src/routes/invoices.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 139
     },
     {
       "id": "AGENTS-ACTIVITY-SUMMARY-001",

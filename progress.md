@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 139 — INVOICE-SEARCH-ADVANCED-001
+- Status: PASS | Commit: 3f6a8bc | Branch: sprint-139-invoice-search-advanced → main | Tests: 5/5 | Files: invoices.ts +43 lines, invoice-search-advanced.test.ts (new) | Note: GET /v1/invoices/search/advanced — multi-field with pagination | Timestamp: 2026-03-16T22:30:00Z
+
 ## Sprint 138 — WEBHOOKS-LIST-001
 - Status: PASS | Commit: 8ecc83b | Branch: sprint-138-webhooks-list → main | Tests: 5/5 | Files: webhooks.ts pagination upgrade, webhooks-list.test.ts (new), week-99.json (new) | Note: GET /v1/webhooks now supports ?limit&offset pagination | Timestamp: 2026-03-16T22:20:00Z
 
