@@ -1,5 +1,23 @@
 # Invoica Sprint Progress Log
 
+## Sprint 123 — AGENT-INVOICE-SUMMARY-001
+- Status: PASS | Commit: 84b54b9 | Branch: sprint-123-agent-invoice-summary → main | Tests: 5/5 | Files: agents.ts +39 lines, agent-invoice-summary.test.ts (new), week-96.json (new) | Timestamp: 2026-03-16T20:30:00Z
+
+## Sprint 122 — WEBHOOKS-UPDATE-001
+- Status: PASS | Commit: ffb3439 | Tests: 5/5 | Timestamp: 2026-03-16T22:25:00Z
+
+## Sprint 121 — SETTLEMENTS-VOLUME-001
+- Status: PASS | Commit: db7cd8d | Tests: 5/5 | Timestamp: 2026-03-16T22:23:00Z
+
+## Sprint 120 — AGENT-REPUTATION-HISTORY-001
+- Status: PASS | Commit: 43180eb | Tests: 5/5 | Timestamp: 2026-03-16T22:22:00Z
+
+## Sprint 119 — METRICS-CHAIN-001
+- Status: PASS | Commit: a716e69 | Tests: 5/5 | Timestamp: 2026-03-16T22:21:00Z
+
+## Sprint 118 — INVOICE-BULK-STATUS-001
+- Status: PASS | Commit: 8418dfc | Tests: 5/5 | Timestamp: 2026-03-16T22:20:30Z
+
 ## Sprint 117 — HEALTH-METRICS-001
 - Status: PASS | Commit: 0036818 | Tests: 5/5 | Timestamp: 2026-03-16T22:20:00Z
 
