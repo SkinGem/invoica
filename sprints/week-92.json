@@ -23,8 +23,8 @@
       "title": "GET /v1/metrics/daily — invoice counts per day for last 7 days",
       "description": "New endpoint: GET /v1/metrics/daily. Returns daily invoice counts for the last 7 days: [{ date: 'YYYY-MM-DD', invoiceCount, settlementCount }]. Fills in zeros for days with no activity. Tests: 200-returns-7-days, 200-has-date-field, 200-has-invoice-count, 200-zeros-for-empty-days, 500-db-error. File: backend/src/routes/metrics.ts (add route) + tests.",
       "file": "backend/src/routes/metrics.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "done",
+      "sprint": 105
     },
     {
       "id": "SETTLEMENT-BY-AGENT-001",

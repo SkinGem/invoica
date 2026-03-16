@@ -109,6 +109,50 @@ router.get('/v1/metrics/agent/:agentId', async (req: Request, res: Response): Pr
 });
 
 /**
+ * GET /v1/metrics/daily
+ * Invoice counts per day for the last 7 days. Zeros filled in for empty days.
+ */
+router.get('/v1/metrics/daily', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const sb = getSb();
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    sevenDaysAgo.setUTCHours(0, 0, 0, 0);
+
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('status, createdAt')
+      .gte('createdAt', sevenDaysAgo.toISOString());
+
+    if (error) throw error;
+
+    // Build a map of date → { invoiceCount, settlementCount }
+    const SETTLED = ['SETTLED', 'COMPLETED'];
+    const dayMap = new Map<string, { invoiceCount: number; settlementCount: number }>();
+
+    // Pre-fill last 7 days with zeros
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      const key = d.toISOString().slice(0, 10);
+      dayMap.set(key, { invoiceCount: 0, settlementCount: 0 });
+    }
+
+    for (const row of (data || [])) {
+      const key = new Date(row.createdAt).toISOString().slice(0, 10);
+      if (dayMap.has(key)) {
+        const entry = dayMap.get(key)!;
+        entry.invoiceCount += 1;
+        if (SETTLED.includes(row.status)) entry.settlementCount += 1;
+      }
+    }
+
+    const result = Array.from(dayMap.entries()).map(([date, counts]) => ({ date, ...counts }));
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } });
+  }
+});
+
+/**
  * GET /v1/metrics/leaderboard
  * Top N agents by total invoice amount. ?limit=10 (default 10, max 100).
  * Must be before /summary and /compare to avoid any future param conflicts.
