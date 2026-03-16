@@ -24,7 +24,7 @@
       "priority": "high",
       "dependencies": [],
       "description": "Unit tests for pure functions in api-keys.ts — generate, hash, verify, validate, prefix",
-      "context": "backend/src/services/api-keys.ts contains a mix of pure functions and Supabase-wired repository functions. This task tests ONLY the pure crypto/format functions — the Supabase-integrated ones are out of scope here.\n\nFirst READ backend/src/services/api-keys.ts fully.\n\nPure functions to test (verify by reading):\n- generateApiKey() — returns a string of expected format/length\n- hashApiKey(key) — returns a hash (bcrypt or crypto); different from key\n- verifyApiKey(key, hash) — returns true when key matches hash, false otherwise\n- validateApiKeyFormat(key) — returns true/false for valid/invalid formats\n- getKeyPrefix(key) — returns the prefix (first N chars) of the key\n\nCREATE: backend/src/services/__tests__/api-keys.test.ts (max 150 lines)\n\nIMPORTANT: hashApiKey and verifyApiKey likely use bcrypt (async). Tests should use await.\n\nTests:\n1. generateApiKey() returns a non-empty string\n2. generateApiKey() returns keys of consistent length or prefix pattern\n3. generateApiKey() returns different values on each call (randomness check)\n4. validateApiKeyFormat() returns true for a freshly generated key\n5. validateApiKeyFormat() returns false for empty string\n6. validateApiKeyFormat() returns false for a clearly invalid string (too short)\n7. getKeyPrefix() returns the correct prefix from a known key\n8. hashApiKey() returns a different string from the input key\n9. verifyApiKey() returns true when given the correct key + its hash\n10. verifyApiKey() returns false when given wrong key + hash\n\nNote: if hashApiKey uses bcrypt, tests will be async and may take 1-2s. That is fine.\nMin: 10 tests.",
+      "context": "DONE — Sprint 026 (ea18678). 15 tests for generateApiKey, hashApiKey, verifyApiKey, getKeyPrefix, validateApiKeyFormat.",
       "deliverables": {
         "code": [],
         "tests": [
@@ -32,7 +32,7 @@
         ],
         "docs": []
       },
-      "status": "pending"
+      "status": "approved"
     },
     {
       "id": "API-ROTATE-001",
