@@ -1241,3 +1241,15 @@
 - Health check post: 162/162 suites, 1349/1349 tests — ALL PASS
 - Notes: Copies customer fields + paymentDetails from source. New invoiceNumber via MAX query. Source status ignored — duplicate always starts PENDING.
 - Timestamp: 2026-03-16T20:35:00Z
+
+## Sprint 148 — INVOICE-AGING-001
+- Status: PASS
+- Branch: sprint-148-invoice-aging-001 → merged to main
+- Commit: 9feeefa
+- Files created: backend/src/routes/__tests__/invoice-aging.test.ts
+- Files modified: backend/src/routes/invoices.ts (+GET /v1/invoices/stats/aging handler)
+- Tests: 5 new tests (200-returns-shape, 200-buckets-correct, 200-empty-state, 200-amount-summed, 500-db-error) — PASS
+- Health check pre: backend port 3001 HTTP 200, disk 3%, Node v22.22.0
+- Health check post: 222/222 suites, 1649/1649 tests — ALL PASS
+- Notes: Buckets PENDING invoices by age: 0_30, 31_60, 61_90, over_90 — each has count + totalAmount
+- Timestamp: 2026-03-16T21:00:00Z
