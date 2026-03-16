@@ -970,3 +970,14 @@
 - Health check post: 157/157 suites, 1323/1323 tests — ALL PASS
 - Notes: week-87 ALL DONE. Per-agent metrics: invoice counts, totalValueSettled, reputation snapshot.
 - Timestamp: 2026-03-16T19:25:00Z
+
+## Sprint 084 — REPUTATION-BATCH-001
+- Status: PASS
+- Branch: sprint-084-reputation-batch-001 → merged to main
+- Commit: fa62058
+- Files created: backend/src/routes/__tests__/reputation-batch.test.ts, sprints/week-88.json
+- Files modified: backend/src/routes/reputation.ts (+POST /v1/reputation/batch), backend/src/routes/__tests__/reputation.test.ts (route count 2→3)
+- Tests: 5 new tests (200-found-multiple, 200-empty, 400-missing, 400-exceeds-50, 500-error) — PASS
+- Health check post: 158/158 suites, 1328/1328 tests — ALL PASS
+- Notes: week-88.json created with 5 tasks. Batch lookup max 50 agents, omits missing agents.
+- Timestamp: 2026-03-16T19:35:00Z

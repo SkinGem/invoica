@@ -153,11 +153,15 @@
 - INVOICE-BY-ID-TESTS-001 ✅ (Sprint 079), ORACLE-SCORES-TESTS-001 ✅ (Sprint 080), WEBHOOK-PING-001 ✅ (Sprint 081)
 - INVOICE-METADATA-001 ✅ (Sprint 082), METRICS-AGENT-001 ✅ (Sprint 083)
 
-## Current State (2026-03-16 — Sprint 083)
-- **Git**: d952c54 on main, pushed to origin (clean)
-- **Tests**: 157/157 suites, 1323/1323 tests — ALL PASS
-- **New endpoints this week**: POST /v1/webhooks/:id/test, PATCH /v1/invoices/:id/metadata, GET /v1/metrics/agent/:agentId
-- **Next**: Need week-88 backlog
+## Week-88 Status — IN PROGRESS
+- REPUTATION-BATCH-001 ✅ (Sprint 084)
+- TAX-RATES-LIST-001 ⏳, INVOICE-SEARCH-001 ⏳, SETTLEMENT-STATS-001 ⏳, METRICS-PERIOD-001 ⏳
+
+## Current State (2026-03-16 — Sprint 084)
+- **Git**: fa62058 on main, pushed to origin (clean)
+- **Tests**: 158/158 suites, 1328/1328 tests — ALL PASS
+- **New endpoints this week**: POST /v1/webhooks/:id/test, PATCH /v1/invoices/:id/metadata, GET /v1/metrics/agent/:agentId, POST /v1/reputation/batch
+- **week-88.json created**: 5 tasks queued
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)
