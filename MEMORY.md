@@ -146,18 +146,17 @@
 - INVOICE-STATUS-TESTS-001 ✅ (Sprint 073), METRICS-001 ✅ (Sprint 074), WEBHOOK-TESTS-002 ✅ (Sprint 075)
 - INVOICE-PATCH-VALIDATOR-001 ✅ (Sprint 076), SETTLEMENT-FILTER-001 ✅ (Sprint 077)
 
-## Week-86 Status — IN PROGRESS
-- TAX-ROUTE-TESTS-001 ✅ (pre-existing: 11 tests in tax.test.ts)
-- INVOICE-STATS-TESTS-001 ✅ (pre-existing: 8 tests in invoice-stats.test.ts)
-- LEADERBOARD-TESTS-001 ✅ (pre-existing: 10 tests in reputation-leaderboard.test.ts)
-- SETTLEMENT-SUMMARY-TESTS-001 ✅ (pre-existing: 9 tests in settlement-summary.test.ts)
-- INVOICE-NUMBER-TESTS-001 ✅ (Sprint 078)
+## Week-86 Status — ALL DONE ✅
+- All 5 tasks done (4 pre-existing + Sprint 078)
 
-## Current State (2026-03-16 — Sprint 078)
-- **Git**: ef5b2da on main, pushed to origin (clean)
-- **Tests**: 152/152 suites, 1300/1300 tests — ALL PASS
-- **MILESTONE**: 1300 tests across 152 suites
-- **Next**: New feature work — week-87 needed
+## Week-87 Status — IN PROGRESS
+- INVOICE-BY-ID-TESTS-001 ✅ (Sprint 079)
+- ORACLE-SCORES-TESTS-001 pending, WEBHOOK-PING-001 pending, INVOICE-METADATA-001 pending, METRICS-AGENT-001 pending
+
+## Current State (2026-03-16 — Sprint 079)
+- **Git**: 0a7b4c1 on main, pushed to origin (clean)
+- **Tests**: 153/153 suites, 1305/1305 tests — ALL PASS
+- **Next priority**: ORACLE-SCORES-TESTS-001 then WEBHOOK-PING-001 (new feature)
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)

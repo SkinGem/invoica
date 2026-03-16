@@ -919,3 +919,12 @@
 - Health check post: 152/152 suites, 1300/1300 tests — ALL PASS
 - Notes: MILESTONE 1300 tests. week-85 ALL DONE. week-86 created (4 pre-existing + 1 new = all done).
 - Timestamp: 2026-03-16T18:35:00Z
+
+## Sprint 079 — INVOICE-BY-ID-TESTS-001
+- Status: PASS
+- Branch: sprint-079-invoice-by-id-tests-001 → merged to main
+- Commit: 0a7b4c1
+- Files created: backend/src/routes/__tests__/invoice-by-id.test.ts, sprints/week-87.json
+- Tests: 5 new tests (200-found, 404-not-found, paymentDetails-shape, settledAt, response-fields) — PASS
+- Health check post: 153/153 suites, 1305/1305 tests — ALL PASS
+- Timestamp: 2026-03-16T18:45:00Z
