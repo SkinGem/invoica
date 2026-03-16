@@ -548,6 +548,40 @@ router.get('/v1/metrics/weekly', async (_req: Request, res: Response): Promise<v
 });
 
 /**
+ * GET /v1/metrics/peak-hours
+ * Hour-of-day distribution (UTC) of invoice creation over the last 30 days.
+ * Returns 24 entries (hour 0-23) each with count and percentage of total.
+ */
+router.get('/v1/metrics/peak-hours', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const sb = getSb();
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('createdAt')
+      .gte('createdAt', thirtyDaysAgo);
+    if (error) throw error;
+
+    const hourCounts = Array.from({ length: 24 }, (_, h) => ({ hour: h, count: 0 }));
+    for (const row of (data || [])) {
+      const h = new Date(row.createdAt).getUTCHours();
+      hourCounts[h].count += 1;
+    }
+
+    const total = (data || []).length;
+    const result = hourCounts.map((entry) => ({
+      hour: entry.hour,
+      count: entry.count,
+      percentage: total > 0 ? Math.round((entry.count / total) * 10000) / 100 : 0,
+    }));
+
+    res.json({ success: true, data: { hours: result, total } });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } });
+  }
+});
+
+/**
  * GET /v1/metrics/conversion
  * Invoice conversion rates: created→settled, plus avg time to settle.
  */
