@@ -158,4 +158,31 @@ router.post('/v1/reputation/batch', async (req, res): Promise<void> => {
   }
 });
 
+/**
+ * GET /v1/reputation/:agentId/stats
+ * Full reputation record for a specific agent.
+ */
+router.get('/v1/reputation/:agentId/stats', async (req, res): Promise<void> => {
+  try {
+    const { agentId } = req.params;
+    const { data, error } = await getSb()
+      .from('AgentReputation')
+      .select('agentId, score, tier, invoicesCompleted, invoicesDisputed, totalValueSettled, lastUpdated')
+      .eq('agentId', agentId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      res.status(404).json({ success: false, error: { message: 'Agent reputation not found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    res.json({ success: true, data });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ success: false, error: { message: error.message, code: 'DB_ERROR' } });
+  }
+});
+
 export default router;

@@ -23,8 +23,8 @@
       "title": "GET /v1/reputation/:agentId/stats — agent reputation detail",
       "description": "New endpoint: GET /v1/reputation/:agentId/stats. Returns full reputation record from AgentReputation table: { agentId, score, tier, invoicesCompleted, invoicesDisputed, totalValueSettled, lastUpdated }. Returns 404 if no record found. Tests: 200-returns-full-record, 200-fields-present, 404-not-found, 200-score-is-number, 500-db-error. File: backend/src/routes/reputation.ts (add route) + tests.",
       "file": "backend/src/routes/reputation.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "done",
+      "sprint": 100
     },
     {
       "id": "METRICS-AGENTS-LEADERBOARD-001",
