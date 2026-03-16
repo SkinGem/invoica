@@ -85,6 +85,32 @@ router.get('/v1/webhooks/:id', async (req: Request, res: Response, next: NextFun
   } catch (err) { next(err); }
 });
 
+// PUT /v1/webhooks/:id — update webhook URL or events
+router.put('/v1/webhooks/:id', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    const { url, events } = req.body || {};
+
+    if (!url && !events) {
+      res.status(400).json({ success: false, error: { message: 'At least one of url or events must be provided', code: 'NO_FIELDS' } });
+      return;
+    }
+
+    const existing = await repo.findById(id);
+    if (!existing) {
+      res.status(404).json({ success: false, error: { message: 'Webhook not found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    const fields: { url?: string; events?: string[] } = {};
+    if (url) fields.url = url;
+    if (events) fields.events = events;
+
+    const updated = await repo.update(id, fields);
+    res.json({ success: true, data: updated });
+  } catch (err) { next(err); }
+});
+
 // DELETE /v1/webhooks/:id — permanently delete a webhook
 router.delete('/v1/webhooks/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {

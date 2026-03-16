@@ -64,4 +64,11 @@ export class WebhookRepository {
   async listAll(): Promise<WebhookRegistration[]> {
     return this.prisma.webhookRegistration.findMany({ orderBy: { createdAt: 'desc' } });
   }
+
+  async update(id: string, fields: { url?: string; events?: string[] }): Promise<WebhookRegistration> {
+    return this.prisma.webhookRegistration.update({
+      where: { id },
+      data: fields,
+    });
+  }
 }
