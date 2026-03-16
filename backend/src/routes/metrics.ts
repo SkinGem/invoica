@@ -109,6 +109,41 @@ router.get('/v1/metrics/agent/:agentId', async (req: Request, res: Response): Pr
 });
 
 /**
+ * GET /v1/metrics/leaderboard
+ * Top N agents by total invoice amount. ?limit=10 (default 10, max 100).
+ * Must be before /summary and /compare to avoid any future param conflicts.
+ */
+router.get('/v1/metrics/leaderboard', async (req: Request, res: Response): Promise<void> => {
+  const limit = Math.min(parseInt((req.query.limit as string) || '10', 10), 100);
+  try {
+    const sb = getSb();
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('agentId, amount');
+
+    if (error) throw error;
+
+    const agentMap = new Map<string, { agentId: string; totalAmount: number; invoiceCount: number }>();
+    for (const row of (data || [])) {
+      const key = row.agentId || 'unknown';
+      if (!agentMap.has(key)) agentMap.set(key, { agentId: key, totalAmount: 0, invoiceCount: 0 });
+      const entry = agentMap.get(key)!;
+      entry.totalAmount += row.amount || 0;
+      entry.invoiceCount += 1;
+    }
+
+    const sorted = Array.from(agentMap.values())
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, limit)
+      .map((entry, idx) => ({ rank: idx + 1, ...entry }));
+
+    res.json({ success: true, data: sorted });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } });
+  }
+});
+
+/**
  * GET /v1/metrics/summary
  * High-level KPI summary: totalInvoices, totalAgents, totalVolumeSettled, avgInvoiceAmount, topAgentId.
  * Reads from Invoice table only.

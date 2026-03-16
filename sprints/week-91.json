@@ -31,8 +31,8 @@
       "title": "GET /v1/metrics/leaderboard — top agents by invoice volume",
       "description": "New endpoint: GET /v1/metrics/leaderboard?limit=10. Returns top N agents by total invoice amount: [{ rank, agentId, totalAmount, invoiceCount }]. Reads from Invoice table, aggregates by agentId, sorted by totalAmount descending. Tests: 200-returns-ranked-list, 200-rank-starts-at-1, 200-respects-limit, 200-empty-state, 500-db-error. File: backend/src/routes/metrics.ts (add route) + tests.",
       "file": "backend/src/routes/metrics.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "done",
+      "sprint": 101
     },
     {
       "id": "HEALTH-SERVICES-001",
