@@ -1,8 +1,25 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+const POLL_INTERVAL_MS = Number(
+  process.env.NEXT_PUBLIC_DASHBOARD_POLL_INTERVAL_MS ?? 30000
+);
+
 export default function DashboardPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    if (POLL_INTERVAL_MS <= 0) return;
+    const id = setInterval(() => router.refresh(), POLL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [router]);
+
   return (
     <div className="max-w-5xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="border rounded-lg p-6">
           <p className="text-sm text-gray-500">Total Invoices</p>
@@ -17,14 +34,14 @@ export default function DashboardPage() {
           <p className="text-2xl font-bold">0</p>
         </div>
       </div>
-      
+
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
         <div className="border rounded-lg p-6">
           <p className="text-gray-500 text-center">No recent activity</p>
         </div>
       </section>
-      
+
       <section>
         <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
         <div className="flex gap-4">
