@@ -84,6 +84,33 @@ router.get('/v1/agents/:agentId/invoices', async (req: Request, res: Response): 
 });
 
 // ─────────────────────────────────────────────
+// GET /v1/agents/:agentId/reputation
+// Full AgentReputation record for an agent. Must be before /:agentId.
+// ─────────────────────────────────────────────
+router.get('/v1/agents/:agentId/reputation', async (req: Request, res: Response): Promise<void> => {
+  const { agentId } = req.params;
+  const sb = getSb();
+
+  const { data, error } = await sb
+    .from('AgentReputation')
+    .select('agentId, score, tier, disputeRate, completionRate, updatedAt')
+    .eq('agentId', agentId)
+    .maybeSingle();
+
+  if (error) {
+    res.status(500).json({ success: false, error: { message: error.message, code: 'DB_ERROR' } });
+    return;
+  }
+
+  if (!data) {
+    res.status(404).json({ success: false, error: { message: 'Agent reputation not found', code: 'NOT_FOUND' } });
+    return;
+  }
+
+  res.json({ success: true, data });
+});
+
+// ─────────────────────────────────────────────
 // GET /v1/agents/:agentId/activity
 // Recent invoice activity for a specific agent. Must be before /:agentId.
 // ─────────────────────────────────────────────
