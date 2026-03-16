@@ -15,6 +15,7 @@ import gasBackstopRouter from './routes/gas-backstop';
 import reputationLeaderboardRoutes from './routes/reputation-leaderboard';
 import reputationRoutes from './routes/reputation';
 import reputationHistoryRoutes from './routes/reputation-history';
+import metricsRoutes from './routes/metrics';
 import taxRoutes from './routes/tax';
 
 const app = express();
@@ -59,6 +60,7 @@ app.use(gasBackstopRouter);
 app.use(reputationLeaderboardRoutes);
 app.use(reputationRoutes);
 app.use(reputationHistoryRoutes);
+app.use(metricsRoutes);
 app.use(taxRoutes);
 
 app.use((_req, res) => {
