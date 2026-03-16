@@ -102,6 +102,70 @@
         "docs": []
       },
       "status": "done"
+    },
+    {
+      "id": "FRONTEND-001",
+      "agent": "frontend-core",
+      "type": "refactor",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Split api-keys page (545 lines) into composable sub-components — CTO-20260215-006",
+      "context": "FILE: frontend/app/dashboard/api-keys/page.tsx (545 lines — violates 200-line rule)\n\nThe page contains 3 distinct units that must be extracted into separate files:\n\n1. EXTRACT KeyRevealModal (lines 33–132) → new file: frontend/components/dashboard/api-key-reveal-modal.tsx\n   - Props: { keyValue: string; keyName: string; onClose: () => void }\n   - Self-contained: manages its own copied state and clipboard logic\n   - Export as: export function KeyRevealModal(...)\n\n2. EXTRACT CreateKeyModal (lines 133–251) → new file: frontend/components/dashboard/api-key-create-modal.tsx\n   - Props: { onCreated: (key: { value: string; name: string }) => void; onClose: () => void }\n   - Contains its own fetch to POST /v1/api-keys — keep it there\n   - Export as: export function CreateKeyModal(...)\n\n3. KEEP in page.tsx: ApiKeysPage (lines 252–545) — the main page component\n   - Remove the two extracted functions from page.tsx\n   - Add imports: import { KeyRevealModal } from '@/components/dashboard/api-key-reveal-modal'; import { CreateKeyModal } from '@/components/dashboard/api-key-create-modal';\n   - Keep: formatDate, ApiKeyRecord interface, BACKEND_URL, all page state and fetch logic\n   - Result: page.tsx should be ~200 lines after extraction\n\nRules:\n- Do NOT change any logic, props, or behaviour — pure extraction only\n- Do NOT rename any functions, variables, or CSS classes\n- Each new file must start with 'use client';\n- Shared type ApiKeyRecord must be defined in page.tsx and imported by sub-components if needed (or duplicated — keep it simple)\n- formatDate stays in page.tsx (only used by page)\n- After extraction: npx tsc --noEmit must pass with 0 new errors",
+      "deliverables": {
+        "code": [
+          "frontend/app/dashboard/api-keys/page.tsx",
+          "frontend/components/dashboard/api-key-reveal-modal.tsx",
+          "frontend/components/dashboard/api-key-create-modal.tsx"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "INFRA-001",
+      "agent": "cto-agent",
+      "type": "maintenance",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Upgrade OpenClaw v2026.2.26 → v2026.3.13 on Hetzner server",
+      "context": "OpenClaw v2026.3.13 is available. Current install: v2026.2.26 on server at /opt/oc/.\n\nSteps to execute on Hetzner (65.108.90.178, user invoica):\n\n1. Backup current install:\n   cp -r /opt/oc /opt/oc.bak-2026.2.26\n   cp /home/invoica/.openclaw/openclaw.json /home/invoica/.openclaw/openclaw.json.bak\n\n2. Check changelog before upgrading:\n   npx clawhub@latest changelog 2026.3.13\n   or: cat /opt/oc/CHANGELOG.md if it exists\n   Flag any breaking changes in your report.\n\n3. Upgrade:\n   npx clawhub@latest upgrade\n\n4. Verify install version:\n   cat /opt/oc/package.json | grep version\n   Should read 2026.3.13\n\n5. Restart openclaw-gateway via PM2:\n   pm2 restart openclaw-gateway && pm2 status\n\n6. Smoke test — run one trivial sprint task to confirm gateway responds:\n   pm2 logs openclaw-gateway --lines 20\n   Look for: gateway connected, agents loaded, no errors\n\n7. Run TypeScript check on local codebase to confirm 0 new errors:\n   npx tsc --noEmit 2>&1 | grep -v node_modules\n\n8. If any step fails: pm2 stop openclaw-gateway && cp -r /opt/oc.bak-2026.2.26 /opt/oc && pm2 start openclaw-gateway\n\nReport: version before/after, changelog breaking changes, smoke test result, PM2 status.",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": ["reports/cto/openclaw-upgrade-2026-03-16.md"]
+      },
+      "status": "pending"
+    },
+    {
+      "id": "MONITOR-001",
+      "agent": "cto-agent",
+      "type": "assessment",
+      "priority": "medium",
+      "dependencies": [],
+      "description": "Low-score pattern monitoring — CTO-20260219-003: assess and implement or piggyback",
+      "context": "Score data location: reports/swarm-runs/daily-YYYY-MM-DD.json and reports/swarm-runs/2026*.json\nScore field path: run.tasks[].review.score (integer 0–100, field is null when task was rejected without review)\n\nAssessment questions:\n1. Scan last 14 days of swarm-runs JSON files. For each agent, calculate:\n   - Average score across all reviewed tasks\n   - Count of tasks scoring below 70\n   - Count of consecutive tasks scoring below 70\n2. Define 'low-score pattern': agent average < 75 over last 10 tasks OR 3+ consecutive tasks < 70\n3. Decision: is this a one-time report or ongoing alert?\n   - Check if agents/skill-observer exists: if yes, piggyback (add a score-pattern check to its prompt)\n   - If no: create a new lightweight script at scripts/check-low-score-patterns.ts\n\nIf implementing a script:\n- Input: reads all reports/swarm-runs/daily-*.json files\n- Output: JSON report to reports/cto/low-score-patterns-YYYY-MM-DD.json with structure:\n  { date, agents: [{ agent_id, avg_score, low_score_count, consecutive_low, flag: boolean }] }\n- Flag = true if avg_score < 75 OR consecutive_low >= 3\n- Script must be runnable: ts-node scripts/check-low-score-patterns.ts\n\nIf piggybacking on skill-observer:\n- Read agents/skill-observer/prompt.md first\n- Add score-pattern analysis instructions to the existing prompt\n- Document what was added in your report\n\nFinal deliverable: either the script OR the updated prompt, plus a report at reports/cto/low-score-assessment-2026-03-16.md summarising the decision and any patterns found in the last 14 days.",
+      "deliverables": {
+        "code": ["scripts/check-low-score-patterns.ts"],
+        "tests": [],
+        "docs": ["reports/cto/low-score-assessment-2026-03-16.md"]
+      },
+      "status": "pending"
+    },
+    {
+      "id": "ASSESS-001",
+      "agent": "cto-agent",
+      "type": "assessment",
+      "priority": "low",
+      "dependencies": [],
+      "description": "Response caching go/no-go — CTO-20260216-003: assess token waste from repeated prompts",
+      "context": "Question: does the orchestrator send duplicate or near-duplicate prompts to agents across sprints, wasting tokens?\n\nData sources to examine:\n1. reports/swarm-runs/daily-*.json — task.tokens_used per task\n2. backend/src/services/orchestrator.ts — how prompts are constructed\n3. sprints/*.json — do repeated agent+description combos appear across files?\n\nAssessment steps:\n1. Read backend/src/services/orchestrator.ts — look for where system prompts or task context are assembled. Are any large blocks repeated verbatim on every call (e.g. full SOUL.md, full constitution.md)?\n2. Scan last 7 days of swarm-run reports: sum tokens_used per agent per day. Flag agents consuming >50k tokens/day.\n3. Check if any 2 tasks across the last 10 sprint files share identical (agent + description) — sign of accidental duplication.\n4. Estimate: what % of tokens are from repeated/static context vs novel task content?\n\nDecision criteria:\n- Build cache sprint: if >20% of tokens are from repeated static context OR duplicate task combos found\n- Close as low-priority: if token usage is mostly unique task content and no duplicates found\n\nOutput: report at reports/cto/caching-assessment-2026-03-16.md with:\n- Token usage summary by agent (last 7 days)\n- Duplicate task combos found (if any)\n- % static vs novel prompt content estimate\n- Decision: BUILD / CLOSE with one-sentence rationale",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": ["reports/cto/caching-assessment-2026-03-16.md"]
+      },
+      "status": "pending"
     }
   ]
 }
