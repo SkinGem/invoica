@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 132 — INVOICE-STATS-STATUS-001
+- Status: PASS | Commit: 9107d8d | Branch: sprint-132-invoice-stats-status → main | Tests: 5/5 | Files: invoices.ts +22 lines, invoice-stats-status.test.ts (new) | Note: GET /v1/invoices/stats/status — distinct endpoint from /count, week-97 now fully complete | Timestamp: 2026-03-16T21:20:00Z
+
 ## Sprint 131 — AGENT-EARNINGS-001
 - Status: PASS | Commit: 01cd735 | Branch: sprint-131-agent-earnings → main | Tests: 5/5 | Files: agents.ts +52 lines, agent-earnings.test.ts (new) | Note: INVOICE-STATS-STATUS-001 skipped (duplicate of existing /v1/invoices/count) | Timestamp: 2026-03-16T21:10:00Z
 

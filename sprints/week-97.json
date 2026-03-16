@@ -31,8 +31,8 @@
       "title": "GET /v1/invoices/stats/status — global invoice count breakdown by status",
       "description": "New endpoint: GET /v1/invoices/stats/status. Returns invoice counts grouped by status plus total: { total, byStatus: { PENDING: N, SETTLED: N, COMPLETED: N, CANCELLED: N, PROCESSING: N } }. Tests: 200-returns-shape, 200-has-total, 200-has-by-status, 200-zero-when-empty, 500-db-error. File: backend/src/routes/invoices.ts (add in stats section, before /:id routes) + tests at backend/src/routes/__tests__/invoice-stats-status.test.ts.",
       "file": "backend/src/routes/invoices.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 132
     },
     {
       "id": "AGENT-EARNINGS-001",
