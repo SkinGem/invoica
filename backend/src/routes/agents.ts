@@ -84,6 +84,30 @@ router.get('/v1/agents/:agentId/invoices', async (req: Request, res: Response): 
 });
 
 // ─────────────────────────────────────────────
+// GET /v1/agents/:agentId/activity
+// Recent invoice activity for a specific agent. Must be before /:agentId.
+// ─────────────────────────────────────────────
+router.get('/v1/agents/:agentId/activity', async (req: Request, res: Response): Promise<void> => {
+  const { agentId } = req.params;
+  const limit = Math.min(parseInt((req.query.limit as string) || '10', 10), 20);
+  const sb = getSb();
+
+  const { data, error } = await sb
+    .from('Invoice')
+    .select('id, status, amount, currency, createdAt')
+    .eq('agentId', agentId)
+    .order('createdAt', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    res.status(500).json({ success: false, error: { message: error.message, code: 'DB_ERROR' } });
+    return;
+  }
+
+  res.json({ success: true, data: data || [] });
+});
+
+// ─────────────────────────────────────────────
 // GET /v1/agents/:agentId/settlements/summary
 // Settlement summary for a specific agent.
 // Must be before /:agentId (profile).
