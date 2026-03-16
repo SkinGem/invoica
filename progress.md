@@ -867,3 +867,14 @@
 - Health check post: 147/147 suites, 1270/1270 tests — ALL PASS
 - Notes: week-84 COMPLETE. week-85 created (5 tasks). PATCH /v1/invoices/:id/status now fully tested.
 - Timestamp: 2026-03-16T17:40:00Z
+
+## Sprint 074 — METRICS-001
+- Status: PASS
+- Branch: sprint-074-metrics-001 → merged to main
+- Commit: 72a0280
+- Files created: backend/src/routes/metrics.ts, backend/src/routes/__tests__/metrics.test.ts
+- Files modified: backend/src/app.ts (import + registration)
+- Tests: 5 new tests (invoice-totals+byStatus, settlement-totals, reputation-summary, zeros-empty, 500-error) — PASS
+- Health check post: 148/148 suites, 1275/1275 tests — ALL PASS
+- Notes: GET /v1/metrics now LIVE. 3 parallel Supabase queries, avgScore rounded to 2dp.
+- Timestamp: 2026-03-16T17:50:00Z
