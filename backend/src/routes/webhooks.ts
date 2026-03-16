@@ -30,6 +30,22 @@ router.get('/v1/webhooks', async (_req: Request, res: Response, next: NextFuncti
   } catch (err) { next(err); }
 });
 
+// GET /v1/webhooks/stats — webhook subscription statistics
+// Must be registered before /:id to avoid param capture
+router.get('/v1/webhooks/stats', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const webhooks = await repo.listAll();
+    const byEvent: Record<string, number> = {};
+    for (const wh of webhooks) {
+      const events: string[] = Array.isArray((wh as any).events) ? (wh as any).events : [];
+      for (const event of events) {
+        byEvent[event] = (byEvent[event] || 0) + 1;
+      }
+    }
+    res.json({ success: true, data: { total: webhooks.length, byEvent } });
+  } catch (err) { next(err); }
+});
+
 // GET /v1/webhooks/events — list available webhook event types (no DB call)
 // Must be registered before /:id to avoid param capture
 const WEBHOOK_EVENT_TYPES = [

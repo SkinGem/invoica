@@ -39,8 +39,8 @@
       "title": "GET /v1/webhooks/stats — webhook delivery statistics",
       "description": "New endpoint: GET /v1/webhooks/stats. Returns { total: number, byEvent: Record<string, number> } based on registered webhooks and their event subscriptions. No DB call for delivery logs — reads from WebhookEndpoint table only. Tests: 200-returns-stats, 200-total-correct, 200-by-event-correct, 200-empty-state, 500-db-error. File: backend/src/routes/webhooks.ts (add GET /v1/webhooks/stats before /:id) + tests.",
       "file": "backend/src/routes/webhooks.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "done",
+      "sprint": 97
     }
   ]
 }
