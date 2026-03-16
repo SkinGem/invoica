@@ -1,0 +1,46 @@
+{
+  "week": 98,
+  "created": "2026-03-16",
+  "tasks": [
+    {
+      "id": "INVOICE-EXPORT-001",
+      "title": "GET /v1/invoices/export.csv — CSV export of invoices",
+      "description": "New endpoint: GET /v1/invoices/export.csv. Returns a CSV file download of invoices. Headers: id,invoiceNumber,status,amount,currency,customerEmail,customerName,createdAt,settledAt. Accepts optional ?status=PENDING|SETTLED|COMPLETED|CANCELLED filter. Sets Content-Type: text/csv, Content-Disposition: attachment; filename=invoices.csv. Tests: 200-returns-csv, 200-has-headers, 200-empty-csv, 200-respects-status-filter, 500-db-error. File: backend/src/routes/invoices.ts (add after /v1/invoices/overdue, before /:id) + tests at backend/src/routes/__tests__/invoice-export.test.ts.",
+      "file": "backend/src/routes/invoices.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "AGENTS-COUNT-001",
+      "title": "GET /v1/agents/count — count of registered agents",
+      "description": "New endpoint: GET /v1/agents/count. Returns { total, withActivity } where total is all distinct agentIds in Invoice table, withActivity is count of agentIds with at least 1 SETTLED or COMPLETED invoice. Tests: 200-returns-shape, 200-has-total, 200-has-with-activity, 200-zero-when-empty, 500-db-error. File: backend/src/routes/agents.ts (add before /:agentId routes) + tests at backend/src/routes/__tests__/agents-count.test.ts.",
+      "file": "backend/src/routes/agents.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "METRICS-WEEKLY-001",
+      "title": "GET /v1/metrics/weekly — weekly invoice counts for last 12 weeks",
+      "description": "New endpoint: GET /v1/metrics/weekly. Returns invoice creation counts grouped by ISO week for the last 12 weeks: [{ week: '2026-W11', count, amount }], zero-filled for empty weeks, sorted chronologically. Tests: 200-returns-12-weeks, 200-has-week-field, 200-has-count-field, 200-zeros-for-empty-weeks, 500-db-error. File: backend/src/routes/metrics.ts (add after /v1/metrics/hourly) + tests at backend/src/routes/__tests__/metrics-weekly.test.ts.",
+      "file": "backend/src/routes/metrics.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "SETTLEMENTS-STATS-001",
+      "title": "GET /v1/settlements/stats — aggregate settlement statistics",
+      "description": "New endpoint: GET /v1/settlements/stats. Returns { total, totalAmount, avgAmount, last24h: { count, amount }, last7d: { count, amount }, last30d: { count, amount } } for SETTLED+COMPLETED invoices. Tests: 200-returns-shape, 200-has-total, 200-has-total-amount, 200-zero-when-empty, 500-db-error. File: backend/src/routes/settlements.ts (add before /v1/settlements/pending) + tests at backend/src/routes/__tests__/settlements-stats.test.ts.",
+      "file": "backend/src/routes/settlements.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "INVOICE-STATS-CURRENCY-001",
+      "title": "GET /v1/invoices/stats/currency — invoice breakdown by currency",
+      "description": "New endpoint: GET /v1/invoices/stats/currency. Returns invoice counts and amounts grouped by currency: [{ currency, count, totalAmount }], sorted by totalAmount DESC. Tests: 200-returns-array, 200-has-currency-field, 200-sorted-by-amount, 200-empty-state, 500-db-error. File: backend/src/routes/invoices.ts (add in stats section after /v1/invoices/stats/status) + tests at backend/src/routes/__tests__/invoice-stats-currency.test.ts.",
+      "file": "backend/src/routes/invoices.ts",
+      "status": "pending",
+      "sprint": null
+    }
+  ]
+}

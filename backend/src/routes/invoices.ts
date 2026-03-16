@@ -192,6 +192,36 @@ router.get('/v1/invoices/overdue', async (_req: Request, res: Response, next: Ne
 });
 
 /**
+ * GET /v1/invoices/export.csv
+ * CSV export of invoices. Optional ?status= filter. Registered before /:id.
+ */
+router.get('/v1/invoices/export.csv', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sb = getSupabase();
+    const { status } = req.query as { status?: string };
+
+    let query = sb.from('Invoice').select('id, invoiceNumber, status, amount, currency, customerEmail, customerName, createdAt, settledAt').order('createdAt', { ascending: false });
+    if (status) query = query.eq('status', status);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const rows = data || [];
+    const header = 'id,invoiceNumber,status,amount,currency,customerEmail,customerName,createdAt,settledAt';
+    const lines = rows.map((r: any) => [
+      r.id, r.invoiceNumber, r.status, r.amount, r.currency,
+      r.customerEmail || '', r.customerName || '',
+      r.createdAt || '', r.settledAt || '',
+    ].map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+    const csv = [header, ...lines].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=invoices.csv');
+    res.send(csv);
+  } catch (err) { next(err); }
+});
+
+/**
  * GET /v1/invoices/:id
  * Lookup invoice by UUID.
  * Registered AFTER /v1/invoices/number/:number to avoid shadowing.
