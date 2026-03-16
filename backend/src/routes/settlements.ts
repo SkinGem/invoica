@@ -315,6 +315,32 @@ router.get('/v1/settlements/by-agent', async (req: Request, res: Response, next:
   } catch (err) { next(err); }
 });
 
+// ─────────────────────────────────────────────
+// GET /v1/settlements/analytics
+// Aggregate size metrics for all settled invoices:
+// total, totalAmount, avgAmount, minAmount, maxAmount.
+// Must be before /:id to avoid param capture.
+// ─────────────────────────────────────────────
+router.get('/v1/settlements/analytics', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('amount')
+      .in('status', ['SETTLED', 'COMPLETED']);
+    if (error) throw error;
+
+    const amounts = (data || []).map((r: any) => Number(r.amount) || 0);
+    const total = amounts.length;
+    const totalAmount = amounts.reduce((s, a) => s + a, 0);
+    const avgAmount = total > 0 ? Math.round((totalAmount / total) * 100) / 100 : 0;
+    const minAmount = total > 0 ? Math.min(...amounts) : 0;
+    const maxAmount = total > 0 ? Math.max(...amounts) : 0;
+
+    res.json({ success: true, data: { total, totalAmount, avgAmount, minAmount, maxAmount } });
+  } catch (err) { next(err); }
+});
+
 router.get('/v1/settlements/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
