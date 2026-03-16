@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 136 — SETTLEMENTS-STATS-001
+- Status: PASS | Commit: e422c99 | Branch: sprint-136-settlements-stats → main | Tests: 5/5 | Files: settlements.ts +42 lines, settlements-stats.test.ts (new) | Note: GET /v1/settlements/stats — aggregate total/totalAmount/avgAmount/last24h/7d/30d | Timestamp: 2026-03-16T22:00:00Z
+
 ## Sprint 135 — METRICS-WEEKLY-001
 - Status: PASS | Commit: 05487e8 | Branch: sprint-135-metrics-weekly → main | Tests: 5/5 | Files: metrics.ts +48 lines, metrics-weekly.test.ts (new) | Note: GET /v1/metrics/weekly — 12-week ISO week buckets with zero-fill | Timestamp: 2026-03-16T21:50:00Z
 

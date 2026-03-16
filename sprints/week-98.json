@@ -31,8 +31,8 @@
       "title": "GET /v1/settlements/stats — aggregate settlement statistics",
       "description": "New endpoint: GET /v1/settlements/stats. Returns { total, totalAmount, avgAmount, last24h: { count, amount }, last7d: { count, amount }, last30d: { count, amount } } for SETTLED+COMPLETED invoices. Tests: 200-returns-shape, 200-has-total, 200-has-total-amount, 200-zero-when-empty, 500-db-error. File: backend/src/routes/settlements.ts (add before /v1/settlements/pending) + tests at backend/src/routes/__tests__/settlements-stats.test.ts.",
       "file": "backend/src/routes/settlements.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 136
     },
     {
       "id": "INVOICE-STATS-CURRENCY-001",
