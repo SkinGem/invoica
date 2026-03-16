@@ -150,6 +150,26 @@ router.get('/v1/invoices/count', async (_req: Request, res: Response, next: Next
 });
 
 /**
+ * GET /v1/invoices/overdue
+ * Returns PENDING invoices older than 24 hours. Registered before /:id.
+ */
+router.get('/v1/invoices/overdue', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sb = getSupabase();
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await sb
+      .from('Invoice')
+      .select(SELECT_FIELDS)
+      .eq('status', 'PENDING')
+      .lt('createdAt', cutoff)
+      .order('createdAt', { ascending: true });
+    if (error) throw error;
+    const invoices = (data || []).map(mapInvoice);
+    res.json({ success: true, data: invoices, meta: { total: invoices.length, cutoffISO: cutoff } });
+  } catch (err) { next(err); }
+});
+
+/**
  * GET /v1/invoices/:id
  * Lookup invoice by UUID.
  * Registered AFTER /v1/invoices/number/:number to avoid shadowing.
