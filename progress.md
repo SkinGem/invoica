@@ -909,3 +909,13 @@
 - Health check post: 151/151 suites, 1295/1295 tests — ALL PASS
 - Notes: week-85 ALL DONE (5/5). Fixed thenable mock chain pattern for post-range filter calls.
 - Timestamp: 2026-03-16T18:20:00Z
+
+## Sprint 078 — INVOICE-NUMBER-TESTS-001
+- Status: PASS
+- Branch: sprint-078-invoice-number-tests-001 → merged to main
+- Commit: ef5b2da
+- Files created: backend/src/routes/__tests__/invoice-by-number.test.ts, sprints/week-86.json
+- Tests: 5 new tests (200-found, 404-not-found, 400-non-numeric, 400-zero, response-shape) — PASS
+- Health check post: 152/152 suites, 1300/1300 tests — ALL PASS
+- Notes: MILESTONE 1300 tests. week-85 ALL DONE. week-86 created (4 pre-existing + 1 new = all done).
+- Timestamp: 2026-03-16T18:35:00Z
