@@ -111,6 +111,31 @@ router.put('/v1/webhooks/:id', async (req: Request, res: Response, next: NextFun
   } catch (err) { next(err); }
 });
 
+// DELETE /v1/webhooks/bulk — delete multiple webhook registrations by IDs
+// Must be registered before /:id to avoid param capture
+router.delete('/v1/webhooks/bulk', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { ids } = req.body || {};
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      res.status(400).json({ success: false, error: { message: 'ids array is required', code: 'MISSING_IDS' } });
+      return;
+    }
+    if (ids.length > 20) {
+      res.status(400).json({ success: false, error: { message: 'Cannot delete more than 20 webhooks at once', code: 'TOO_MANY_IDS' } });
+      return;
+    }
+    const deleted: string[] = [];
+    for (const id of ids) {
+      const existing = await repo.findById(String(id));
+      if (existing) {
+        await repo.delete(String(id));
+        deleted.push(String(id));
+      }
+    }
+    res.json({ success: true, data: { deleted: deleted.length, ids: deleted } });
+  } catch (err) { next(err); }
+});
+
 // DELETE /v1/webhooks/:id — permanently delete a webhook
 router.delete('/v1/webhooks/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
