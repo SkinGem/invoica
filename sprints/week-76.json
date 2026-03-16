@@ -135,7 +135,8 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done",
+      "output": { "commit": "4069ad2", "note": "Split via CTO-006 sprint — files placed in app/dashboard/api-keys/ (co-located)" }
     },
     {
       "id": "INFRA-001",
@@ -150,7 +151,8 @@
         "tests": [],
         "docs": ["reports/cto/openclaw-upgrade-2026-03-16.md"]
       },
-      "status": "pending"
+      "status": "done",
+      "output": { "note": "Already v2026.3.13. Crash loop was port 18789 race condition. Fixed by stop-all + clean restart. Gateway now stable." }
     },
     {
       "id": "MONITOR-001",
@@ -180,7 +182,8 @@
         "tests": [],
         "docs": ["reports/cto/caching-assessment-2026-03-16.md"]
       },
-      "status": "pending"
+      "status": "done",
+      "output": { "note": "CLOSED / NO-GO. Anthropic server-side prompt caching active. User prompts 100% unique. Client cache hit rate near-zero." }
     },
     {
       "id": "SOL-005",
@@ -195,7 +198,8 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done",
+      "output": { "commit": "897177d", "note": "programId + tokenMint validation added. Constants validated against known SPL Token Program and USDC mint." }
     },
     {
       "id": "SOL-006",

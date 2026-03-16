@@ -11,7 +11,14 @@ module.exports = {
       tsconfig: 'tsconfig.json',
       diagnostics: false,
     }],
+    '^.+\\.js$': ['ts-jest', {
+      tsconfig: 'tsconfig.json',
+      diagnostics: false,
+    }],
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(@noble)/)',
+  ],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/backend/src/$1',
   },
