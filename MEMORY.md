@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: ab3df0e on main, pushed to origin (clean)
-- **Tests**: 100/100 suites, 765/765 tests — ALL PASS
+- **Git**: caddf66 on main, pushed to origin (clean)
+- **Tests**: 100/100 suites, 770/770 tests — ALL PASS
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
@@ -60,6 +60,7 @@
 39. Sprint 033 — env-validator coverage: 11 new tests (legacy/ClawRouter modes, PORT coercion, LOG_LEVEL) (3016635)
 40. Sprint 034 — api-key-generator coverage: 7 new tests (input validation, hash length, constants) (6544472)
 41. Sprint 035 — graceful-shutdown coverage: 4 new tests (server error, onShutdown error, custom config, log msg) (ab3df0e)
+42. Sprint 036 — logger coverage: 5 new tests (production JSON, dev meta, pino-style messages) (caddf66)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
@@ -119,9 +120,10 @@
 ## Week-79 Status — ALL DONE ✅
 - ORCH-CONFIG-001, API-REPO-001, SETTLE-POLL-001 — all complete (Sprints 030-032)
 
-## Next Sprint: Sprint 036
-- Coverage work ongoing. Remaining gap: logger.ts (77%)
-- After logger: create week-80.json for next feature sprint
+## Next Sprint: Sprint 037
+- Coverage wave complete (env-validator, api-key-generator, graceful-shutdown, logger all improved)
+- Time to create week-80.json with new feature/test tasks
+- Candidate features: middleware tests, webhook route tests, or new API capabilities
 
 ## V17 + Solana Migration — COMPLETE
 - All 4 V17 sprints COMPLETE

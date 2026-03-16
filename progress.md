@@ -422,3 +422,13 @@
 - Coverage added: server.close error catch, onShutdown throws catch, custom config acceptance, initiation log message
 - Issues: None
 - Timestamp: 2026-03-16T18:45:00Z
+
+## Sprint 036 — logger Coverage Improvement
+- Status: PASS
+- Branch: sprint-036-logger-coverage → merged to main
+- Commit: caddf66
+- Files modified: backend/src/utils/__tests__/logger.test.ts (+44 lines, 5 new tests)
+- Tests: 100/100 suites, 770/770 — ALL PASS (5 new tests, total 10 in file)
+- Coverage added: production JSON format, production JSON+meta, dev mode with meta, pino-style object msg, object no-msg fallback
+- Issues: None
+- Timestamp: 2026-03-16T19:00:00Z
