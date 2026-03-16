@@ -533,3 +533,16 @@
 - Health check post: ✅ 113/113, 928/928
 - Issues: None
 - Timestamp: 2026-03-16T20:35:00Z
+
+## Sprint 045 — WEBHOOKS-GET-001 + API-KEYS-FULL-001
+- Status: PASS
+- Branch: sprint-045-webhooks-apikeys-tests → merged to main
+- Commit: 7ffb6bc
+- Files created: backend/src/api/__tests__/webhooks-get.test.ts, backend/src/api/__tests__/api-keys-full.test.ts
+- Files modified: None
+- Tests: 115/115 suites, 942/942 — ALL PASS (14 new tests)
+- Coverage added: getWebhook (400 missing id, 404 not found, 200 found, correct id passed to findById); createApiKeyHandler (400 validation, 201 success, 500 error); listApiKeysHandler (400 missing customerId, 200 success, 500); revokeApiKeyHandler (200 success, 500); rotateApiKeyHandler (200 success, 500)
+- Health check pre: ✅ 113/113, 928/928
+- Health check post: ✅ 115/115, 942/942
+- Issues: None
+- Timestamp: 2026-03-16T20:50:00Z
