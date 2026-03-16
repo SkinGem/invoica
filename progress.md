@@ -470,3 +470,15 @@
 - Health check post: ✅ 106/106, 851/851
 - Issues: None
 - Timestamp: 2026-03-16T19:35:00Z
+
+## Sprint 040 — SETTLE-EVM-001 + SOLANA-PDA-001
+- Status: PASS
+- Branch: sprint-040-settlement-solana-tests → merged to main
+- Commit: 9b26d7f
+- Files created: backend/src/services/settlement/__tests__/evm-detector.test.ts, backend/src/services/settlement/__tests__/solana-pda.test.ts
+- Tests: 108/108 suites, 868/868 — ALL PASS (17 new tests: evm-detector 9, solana-pda 8)
+- Coverage added: EvmSettlementDetector getLatestBlock/scanTransfersToAddress/verifyTransfer (fetch mock), PublicKey fromBase58 validation, toBase58/toBytes, findProgramAddress stub, findAssociatedTokenAddress stub
+- Health check pre: ✅ 106/106, 851/851
+- Health check post: ✅ 108/108, 868/868
+- Issues: None
+- Timestamp: 2026-03-16T19:45:00Z
