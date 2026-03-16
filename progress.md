@@ -324,3 +324,16 @@
 - Health check post: ✅ 96/96 suites, disk 80% free
 - Issues: None
 - Timestamp: 2026-03-16T16:35:00Z
+
+## Sprint 028 — API-ROTATE-001: ApiKeyRotationService Unit Tests
+- Status: PASS
+- Branch: sprint-028-api-rotate-tests → merged to main
+- Commit: a896412
+- Files created: backend/src/services/__tests__/api-key-rotation.test.ts (172 lines, 13 tests)
+- Files modified: None
+- Tests: 97/97 suites, 699/699 — ALL PASS (13 new tests)
+- Health check pre: ✅ 96/96 suites, disk 80% free, target file confirmed
+- Health check post: ✅ 97/97 suites, disk 80% free
+- Coverage: rotateKey (6 tests: success, KEY_NOT_FOUND×2, INSERT_FAILED, INVALID_KEY_ID, INVALID_USER_ID), revokeKey (4 tests: success, KEY_NOT_FOUND, KEY_ALREADY_REVOKED, REVOKE_FAILED), listKeys (3 tests: success, empty, INVALID_USER_ID)
+- Issues: None
+- Timestamp: 2026-03-16T17:00:00Z
