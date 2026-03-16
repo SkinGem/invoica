@@ -349,3 +349,16 @@
 - Changes: Added disputeRate (invoicesDisputed/total, 4dp) and completionRate (invoicesCompleted/total, 4dp, defaults to 1 when no invoices) to every leaderboard entry
 - Issues: None
 - Timestamp: 2026-03-16T17:15:00Z
+
+## Sprint 030 — week-79.json Planning + ORCH-CONFIG-001 Unit Tests
+- Status: PASS
+- Branch: sprint-030-week79-orch-config-tests → merged to main
+- Commit: 90e8714
+- Files created: sprints/week-79.json (3 tasks), backend/src/services/__tests__/orchestrator-config.test.ts (82 lines, 15 tests)
+- Files modified: sprints/week-78.json (mark API-ROTATE-001 + REP-003 as approved)
+- Tests: 98/98 suites, 716/716 — ALL PASS (15 new tests)
+- Health check pre: ✅ 97/97 suites, disk 80% free
+- Health check post: ✅ 98/98 suites, disk 80% free
+- Coverage: META_TASK_BLACKLIST shape, validTaskTypes shape, SPRINT_CAPACITY min/max, isBlacklistedTaskId (exact/startsWith/case-insensitive/negative), filterBlacklistedTaskIds (mixed/empty/clean/all-blacklisted)
+- Issues: None
+- Timestamp: 2026-03-16T17:30:00Z
