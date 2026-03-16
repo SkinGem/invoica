@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 126 — WEBHOOKS-BULK-DELETE-001
+- Status: PASS | Commit: 013cdce | Branch: sprint-126-webhooks-bulk-delete → main | Tests: 5/5 | Files: webhooks.ts +25 lines, webhook-bulk-delete.test.ts (new) | Timestamp: 2026-03-16T20:45:00Z
+
 ## Sprint 125 — METRICS-AGENTS-TOP-001
 - Status: PASS | Commit: 38d08ca | Branch: sprint-125-metrics-agents-top → main | Tests: 5/5 | Files: metrics.ts +36 lines, metrics-agents-top.test.ts (new) | Timestamp: 2026-03-16T20:40:00Z
 
