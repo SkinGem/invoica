@@ -45,4 +45,39 @@ describe('api-key-generator', () => {
     expect(suffix.length).toBeGreaterThan(0);
     expect(/^[a-f0-9]+$/.test(suffix)).toBe(true);
   });
+
+  it('generateApiKey() default parameter (no args) produces live key', () => {
+    const { key } = generateApiKey();
+    expect(key.startsWith(livePrefix)).toBe(true);
+  });
+
+  it('generateApiKey throws TypeError when isTest is not a boolean', () => {
+    expect(() => generateApiKey('true' as any)).toThrow(TypeError);
+    expect(() => generateApiKey('true' as any)).toThrow('isTest parameter must be a boolean');
+  });
+
+  it('hashApiKey returns a 64-character hex string (SHA256)', () => {
+    const hash = hashApiKey('inv_live_testinput');
+    expect(hash).toHaveLength(64);
+    expect(/^[a-f0-9]+$/.test(hash)).toBe(true);
+  });
+
+  it('hashApiKey throws TypeError for empty string', () => {
+    expect(() => hashApiKey('')).toThrow(TypeError);
+    expect(() => hashApiKey('')).toThrow('key parameter must be a non-empty string');
+  });
+
+  it('hashApiKey throws TypeError for non-string input', () => {
+    expect(() => hashApiKey(null as any)).toThrow(TypeError);
+  });
+
+  it('isTestKey throws TypeError for non-string input', () => {
+    expect(() => isTestKey(42 as any)).toThrow(TypeError);
+    expect(() => isTestKey(42 as any)).toThrow('key parameter must be a string');
+  });
+
+  it('API_KEY_PREFIX and TEST_KEY_PREFIX have correct values', () => {
+    expect(API_KEY_PREFIX).toBe('inv_live_');
+    expect(TEST_KEY_PREFIX).toBe('inv_test_');
+  });
 });
