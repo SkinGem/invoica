@@ -50,6 +50,49 @@ function mapInvoice(inv: any) {
 }
 
 /**
+ * GET /v1/invoices/search/advanced
+ * Multi-field search with filters. Must be before /search to avoid shadowing.
+ */
+router.get('/v1/invoices/search/advanced', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {
+      q, status, currency,
+      minAmount, maxAmount,
+      fromDate, toDate,
+    } = req.query as Record<string, string | undefined>;
+
+    const limit  = Math.min(parseInt((req.query.limit  as string) || '20', 10), 100);
+    const offset = Math.max(parseInt((req.query.offset as string) || '0',  10), 0);
+
+    const sb = getSupabase();
+    let query = sb.from('Invoice').select(SELECT_FIELDS);
+
+    if (status)    query = (query as any).eq('status', status);
+    if (currency)  query = (query as any).eq('currency', currency);
+    if (minAmount) query = (query as any).gte('amount', Number(minAmount));
+    if (maxAmount) query = (query as any).lte('amount', Number(maxAmount));
+    if (fromDate)  query = (query as any).gte('createdAt', fromDate);
+    if (toDate)    query = (query as any).lte('createdAt', toDate);
+
+    if (q && q.length >= 2) {
+      const term = `%${q}%`;
+      query = (query as any).or(`customerEmail.ilike.${term},customerName.ilike.${term},invoiceNumber.ilike.${term}`);
+    }
+
+    const { data, error } = await (query as any)
+      .order('createdAt', { ascending: false });
+
+    if (error) throw error;
+
+    const all = (data || []).map(mapInvoice);
+    const total = all.length;
+    const page = all.slice(offset, offset + limit);
+
+    res.json({ success: true, data: page, meta: { total, limit, offset } });
+  } catch (err) { next(err); }
+});
+
+/**
  * GET /v1/invoices/search?q=
  * Search invoices by customer email or name (case-insensitive).
  * Query param: q (min 2 chars). Returns up to 20 matches.
