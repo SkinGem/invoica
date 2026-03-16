@@ -159,6 +159,37 @@ router.post('/v1/reputation/batch', async (req, res): Promise<void> => {
 });
 
 /**
+ * GET /v1/reputation/distribution
+ * Histogram of agent reputation scores in buckets: 0_20, 21_40, 41_60, 61_80, 81_100.
+ * Each bucket has count. Must be before /:agentId to avoid param capture.
+ */
+router.get('/v1/reputation/distribution', async (_req, res): Promise<void> => {
+  try {
+    const { data, error } = await getSb()
+      .from('AgentReputation')
+      .select('score');
+
+    if (error) throw error;
+
+    const buckets: Record<string, number> = { '0_20': 0, '21_40': 0, '41_60': 0, '61_80': 0, '81_100': 0 };
+
+    for (const row of (data || [])) {
+      const score = Number(row.score) || 0;
+      if (score <= 20)       buckets['0_20']++;
+      else if (score <= 40)  buckets['21_40']++;
+      else if (score <= 60)  buckets['41_60']++;
+      else if (score <= 80)  buckets['61_80']++;
+      else                   buckets['81_100']++;
+    }
+
+    res.json({ success: true, data: { total: (data || []).length, buckets } });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({ success: false, error: { message: error.message, code: 'DB_ERROR' } });
+  }
+});
+
+/**
  * GET /v1/reputation/:agentId/stats
  * Full reputation record for a specific agent.
  */
