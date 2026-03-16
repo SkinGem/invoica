@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 145 — METRICS-CONVERSION-001
+- Status: PASS | Commit: 54f0ecc | Branch: sprint-145-metrics-conversion → main | Tests: 5/5 | Files: metrics.ts +41 lines, metrics-conversion.test.ts (new) | Note: GET /v1/metrics/conversion — settled/cancelled/pending/conversionRate/avgTimeToSettle | Timestamp: 2026-03-16T23:30:00Z
+
 ## Sprint 144 — AGENTS-TOP-EARNERS-001
 - Status: PASS | Commit: 2b42051 | Branch: sprint-144-agents-top-earners → main | Tests: 5/5 | Files: agents.ts +36 lines, agents-top-earners.test.ts (new) | Note: GET /v1/agents/top-earners with totalRevenue/invoiceCount/avgRevenue | Timestamp: 2026-03-16T23:20:00Z
 

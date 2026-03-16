@@ -23,8 +23,8 @@
       "title": "GET /v1/metrics/conversion — invoice conversion rates (created→settled)",
       "description": "New endpoint: GET /v1/metrics/conversion. Returns conversion stats: { total, settled, cancelled, pending, conversionRate (settled/total as %), avgTimeToSettle }. Tests: 200-returns-shape, 200-has-conversion-rate, 200-rate-is-percentage, 200-zero-when-empty, 500-db-error. File: backend/src/routes/metrics.ts (add after /v1/metrics/weekly) + tests at backend/src/routes/__tests__/metrics-conversion.test.ts.",
       "file": "backend/src/routes/metrics.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 145
     },
     {
       "id": "SETTLEMENTS-TIMELINE-001",
