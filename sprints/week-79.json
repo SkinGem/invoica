@@ -1,0 +1,55 @@
+{
+  "tasks": [
+    {
+      "id": "ORCH-CONFIG-001",
+      "agent": "backend-core",
+      "type": "test",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Unit tests for orchestrator-config.ts pure functions — blacklist, filter, constants",
+      "context": "backend/src/services/orchestrator-config.ts exports pure functions and constants with no external dependencies — ideal for zero-mock unit tests.\n\nCREATE: backend/src/services/__tests__/orchestrator-config.test.ts (max 100 lines)\n\nTests:\n1. META_TASK_BLACKLIST contains exactly ['ORCH-001', 'QUALITY-001']\n2. validTaskTypes contains all 5 expected types (feature, bugfix, ops, agent_creation, refactor)\n3. SPRINT_CAPACITY.min === 5, SPRINT_CAPACITY.max === 9\n4. isBlacklistedTaskId('ORCH-001') → true (exact match)\n5. isBlacklistedTaskId('QUALITY-001') → true (exact match)\n6. isBlacklistedTaskId('ORCH-001-SUB-TASK') → true (startsWith match)\n7. isBlacklistedTaskId('orch-001') → true (case-insensitive via toUpperCase)\n8. isBlacklistedTaskId('FEATURE-001') → false\n9. isBlacklistedTaskId('') → false\n10. filterBlacklistedTaskIds(['ORCH-001', 'FEATURE-001', 'QUALITY-001-X']) → ['FEATURE-001']\n11. filterBlacklistedTaskIds([]) → []\n12. filterBlacklistedTaskIds(['FEATURE-001', 'BUGFIX-002']) → ['FEATURE-001', 'BUGFIX-002'] (no change)\n\nMin: 12 tests. No mocking required.",
+      "deliverables": {
+        "code": [],
+        "tests": [
+          "backend/src/services/__tests__/orchestrator-config.test.ts"
+        ],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "API-REPO-001",
+      "agent": "backend-core",
+      "type": "test",
+      "priority": "medium",
+      "dependencies": [],
+      "description": "Unit tests for SupabaseApiKeyRepository — findById, findByCustomerId, findByKeyPrefix, create, update, delete, rotate",
+      "context": "backend/src/services/api-key-repo-supabase.ts exports SupabaseApiKeyRepository implementing ApiKeyRepository interface. Mock @supabase/supabase-js createClient.\n\nCREATE: backend/src/services/__tests__/api-key-repo-supabase.test.ts (max 200 lines)\n\nMock strategy: jest.mock('@supabase/supabase-js', ...) + set env vars in beforeEach.\n\nKey tests:\n1. findById — returns null when row not found (single() returns null)\n2. findById — returns mapped ApiKey with correct field names (id, customerId, keyHash, etc.)\n3. findByCustomerId — returns array of mapped keys\n4. findByCustomerId — returns empty array when no rows\n5. findByKeyPrefix — returns null when not found\n6. findByKeyPrefix — returns mapped key when found\n7. create — throws on Supabase insert error\n8. create — returns mapped ApiKey on success\n9. update — throws on Supabase update error\n10. update — returns mapped ApiKey with updated fields\n11. delete — returns true when no error\n12. delete — returns false when error occurs\n13. rotate — throws when key not found (delegates to findById)\n14. rowToApiKey mapping — customerEmail defaults to {customerId}@agents.invoica.ai when null\n\nMin: 12 tests.",
+      "deliverables": {
+        "code": [],
+        "tests": [
+          "backend/src/services/__tests__/api-key-repo-supabase.test.ts"
+        ],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "SETTLE-POLL-001",
+      "agent": "backend-core",
+      "type": "test",
+      "priority": "medium",
+      "dependencies": [],
+      "description": "Unit tests for SettlementPollerService — SettlementPollerError class and constructor validation",
+      "context": "backend/src/services/settlement-poller.ts exports SettlementPollerService (Prisma + Bull + axios). Focus on what is unit-testable without running infrastructure.\n\nCREATE: backend/src/services/__tests__/settlement-poller.test.ts (max 150 lines)\n\nMock: jest.mock('bull'), jest.mock('axios'), jest.mock('@prisma/client', () => ({ PrismaClient: jest.fn().mockImplementation(() => ({})) }))\n\nTests:\n1. SettlementPollerError — message is stored correctly\n2. SettlementPollerError — code is stored correctly  \n3. SettlementPollerError — cause is optional (undefined when not passed)\n4. SettlementPollerError — cause is stored when passed\n5. SettlementPollerError — name is 'SettlementPollerError'\n6. PayAISettlement interface shape — status enum only accepts 'settled' | 'pending' | 'failed'\n7. SettlementPollerService constructor — instantiates without throwing given valid config\n8. SettlementPollerService constructor — stores config values correctly\n\nMin: 8 tests.",
+      "deliverables": {
+        "code": [],
+        "tests": [
+          "backend/src/services/__tests__/settlement-poller.test.ts"
+        ],
+        "docs": []
+      },
+      "status": "pending"
+    }
+  ]
+}

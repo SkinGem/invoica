@@ -41,7 +41,7 @@
       "priority": "medium",
       "dependencies": [],
       "description": "Unit tests for ApiKeyRotationService — rotate, revoke, list operations with Supabase mock",
-      "context": "backend/src/services/api-key-rotation.ts exports ApiKeyRotationService with methods for rotating (generate new + expire old in 24h), revoking (immediate deactivation), and listing (sanitized prefix + last 4 chars) API keys.\n\nFirst READ backend/src/services/api-key-rotation.ts fully.\n\nCREATE: backend/src/services/__tests__/api-key-rotation.test.ts (max 200 lines)\n\nMock strategy:\njest.mock('@supabase/supabase-js', () => ({ createClient: jest.fn() }));\nimport { createClient } from '@supabase/supabase-js';\n// For each test, set (createClient as jest.Mock).mockReturnValue({ from: ... });\n\nTests (read the file to adapt to actual implementation):\n1. rotateKey(userId, keyId) — fetches existing key, validates ownership (userId match)\n2. rotateKey() — throws ApiKeyRotationError when key not found\n3. rotateKey() — throws when userId does not match key's userId\n4. rotateKey() — creates new key and sets old one to expire_at = now+24h\n5. revokeKey(userId, keyId) — sets key is_active=false immediately\n6. revokeKey() — throws when key not found\n7. revokeKey() — throws when already revoked\n8. listKeys(userId) — returns array of sanitized keys (prefix + last4, no full key)\n9. listKeys() — returns empty array when no keys found\n10. Supabase error propagation — DB failure throws ApiKeyRotationError\n\nMin: 10 tests.",
+      "context": "DONE — Sprint 028 (a896412). 13 tests covering rotateKey (success, KEY_NOT_FOUND×2, INSERT_FAILED, INVALID_KEY_ID, INVALID_USER_ID), revokeKey (success, KEY_NOT_FOUND, KEY_ALREADY_REVOKED, REVOKE_FAILED), listKeys (success, empty, INVALID_USER_ID).",
       "deliverables": {
         "code": [],
         "tests": [
@@ -49,7 +49,7 @@
         ],
         "docs": []
       },
-      "status": "pending"
+      "status": "approved"
     },
     {
       "id": "REP-003",
@@ -58,7 +58,7 @@
       "priority": "medium",
       "dependencies": [],
       "description": "Enhance GET /v1/reputation/leaderboard — add invoicesDisputed ratio and trend fields to response",
-      "context": "The current leaderboard (Sprint 022) returns raw invoicesCompleted, invoicesDisputed, etc. This sprint adds two computed fields to each entry to make the leaderboard more useful for the Agent Marketplace (Priority 2 in SOUL.md):\n\n1. disputeRate: invoicesDisputed / (invoicesCompleted + invoicesDisputed), rounded to 4 decimal places. Returns 0 if no invoices.\n2. completionRate: invoicesCompleted / (invoicesCompleted + invoicesDisputed), rounded to 4 decimal places. Returns 1 if no invoices.\n\nEDIT: backend/src/routes/reputation-leaderboard.ts\n\nIn the .map() that builds each entry, add:\n  const total = (agent.invoicesCompleted || 0) + (agent.invoicesDisputed || 0);\n  const disputeRate = total > 0 ? parseFloat(((agent.invoicesDisputed || 0) / total).toFixed(4)) : 0;\n  const completionRate = total > 0 ? parseFloat(((agent.invoicesCompleted || 0) / total).toFixed(4)) : 1;\n\nAnd include disputeRate and completionRate in the returned object.\n\nEDIT: backend/src/routes/__tests__/reputation-leaderboard.test.ts\n\nAdd 2 new tests:\n1. disputeRate is correctly computed — mock agent with 1 disputed out of 10 total → disputeRate = 0.1\n2. completionRate defaults to 1 when agent has 0 invoices (total = 0)\n\nFile should stay under 120 lines after additions.",
+      "context": "DONE — Sprint 029 (c8b57fe). Added disputeRate and completionRate computed fields to leaderboard response. 2 new tests added.",
       "deliverables": {
         "code": [
           "backend/src/routes/reputation-leaderboard.ts"
@@ -68,7 +68,7 @@
         ],
         "docs": []
       },
-      "status": "pending"
+      "status": "approved"
     },
     {
       "id": "SETTLE-004",
