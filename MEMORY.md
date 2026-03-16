@@ -1,7 +1,7 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: b995fd9 on main, pushed to origin
+- **Git**: 730e532 on main, pushed to origin
 - **Tests**: 76/76 suites, 481/481 tests — ALL PASS
 - **TypeScript**: 0 source errors (6 in node_modules/ox — skipLibCheck)
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected
@@ -24,6 +24,7 @@
 4. CTO-006 — Frontend api-keys page split (545→294 lines)
 5. HF-TESTS — Fixed all 75 test suites to match implementations
 6. Sprint 006 — Solana x402 adapter + OpenClaw fix + task status sync
+7. Sprint 007 — Low-score pattern monitoring script (MONITOR-001)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured)
@@ -32,7 +33,7 @@
 
 ## Remaining week-76 Items
 - [ ] CMO-001: Reactivate Manus CMO (needs MANUS_API_KEY in .env — human action)
-- [ ] MONITOR-001: Low-score pattern monitoring script
+- [x] MONITOR-001: done (Sprint 007)
 - [x] FRONTEND-001: done (CTO-006)
 - [x] INFRA-001: done (OpenClaw fixed)
 - [x] SOL-005: done (commit 897177d)
