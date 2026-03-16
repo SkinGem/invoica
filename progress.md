@@ -878,3 +878,13 @@
 - Health check post: 148/148 suites, 1275/1275 tests — ALL PASS
 - Notes: GET /v1/metrics now LIVE. 3 parallel Supabase queries, avgScore rounded to 2dp.
 - Timestamp: 2026-03-16T17:50:00Z
+
+## Sprint 075 — WEBHOOK-TESTS-002
+- Status: PASS
+- Branch: sprint-075-webhook-tests-002 → merged to main
+- Commit: 6d7517d
+- Files created: backend/src/routes/__tests__/webhooks-crud.test.ts
+- Tests: 8 new tests (201-register, 400-missing-url, 400-empty-events, 400-short-secret, 200-list, 200-empty-list, 200-delete, 404-not-found) — PASS
+- Health check post: 149/149 suites, 1283/1283 tests — ALL PASS
+- Notes: Mocked WebhookRepository class. Covers POST+GET+DELETE functional paths.
+- Timestamp: 2026-03-16T18:00:00Z

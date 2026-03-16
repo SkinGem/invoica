@@ -143,14 +143,14 @@
 - DASHBOARD-REFRESH-001 ✅ (Sprint 072)
 
 ## Week-85 Status — IN PROGRESS
-- INVOICE-STATUS-TESTS-001 ✅ (Sprint 073), METRICS-001 ✅ (Sprint 074)
-- WEBHOOK-TESTS-002 pending, INVOICE-PATCH-VALIDATOR-001 pending, SETTLEMENT-FILTER-001 pending
+- INVOICE-STATUS-TESTS-001 ✅ (Sprint 073), METRICS-001 ✅ (Sprint 074), WEBHOOK-TESTS-002 ✅ (Sprint 075)
+- INVOICE-PATCH-VALIDATOR-001 pending, SETTLEMENT-FILTER-001 pending
 
-## Current State (2026-03-16 — Sprint 074)
-- **Git**: 72a0280 on main, pushed to origin (clean)
-- **Tests**: 148/148 suites, 1275/1275 tests — ALL PASS
-- **New endpoints**: GET /v1/metrics (invoice totals, settlements, reputation summary) LIVE
-- **Next priority**: WEBHOOK-TESTS-002
+## Current State (2026-03-16 — Sprint 075)
+- **Git**: 6d7517d on main, pushed to origin (clean)
+- **Tests**: 149/149 suites, 1283/1283 tests — ALL PASS
+- **New endpoints**: GET /v1/metrics LIVE
+- **Next priority**: INVOICE-PATCH-VALIDATOR-001
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)
