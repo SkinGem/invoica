@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: b84dcbe on main, pushed to origin (clean)
-- **Tests**: 138/138 suites, 1199/1199 tests — ALL PASS (+12 Sprint 065)
+- **Git**: 522aee3 on main, pushed to origin (clean)
+- **Tests**: 140/140 suites, 1215/1215 tests — ALL PASS (+16 Sprint 066)
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK at /v1/health — DB connected, Redis not_configured
 - **OpenClaw**: Stable (v2026.3.13, port 18789, PID 4026797/4026831, 24s uptime — root PM2 conflict resolved)
@@ -136,11 +136,11 @@
 - DASHBOARD-ACTIVITY-001 ✅ (Sprint 046), UTILS-TASK-VALID-001 ✅ (Sprint 046)
 - WEBHOOK-EVENTS-001 pending, API-ROUTER-001 pending, DASHBOARD-ACTIVITY-001 ✅
 
-## Next Sprint: Sprint 066
-- SETTLE-TYPES-001 ✅ (Sprint 065) — 12 tests (SettlementStatus enum 5, interface shapes 7)
-- MILESTONE: 1199 tests across 138 suites
-- Session 052-065: 14 sprints, +157 tests (1042 → 1199), 14 new test files
-- Next candidates: lib/prisma.ts wrapper coverage, lib/supabase.ts wrapper, or feature work
+## Next Sprint: Sprint 067
+- WEBHOOK-DISPATCH-TYPES-001 + SPAM-TYPES-001 ✅ (Sprint 066) — 16 tests (dispatch.types 9, spam-blacklist 7)
+- MILESTONE: 1215 tests across 140 suites
+- Session 052-066: 15 sprints, +173 tests (1042 → 1215), 16 new test files
+- Next candidates: types/index.ts ChainConfig shape, validators coverage gaps, or feature work
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)
