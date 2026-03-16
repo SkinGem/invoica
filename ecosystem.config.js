@@ -12,12 +12,12 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: "512M",
-      max_restarts: 50,        // live beta: tolerate transient crashes (DB cold starts, port zombie loops, etc.)
+      max_restarts: 20,        // live beta: real crashes are rare; 20 allows recovery from transient issues
       min_uptime: "30s",       // only counts as stable if it lives 30s (catches fast crash loops)
       restart_delay: 5000,     // 5s between restart attempts (gives port TIME_WAIT time to clear)
       kill_timeout: 15000,     // 15s: server.close() + prisma.$disconnect() completes in <10s now (graceful shutdown added)
       wait_ready: true,        // don't route traffic until process.send('ready') fires (after server.listen())
-      listen_timeout: 60000,   // 60s: backend-wrapper.sh runs tsc check (15-30s) before server.listen()
+      listen_timeout: 120000,  // 120s: backend-wrapper.sh tsc check (15-60s) + port wait (0-20s) + startup (~5s) = up to 85s worst case
       env: {
         // x402 seller wallet — receives USDC from agent inference payments
         X402_SELLER_WALLET: "0x3e127c918C83714616CF2416f8A620F1340C19f1",
