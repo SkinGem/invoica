@@ -51,6 +51,33 @@ router.get('/v1/agents', async (req: Request, res: Response): Promise<void> => {
 });
 
 // ─────────────────────────────────────────────
+// GET /v1/agents/count
+// Count of distinct agentIds and how many have activity.
+// Registered before /:agentId to avoid param capture.
+// ─────────────────────────────────────────────
+router.get('/v1/agents/count', async (_req: Request, res: Response): Promise<void> => {
+  const sb = getSb();
+
+  const { data, error } = await sb
+    .from('Invoice')
+    .select('agentId, status');
+
+  if (error) {
+    res.status(500).json({ success: false, error: { message: error.message, code: 'DB_ERROR' } });
+    return;
+  }
+
+  const rows = data || [];
+  const allAgents = new Set<string>(rows.map((r: any) => r.agentId).filter(Boolean));
+  const activeStatuses = new Set(['SETTLED', 'COMPLETED']);
+  const activeAgents = new Set<string>(
+    rows.filter((r: any) => activeStatuses.has(r.status)).map((r: any) => r.agentId).filter(Boolean)
+  );
+
+  res.json({ success: true, data: { total: allAgents.size, withActivity: activeAgents.size } });
+});
+
+// ─────────────────────────────────────────────
 // GET /v1/agents/:agentId/invoices/summary
 // Invoice count breakdown by status for a specific agent.
 // Must be before /:agentId/invoices to avoid partial match.
