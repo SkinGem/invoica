@@ -729,3 +729,13 @@
 - Approach: Zero infra — inline Prisma mock via makePrisma() factory + Zod safeParse assertions
 - Total: 134/134 suites, 1143/1143 tests
 - Timestamp: 2026-03-16T18:00:00Z
+
+## Sprint 062 — SOLANA-TYPES-001 (solana-types unit tests)
+- Status: PASS
+- Branch: sprint-062-solana-types-001 → merged to main
+- Commit: 77f6a81
+- Files created: backend/src/services/settlement/__tests__/solana-types.test.ts
+- Tests: 16 new tests — constants (USDC_MINT exact value + length, TOKEN_PROGRAM exact value + length 43, MEMO_PROGRAM exact value + length 43, all 3 distinct) + interfaces (SolanaSettlement required fields + optional memo, SolanaTransferRequest with/without limit, SolanaVerifyRequest bigint, SolanaSignatureInfo 3 statuses, SolanaTokenTransfer bigint + decimals)
+- Correction: TOKEN_PROGRAM and MEMO_PROGRAM are 43 chars (not 44) — valid base58 Solana pubkeys can be 43 or 44 chars
+- Total: 135/135 suites, 1159/1159 tests
+- Timestamp: 2026-03-16T18:30:00Z
