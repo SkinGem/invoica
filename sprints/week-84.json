@@ -1,0 +1,46 @@
+{
+  "week": 84,
+  "created": "2026-03-16",
+  "tasks": [
+    {
+      "id": "INVOICE-SCHEMA-EDGE-001",
+      "title": "invoice schemas edge case tests",
+      "description": "Additional edge cases for validators/invoice-schemas.ts: updateInvoiceSchema with metadata-only, all 4 valid statuses, description+status combo; invoiceQuerySchema with status filter (all 4 values), invalid status rejection. File: backend/src/validators/__tests__/invoice-schemas-edge.test.ts",
+      "file": "backend/src/validators/__tests__/invoice-schemas-edge.test.ts",
+      "status": "done",
+      "sprint": "068"
+    },
+    {
+      "id": "HEALTH-DETAIL-001",
+      "title": "GET /v1/health/detailed endpoint",
+      "description": "Add a detailed health endpoint that returns per-service status (database, redis, openclaw). Response: { status: 'ok'|'degraded', services: { database: 'ok'|'error', redis: 'ok'|'not_configured', openclaw: 'ok'|'error' }, version, uptime }. File: backend/src/api/health.ts + tests. Max 60 lines.",
+      "file": "backend/src/api/health.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "INVOICE-EXPORT-001",
+      "title": "GET /v1/invoices/export endpoint (CSV)",
+      "description": "Add CSV export for invoices. GET /v1/invoices/export?status=completed&chain=base returns CSV with columns: id, amount, currency, status, chain, createdAt. Use auth middleware. Max 80 lines. File: backend/src/api/invoices-export.ts + route registration in router.ts + tests.",
+      "file": "backend/src/api/invoices-export.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "REP-HISTORY-001",
+      "title": "GET /v1/reputation/:agentId/history endpoint",
+      "description": "Returns score history for an agent over the last 30 days. Query AgentReputation table with updatedAt filter. Response: { agentId, history: [{ score, tier, timestamp }] }. Max 60 lines. File: backend/src/routes/reputation-history.ts + route registration + 3 tests.",
+      "file": "backend/src/routes/reputation-history.ts",
+      "status": "pending",
+      "sprint": null
+    },
+    {
+      "id": "DASHBOARD-REFRESH-001",
+      "title": "Dashboard polling interval configuration",
+      "description": "Add DASHBOARD_POLL_INTERVAL_MS env var (default 30000) to control how often the frontend dashboard auto-refreshes. Update .env.example. Update frontend/app/dashboard/page.tsx to use the interval. File: .env.example + frontend/app/dashboard/page.tsx (or wherever SWR/polling is configured).",
+      "file": "frontend/app/dashboard/page.tsx",
+      "status": "pending",
+      "sprint": null
+    }
+  ]
+}
