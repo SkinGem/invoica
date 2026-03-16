@@ -10,6 +10,48 @@ function getSupabase() {
 }
 
 // ─────────────────────────────────────────────
+// GET /v1/settlements/stats
+// Aggregate statistics for SETTLED+COMPLETED invoices.
+// Must be before /:id to avoid param capture.
+// ─────────────────────────────────────────────
+router.get('/v1/settlements/stats', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('amount, updatedAt')
+      .in('status', ['SETTLED', 'COMPLETED']);
+
+    if (error) throw error;
+
+    const rows = data || [];
+    const now = Date.now();
+    const ms24h = 24 * 60 * 60 * 1000;
+    const ms7d  = 7  * 24 * 60 * 60 * 1000;
+    const ms30d = 30 * 24 * 60 * 60 * 1000;
+
+    let totalAmount = 0;
+    const last24h = { count: 0, amount: 0 };
+    const last7d  = { count: 0, amount: 0 };
+    const last30d = { count: 0, amount: 0 };
+
+    for (const r of rows) {
+      const amt = Number(r.amount) || 0;
+      totalAmount += amt;
+      const age = now - new Date(r.updatedAt).getTime();
+      if (age <= ms24h) { last24h.count++; last24h.amount += amt; }
+      if (age <= ms7d)  { last7d.count++;  last7d.amount  += amt; }
+      if (age <= ms30d) { last30d.count++; last30d.amount += amt; }
+    }
+
+    const total = rows.length;
+    const avgAmount = total > 0 ? totalAmount / total : 0;
+
+    res.json({ success: true, data: { total, totalAmount, avgAmount, last24h, last7d, last30d } });
+  } catch (err) { next(err); }
+});
+
+// ─────────────────────────────────────────────
 // GET /v1/settlements/pending
 // Returns PROCESSING invoices awaiting settlement.
 // Must be before /:id to avoid param capture.
