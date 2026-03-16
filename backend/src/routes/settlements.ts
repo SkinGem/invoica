@@ -144,6 +144,28 @@ router.get('/v1/settlements/export.csv', async (_req: Request, res: Response, ne
 });
 
 // ─────────────────────────────────────────────
+// GET /v1/settlements/recent
+// Most recent SETTLED+COMPLETED invoices sorted by updatedAt DESC.
+// Must be before /:id to avoid param capture.
+// ─────────────────────────────────────────────
+router.get('/v1/settlements/recent', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const limit = Math.min(parseInt((req.query.limit as string) || '10', 10), 50);
+    const sb = getSupabase();
+
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('id, invoiceNumber, amount, currency, agentId, settledAt, updatedAt')
+      .in('status', ['SETTLED', 'COMPLETED'])
+      .order('updatedAt', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    res.json({ success: true, data: data || [] });
+  } catch (err) { next(err); }
+});
+
+// ─────────────────────────────────────────────
 // GET /v1/settlements/by-currency
 // Settlement totals grouped by currency, sorted by totalAmount DESC.
 // Must be before /:id to avoid param capture.
