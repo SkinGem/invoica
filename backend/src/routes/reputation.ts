@@ -111,4 +111,51 @@ router.get('/x402/oracle/scores', async (req, res): Promise<void> => {
   }
 });
 
+/**
+ * POST /v1/reputation/batch
+ * Batch reputation lookup for multiple agents. Body: { agentIds: string[] } (max 50).
+ * Returns array of { agentId, score, tier } for each found agent. Missing agents are omitted.
+ */
+router.post('/v1/reputation/batch', async (req, res): Promise<void> => {
+  try {
+    const { agentIds } = req.body;
+
+    if (!Array.isArray(agentIds)) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'agentIds must be an array', code: 'INVALID_INPUT' },
+      });
+      return;
+    }
+
+    if (agentIds.length > 50) {
+      res.status(400).json({
+        success: false,
+        error: { message: 'agentIds may not exceed 50 items', code: 'LIMIT_EXCEEDED' },
+      });
+      return;
+    }
+
+    if (agentIds.length === 0) {
+      res.json({ success: true, data: [] });
+      return;
+    }
+
+    const { data, error } = await getSb()
+      .from('AgentReputation')
+      .select('agentId, score, tier')
+      .in('agentId', agentIds);
+
+    if (error) throw error;
+
+    res.json({ success: true, data: data || [] });
+  } catch (err) {
+    const error = err as Error;
+    res.status(500).json({
+      success: false,
+      error: { message: error.message, code: 'DB_ERROR' },
+    });
+  }
+});
+
 export default router;

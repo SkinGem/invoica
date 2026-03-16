@@ -35,7 +35,7 @@ describe('Reputation Routes', () => {
     expect(route).toBeDefined();
   });
 
-  it('has exactly 2 routes registered', () => {
-    expect(routes).toHaveLength(2);
+  it('has exactly 3 routes registered', () => {
+    expect(routes).toHaveLength(3);
   });
 });
