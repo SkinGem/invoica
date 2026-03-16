@@ -467,4 +467,52 @@ router.get('/v1/metrics/hourly', async (_req: Request, res: Response): Promise<v
   }
 });
 
+/**
+ * GET /v1/metrics/weekly
+ * Invoice creation counts grouped by ISO week for the last 12 weeks. Zero-fills empty weeks.
+ */
+router.get('/v1/metrics/weekly', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const sb = getSb();
+    const twelveWeeksAgo = new Date(Date.now() - 12 * 7 * 24 * 60 * 60 * 1000);
+
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('amount, createdAt')
+      .gte('createdAt', twelveWeeksAgo.toISOString());
+
+    if (error) throw error;
+
+    // Build ISO week key: e.g. "2026-W11"
+    function isoWeek(date: Date): string {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNum = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+      return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+    }
+
+    // Pre-fill last 12 weeks
+    const weekMap = new Map<string, { count: number; amount: number }>();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000);
+      weekMap.set(isoWeek(d), { count: 0, amount: 0 });
+    }
+
+    for (const row of (data || [])) {
+      const key = isoWeek(new Date(row.createdAt));
+      if (weekMap.has(key)) {
+        const entry = weekMap.get(key)!;
+        entry.count += 1;
+        entry.amount += Number(row.amount) || 0;
+      }
+    }
+
+    const result = Array.from(weekMap.entries()).map(([week, vals]) => ({ week, ...vals }));
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } });
+  }
+});
+
 export default router;
