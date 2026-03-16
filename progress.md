@@ -154,3 +154,21 @@
 - Fix: Multiple PM2 wrapper instances spawned simultaneously (race on port 3001 every ~14s). flock ensures only one wrapper proceeds; others block 90s then exit 0. exec ts-node inherits lock fd — held until ts-node exits.
 - Verification: Backend ID 27, 2m uptime, 0 restarts, health OK
 - Timestamp: 2026-03-16T13:13:00Z
+
+## Sprint 013 — Reputation API Fix + Tests
+- Status: PASS
+- Branch: sprint-013-reputation-fix → merged to main
+- Commit: 8fd5e88
+- Files modified: backend/src/services/reputation.ts (companyId query fix + env guard), backend/src/routes/reputation.ts (env var consistency)
+- Files created: backend/src/routes/__tests__/reputation.test.ts (4 tests)
+- Tests: 78/78 suites, 496/496 — ALL PASS
+- Timestamp: 2026-03-16T13:16:00Z
+
+## Sprint 014 — Route Test Coverage
+- Status: PASS
+- Branch: sprint-014-route-coverage → merged to main
+- Commit: f118149
+- Files created: __tests__/admin.test.ts, __tests__/ledger.test.ts, __tests__/ai-inference.test.ts, __tests__/gas-backstop.test.ts
+- Tests: 82/82 suites, 510/510 — ALL PASS (14 new tests)
+- Notes: All route files now have test coverage
+- Timestamp: 2026-03-16T13:20:00Z

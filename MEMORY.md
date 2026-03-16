@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: c83d31b on main, pushed to origin (clean)
-- **Tests**: 77/77 suites, 492/492 tests — ALL PASS
+- **Git**: f118149 on main, pushed to origin (clean)
+- **Tests**: 82/82 suites, 510/510 tests — ALL PASS
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
@@ -37,6 +37,8 @@
 16. HF-004 — Remove wait_ready (PM2 IPC incompatible with bash wrappers)
 17. HF-005 — Remove max_restarts entirely (bounded by min_uptime:"30s" instead)
 18. HF-006 — flock mutex in backend-wrapper.sh (prevents parallel wrapper race on port 3001)
+19. Sprint 013 — Reputation API: fix agentId→companyId query + env var consistency + 4 route tests (8fd5e88)
+20. Sprint 014 — Route coverage: add tests for admin, ledger, ai-inference, gas-backstop (f118149)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
@@ -60,9 +62,20 @@
 - 11 new tests — 77/77 suites, 492/492 pass
 - No Prisma migration needed (tax stored in existing paymentDetails JSON field)
 
-## Next Sprint: Sprint 013
-- Health check first → then plan based on week-76.json remaining or new week-77.json tasks
-- Possible: Reputation Scoring API (Priority 1), webhook improvements, or OpenClaw agent improvements
+## Sprint 013 — COMPLETE
+- services/reputation.ts: query companyId not agentId + guard env vars
+- routes/reputation.ts: use NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (consistent)
+- 4 reputation route existence tests added
+
+## Sprint 014 — COMPLETE
+- 4 new test files: admin, ledger, ai-inference, gas-backstop route tests
+- 14 new tests — all route files now have coverage
+- Tests: 82/82 suites, 510/510 pass
+
+## Next Sprint: Sprint 015
+- All route files covered with tests
+- All week-76 tasks done, Sprints 012-014 complete
+- Next priority: create week-77.json with new feature tasks (Agent Marketplace or invoice improvements)
 
 ## V17 + Solana Migration — COMPLETE
 - All 4 V17 sprints COMPLETE
