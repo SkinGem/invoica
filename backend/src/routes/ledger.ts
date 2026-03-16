@@ -385,6 +385,31 @@ router.get('/v1/ledger/summary/:agentId', async (req: Request, res: Response): P
 });
 
 // ─────────────────────────────────────────────
+// GET /v1/ledger/recent
+// Most recent SETTLED/COMPLETED invoices across all agents.
+// ?limit (default 10, max 50). Must be before /:agentId/balance.
+// ─────────────────────────────────────────────
+router.get('/v1/ledger/recent', async (req: Request, res: Response): Promise<void> => {
+  const limit = Math.min(parseInt((req.query.limit as string) || '10', 10), 50);
+  const sb = getSb();
+
+  const { data, error } = await sb
+    .from('Invoice')
+    .select('id, invoiceNumber, status, amount, currency, agentId, updatedAt')
+    .in('status', ['SETTLED', 'COMPLETED'])
+    .order('updatedAt', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    res.status(500).json({ success: false, error: { message: error.message, code: 'DB_ERROR' } });
+    return;
+  }
+
+  const rows = data || [];
+  res.json({ success: true, data: rows, meta: { total: rows.length, limit } });
+});
+
+// ─────────────────────────────────────────────
 // GET /v1/ledger/:agentId/balance
 // Net balance for an agent across all companies
 // ─────────────────────────────────────────────
