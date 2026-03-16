@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: a3de321 on main, pushed to origin (clean)
-- **Tests**: 124/124 suites, 1033/1033 tests — ALL PASS
+- **Git**: 5bd8139 on main, pushed to origin (clean)
+- **Tests**: 125/125 suites, 1042/1042 tests — ALL PASS
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
@@ -134,10 +134,11 @@
 - DASHBOARD-ACTIVITY-001 ✅ (Sprint 046), UTILS-TASK-VALID-001 ✅ (Sprint 046)
 - WEBHOOK-EVENTS-001 pending, API-ROUTER-001 pending, DASHBOARD-ACTIVITY-001 ✅
 
-## Next Sprint: Sprint 051
-- EVENTS-INVOICE-001 ✅ (Sprint 050), CONFIG-CHAINS-001 ✅ (Sprint 050)
-- MILESTONE: 1033 tests across 124 suites
-- Next: queue/invoice.queue.ts tests, types/ coverage, or deeper lib/ coverage
+## Next Sprint: Sprint 052
+- QUEUE-INVOICE-001 ✅ (Sprint 051) — 9 tests
+- MILESTONE: 1042 tests across 125 suites
+- Session 043-051: 9 sprints, +147 tests (895 → 1042), 15 new test files
+- Next candidates: lib/clawrouter-client.ts tests (mock callClawRouter/getCostLog), proxy/ directory, types/ coverage, or feature work (FIX-007 invoices schema, WEBSITE-001 hero widget)
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)
