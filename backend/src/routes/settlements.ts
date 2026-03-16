@@ -143,6 +143,37 @@ router.get('/v1/settlements/export.csv', async (_req: Request, res: Response, ne
   } catch (err) { next(err); }
 });
 
+// ─────────────────────────────────────────────
+// GET /v1/settlements/by-currency
+// Settlement totals grouped by currency, sorted by totalAmount DESC.
+// Must be before /:id to avoid param capture.
+// ─────────────────────────────────────────────
+router.get('/v1/settlements/by-currency', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('currency, amount, status')
+      .in('status', ['SETTLED', 'COMPLETED']);
+
+    if (error) throw error;
+
+    const currencyMap = new Map<string, { currency: string; count: number; totalAmount: number }>();
+    for (const row of (data || [])) {
+      const key = row.currency || 'UNKNOWN';
+      if (!currencyMap.has(key)) currencyMap.set(key, { currency: key, count: 0, totalAmount: 0 });
+      const entry = currencyMap.get(key)!;
+      entry.count += 1;
+      entry.totalAmount += row.amount || 0;
+    }
+
+    const sorted = Array.from(currencyMap.values())
+      .sort((a, b) => b.totalAmount - a.totalAmount);
+
+    res.json({ success: true, data: sorted });
+  } catch (err) { next(err); }
+});
+
 router.get('/v1/settlements/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
