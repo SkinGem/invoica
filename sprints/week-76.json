@@ -181,6 +181,36 @@
         "docs": ["reports/cto/caching-assessment-2026-03-16.md"]
       },
       "status": "pending"
+    },
+    {
+      "id": "SOL-005",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": ["SOL-004"],
+      "description": "Add Solana paymentDetails validation — programId + tokenMint + base58 check on invoice creation",
+      "context": "FILE: backend/src/api/invoices-create.ts\n\nCurrently when chain='solana', the paymentDetails field is passed through without validating Solana-specific fields. A Solana invoice should validate:\n- paymentAddress: base58 pubkey (already done — SOLANA_ADDRESS_RE)\n- programId: optional string, if provided must be a valid base58 pubkey (same regex)\n- tokenMint: optional string, if provided must equal the known USDC mint 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' or be a valid base58 pubkey\n\nChanges needed in invoices-create.ts:\n\n1. Add to the Zod schema (after paymentAddress field):\n  programId: z.string().optional(),\n  tokenMint: z.string().optional(),\n\n2. Destructure programId and tokenMint from parseResult.data alongside existing fields.\n\n3. After the existing paymentAddress validation block, add:\n  // Validate Solana-specific fields\n  if (chain === 'solana') {\n    const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';\n    if (programId && !SOLANA_ADDRESS_RE.test(programId)) {\n      res.status(400).json({ error: 'Invalid programId', message: 'programId must be a valid Solana base58 public key' });\n      return;\n    }\n    if (tokenMint && tokenMint !== USDC_MINT && !SOLANA_ADDRESS_RE.test(tokenMint)) {\n      res.status(400).json({ error: 'Invalid tokenMint', message: 'tokenMint must be a valid Solana base58 public key' });\n      return;\n    }\n  }\n\n4. Pass new fields through paymentDetails in createPendingInvoice call:\n  paymentDetails: {\n    chain,\n    ...(paymentAddress ? { paymentAddress } : {}),\n    ...(chain === 'solana' && programId ? { programId } : {}),\n    ...(chain === 'solana' && tokenMint ? { tokenMint } : {}),\n  }\n\nDo NOT touch EVM validation, spam check, or response format. Run npx tsc --noEmit after — 0 new errors required.",
+      "deliverables": {
+        "code": ["backend/src/api/invoices-create.ts"],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "SOL-006",
+      "agent": "cto-agent",
+      "type": "assessment",
+      "priority": "medium",
+      "dependencies": [],
+      "description": "Solana x402 adapter assessment — Invoica backlog or Kognai Phase 2?",
+      "context": "Context from x402 test findings (2026-03-16):\n- The x402 middleware uses viem for EIP-712/EIP-3009 sig verification — EVM-only\n- Solana uses ed25519 signatures and base58 addresses — incompatible with viem\n- A proper Solana x402 adapter needs: ed25519 sig verification, SPL token transfer parsing, Solana payment-required headers\n- Estimate: ~16-20h\n\nAssessment steps:\n1. Read backend/src/middleware/x402.ts — note exact viem imports and where address/sig verification happens\n2. Check x402-base/ and x402-evm/ directories — is there a Solana x402 standard or existing adapter?\n3. Decide:\n   - Option A (Invoica backlog): Invoica builds Solana x402 adapter natively\n   - Option B (Kognai Phase 2): Defer — Kognai A2A sprint will need this anyway, build it there\n   - Option C (Skip for now): Solana invoices work for record-keeping; x402 payment flow stays EVM-only\n\nOutput report at reports/cto/solana-x402-assessment-2026-03-16.md:\n- Exact viem dependency locations\n- Any existing Solana x402 resources found\n- Decision: A / B / C with one-paragraph rationale\n- If A: draft sprint spec outline\n- If B: add a note to ~/kognai/docs/shared-infra.md under 'Invoica x402 Solana'",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": ["reports/cto/solana-x402-assessment-2026-03-16.md"]
+      },
+      "status": "pending"
     }
   ]
 }
