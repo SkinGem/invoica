@@ -809,3 +809,15 @@
 - Health check post: 143/143 suites, 1240/1240 tests — ALL PASS
 - Notes: week-84 backlog created (HEALTH-DETAIL-001, INVOICE-EXPORT-001, REP-HISTORY-001, DASHBOARD-REFRESH-001)
 - Timestamp: 2026-03-16T00:04:00Z
+
+## Sprint 069 — INVOICE-EXPORT-001
+- Status: PASS
+- Branch: sprint-069-invoice-export → merged to main
+- Commit: 40ae7d2
+- Files created: backend/src/routes/invoices-export.ts, backend/src/routes/__tests__/invoices-export.test.ts
+- Files modified: backend/src/app.ts (registered invoiceExportRoutes)
+- Tests: 8 new tests (200+content-type, Content-Disposition, 9-col header, data rows, empty, null settledAt, 500 error, status filter) — PASS
+- Health check pre: 1240/1240 — ALL PASS
+- Health check post: 144/144 suites, 1248/1248 tests — ALL PASS
+- Notes: First feature sprint. GET /v1/invoices/export now live. week-84 remaining: REP-HISTORY-001, DASHBOARD-REFRESH-001
+- Timestamp: 2026-03-16T00:05:00Z

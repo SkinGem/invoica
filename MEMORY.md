@@ -1,8 +1,9 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: dc3faad on main, pushed to origin (clean)
-- **Tests**: 143/143 suites, 1240/1240 tests — ALL PASS (+14 Sprint 068)
+- **Git**: 40ae7d2 on main, pushed to origin (clean)
+- **Tests**: 144/144 suites, 1248/1248 tests — ALL PASS (+8 Sprint 069)
+- **New feature**: GET /v1/invoices/export (CSV download) — LIVE in app.ts
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK at /v1/health — DB connected, Redis not_configured
 - **OpenClaw**: Stable (v2026.3.13, port 18789, PID 4026797/4026831, 24s uptime — root PM2 conflict resolved)
@@ -136,12 +137,13 @@
 - DASHBOARD-ACTIVITY-001 ✅ (Sprint 046), UTILS-TASK-VALID-001 ✅ (Sprint 046)
 - WEBHOOK-EVENTS-001 pending, API-ROUTER-001 pending, DASHBOARD-ACTIVITY-001 ✅
 
-## Next Sprint: Sprint 069
-- INVOICE-SCHEMA-EDGE-001 ✅ (Sprint 068) — 14 tests + week-84.json created
-- MILESTONE: 1240 tests across 143 suites
-- Session 052-068: 17 sprints, +198 tests (1042 → 1240), 19 new test files
-- Test coverage SATURATED. Next: feature work — HEALTH-DETAIL-001 (/v1/health/detailed endpoint) or INVOICE-EXPORT-001 (CSV export)
-- Week-84 backlog: HEALTH-DETAIL-001, INVOICE-EXPORT-001, REP-HISTORY-001, DASHBOARD-REFRESH-001 (all pending)
+## Next Sprint: Sprint 070
+- INVOICE-EXPORT-001 ✅ (Sprint 069) — GET /v1/invoices/export feature + 8 tests
+- MILESTONE: 1248 tests across 144 suites
+- Session 064-069: 6 sprints this session, +206 tests total (1042 → 1248)
+- Tests SATURATED. Pivoting to feature work.
+- Week-84 backlog remaining: HEALTH-DETAIL-001 (routes/health.ts already covers this), REP-HISTORY-001, DASHBOARD-REFRESH-001
+- Next priority: REP-HISTORY-001 (GET /v1/reputation/:agentId/history) or DASHBOARD-REFRESH-001
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)
