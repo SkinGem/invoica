@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 124 — INVOICE-CANCEL-001
+- Status: PASS | Commit: f7443b2 | Branch: sprint-124-invoice-cancel → main | Tests: 5/5 | Files: invoices.ts +44 lines, invoice-cancel.test.ts (new) | Timestamp: 2026-03-16T20:35:00Z
+
 ## Sprint 123 — AGENT-INVOICE-SUMMARY-001
 - Status: PASS | Commit: 84b54b9 | Branch: sprint-123-agent-invoice-summary → main | Tests: 5/5 | Files: agents.ts +39 lines, agent-invoice-summary.test.ts (new), week-96.json (new) | Timestamp: 2026-03-16T20:30:00Z
 
