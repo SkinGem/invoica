@@ -31,8 +31,8 @@
       "title": "GET /v1/settlements/agent/:agentId — settlements for an agent",
       "description": "New endpoint: GET /v1/settlements/agent/:agentId. Returns all SETTLED/COMPLETED invoices for a given agent: { data: Settlement[], meta: { total } }. Returns 200 with empty array if no settlements. Tests: 200-returns-array, 200-total-correct, 200-only-settled-statuses, 200-empty-agent, 500-db-error. File: backend/src/routes/settlements.ts (add route before /:id) + tests.",
       "file": "backend/src/routes/settlements.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "done",
+      "sprint": 106
     },
     {
       "id": "WEBHOOK-BY-EVENT-001",

@@ -14,6 +14,40 @@ function getSupabase() {
 // Export settled/completed invoices as CSV
 // Must be before /:id to avoid param capture
 // ─────────────────────────────────────────────
+router.get('/v1/settlements/agent/:agentId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { agentId } = req.params;
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('id, invoiceNumber, status, amount, currency, paymentDetails, settledAt, completedAt, createdAt')
+      .eq('agentId', agentId)
+      .in('status', ['SETTLED', 'COMPLETED'])
+      .order('settledAt', { ascending: false });
+
+    if (error) throw error;
+
+    const settlements = (data || []).map((row: any) => {
+      const pd = typeof row.paymentDetails === 'string' ? JSON.parse(row.paymentDetails) : (row.paymentDetails || {});
+      return {
+        id: row.id,
+        invoiceNumber: row.invoiceNumber,
+        status: row.status === 'COMPLETED' ? 'confirmed' : 'pending',
+        amount: row.amount,
+        currency: row.currency,
+        txHash: pd.txHash || null,
+        network: pd.network || null,
+        settledAt: row.settledAt,
+        completedAt: row.completedAt,
+        createdAt: row.createdAt,
+      };
+    });
+
+    res.json({ success: true, data: settlements, meta: { total: settlements.length } });
+  } catch (err) { next(err); }
+});
+
+// ─────────────────────────────────────────────
 router.get('/v1/settlements/export.csv', async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const sb = getSupabase();
