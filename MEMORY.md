@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: bb5df43 on main, pushed to origin (clean)
-- **Tests**: 93/93 suites, 651/651 tests — ALL PASS
+- **Git**: b9efabd on main, pushed to origin (clean)
+- **Tests**: 94/94 suites, 654/654 tests — ALL PASS
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
@@ -47,6 +47,7 @@
 26. Sprint 020 — INVOICE-003: GET /v1/invoices/stats endpoint (totals, revenue, byStatus) + 4 tests (f50b5fb)
 27. Sprint 021 — ENFORCE-001: enforcement.ts unit tests — 13 tests covering all 7 exported functions (665c436)
 28. Sprint 022 — REP-002: GET /v1/reputation/leaderboard (tier filter, limit cap, rank field) + 5 tests (bb5df43)
+29. Sprint 023 — SETTLE-002: GET /v1/settlements/summary (chain grouping, volume totals) + 3 tests (b9efabd)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
@@ -92,9 +93,12 @@
 - jest.config.js: uuid added to transformIgnorePatterns (ESM fix)
 - Tests: 87/87 suites, 593/593 pass (41 new tests)
 
-## Next Sprint: Sprint 023
-- week-77.json: INVOICE-002 ✅, INVOICE-003 ✅, ENFORCE-001 ✅, REP-002 ✅, 1 remaining (SETTLE-002)
-- Next: SETTLE-002 (settlement summary endpoint)
+## Week-77 Status — ALL DONE ✅
+- INVOICE-002, INVOICE-003, REP-002, ENFORCE-001, SETTLE-002 — all complete (Sprints 019-023)
+
+## Next Sprint: Sprint 024
+- week-77 fully complete — need to create week-78.json with next sprint plan
+- Priority candidates: Reputation Scoring API (Priority 1 in SOUL.md), Agent Marketplace groundwork, API auth middleware tests, frontend dashboard enhancements
 
 ## V17 + Solana Migration — COMPLETE
 - All 4 V17 sprints COMPLETE

@@ -83,7 +83,7 @@
       "priority": "medium",
       "dependencies": [],
       "description": "Add GET /v1/settlements/summary endpoint — settlement totals by chain and status",
-      "context": "The existing GET /v1/settlements route returns individual settlement records. Agents and dashboards need aggregate data: how much has settled on each chain, what's the total volume, and how many settlements are pending vs. confirmed.\n\nCREATE: backend/src/routes/settlement-summary.ts (max 150 lines)\n\nEndpoint: GET /v1/settlements/summary?companyId=XXX\n\n  import { Router, Request, Response, NextFunction } from 'express';\n  import { createClient } from '@supabase/supabase-js';\n  const router = Router();\n\n  function getSb() {\n    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;\n    const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;\n    if (!url || !key) throw new Error('Supabase env vars not set');\n    return createClient(url, key);\n  }\n\n  router.get('/v1/settlements/summary', async (req, res, next) => {\n    try {\n      const companyId = req.query.companyId as string | undefined;\n      const sb = getSb();\n\n      let query = sb\n        .from('Invoice')\n        .select('status, amount, paymentDetails')\n        .in('status', ['SETTLED', 'COMPLETED']);\n\n      if (companyId) query = query.eq('companyId', companyId);\n\n      const { data, error } = await query;\n      if (error) throw error;\n\n      const invoices = data || [];\n      const chainTotals: Record<string, { count: number; totalAmount: number }> = {};\n      let grandTotal = 0;\n      let grandCount = 0;\n\n      for (const inv of invoices) {\n        const pd = inv.paymentDetails\n          ? (typeof inv.paymentDetails === 'string' ? JSON.parse(inv.paymentDetails) : inv.paymentDetails)\n          : {};\n        const chain = pd.network || 'unknown';\n        const amt = parseFloat(inv.amount as string) || 0;\n\n        if (!chainTotals[chain]) chainTotals[chain] = { count: 0, totalAmount: 0 };\n        chainTotals[chain].count++;\n        chainTotals[chain].totalAmount += amt;\n        grandTotal += amt;\n        grandCount++;\n      }\n\n      res.json({\n        success: true,\n        data: {\n          totalSettlements: grandCount,\n          totalVolume: grandTotal,\n          byChain: Object.entries(chainTotals).map(([chain, stats]) => ({\n            chain,\n            count: stats.count,\n            totalAmount: stats.totalAmount,\n          })),\n        },\n      });\n    } catch (err) {\n      next(err);\n    }\n  });\n\n  export default router;\n\nEDIT: backend/src/app.ts\nRegister settlement-summary route near the existing settlements route.\n\nCREATE: backend/src/routes/__tests__/settlement-summary.test.ts (max 80 lines)\n\nTests:\n1. GET /v1/settlements/summary — empty data returns zeros\n2. GET /v1/settlements/summary — multiple chains are grouped correctly\n3. GET /v1/settlements/summary?companyId=co-1 — companyId filter applied",
+      "context": "DONE — Sprint 023 (b9efabd). GET /v1/settlements/summary + 3 tests passing.",
       "deliverables": {
         "code": [
           "backend/src/routes/settlement-summary.ts",
@@ -94,7 +94,7 @@
         ],
         "docs": []
       },
-      "status": "pending"
+      "status": "approved"
     }
   ]
 }
