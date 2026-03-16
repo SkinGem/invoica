@@ -37,3 +37,14 @@
 - Files modified: 21 test files + jest.config.js
 - Tests: 75/75 suites, 471/471 tests — ALL PASS
 - Timestamp: 2026-03-16T11:45:00Z
+
+## Sprint 006 — Solana x402 Adapter + Infra Stabilization
+- Status: PASS
+- Branch: sprint-006-infra-route-wiring → merged to main
+- Commit: b995fd9
+- Files created: backend/src/middleware/x402-solana.ts, backend/src/middleware/__tests__/x402-solana.test.ts
+- Files modified: .env.example, sprints/week-76.json, jest.config.js
+- Tests: 76/76 suites, 481/481 tests — ALL PASS
+- Health check: Backend OK, OpenClaw FIXED (port 18789 race condition resolved)
+- Issues: OpenClaw crash loop root cause = port race condition, not version. Fixed by stop-all + clean restart.
+- Timestamp: 2026-03-16T12:05:00Z
