@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 146 — SETTLEMENTS-TIMELINE-001
+- Status: PASS | Commit: 8294bb6 | Branch: sprint-146-settlements-timeline → main | Tests: 5/5 | Files: settlements.ts +45 lines, settlements-timeline.test.ts (new) | Note: GET /v1/settlements/timeline — date-range daily breakdown | Timestamp: 2026-03-16T23:40:00Z
+
 ## Sprint 145 — METRICS-CONVERSION-001
 - Status: PASS | Commit: 54f0ecc | Branch: sprint-145-metrics-conversion → main | Tests: 5/5 | Files: metrics.ts +41 lines, metrics-conversion.test.ts (new) | Note: GET /v1/metrics/conversion — settled/cancelled/pending/conversionRate/avgTimeToSettle | Timestamp: 2026-03-16T23:30:00Z
 

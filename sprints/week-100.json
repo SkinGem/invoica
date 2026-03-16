@@ -31,8 +31,8 @@
       "title": "GET /v1/settlements/timeline — settlement activity over a date range",
       "description": "New endpoint: GET /v1/settlements/timeline. Accepts ?from=ISO&to=ISO (defaults: last 30 days). Returns daily settlement counts and amounts: [{ date: '2026-03-01', count, amount }], zero-filled for days with no activity. Tests: 200-returns-array, 200-has-date-field, 200-has-count-field, 200-empty-range, 500-db-error. File: backend/src/routes/settlements.ts (add before /v1/settlements/stats) + tests at backend/src/routes/__tests__/settlements-timeline.test.ts.",
       "file": "backend/src/routes/settlements.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 146
     },
     {
       "id": "INVOICE-CUSTOMER-STATS-001",
