@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 134 — AGENTS-COUNT-001
+- Status: PASS | Commit: 9e259f2 | Branch: sprint-134-agents-count → main | Tests: 5/5 | Files: agents.ts +27 lines, agents-count.test.ts (new) | Note: GET /v1/agents/count — distinct total + withActivity | Timestamp: 2026-03-16T21:40:00Z
+
 ## Sprint 133 — INVOICE-EXPORT-001
 - Status: PASS | Commit: f5e9304 | Branch: sprint-133-invoice-export → main | Tests: 5/5 | Files: invoices.ts +30 lines, invoice-export.test.ts (new), week-98.json (new) | Note: GET /v1/invoices/export.csv with optional ?status= filter | Timestamp: 2026-03-16T21:30:00Z
 

@@ -15,8 +15,8 @@
       "title": "GET /v1/agents/count — count of registered agents",
       "description": "New endpoint: GET /v1/agents/count. Returns { total, withActivity } where total is all distinct agentIds in Invoice table, withActivity is count of agentIds with at least 1 SETTLED or COMPLETED invoice. Tests: 200-returns-shape, 200-has-total, 200-has-with-activity, 200-zero-when-empty, 500-db-error. File: backend/src/routes/agents.ts (add before /:agentId routes) + tests at backend/src/routes/__tests__/agents-count.test.ts.",
       "file": "backend/src/routes/agents.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 134
     },
     {
       "id": "METRICS-WEEKLY-001",
