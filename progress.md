@@ -195,3 +195,14 @@
 - Health check pre: ✅ Backend OK, DB OK, disk 19%
 - Issues: uuid ESM compatibility — fixed by adding to transformIgnorePatterns
 - Timestamp: 2026-03-16T13:50:00Z
+
+## Sprint 017 — Ledger Query + GasManager Unit Tests
+- Status: PASS
+- Branch: sprint-017-query-gasmanager-tests → merged to main
+- Commit: 852cbc4
+- Files created: backend/src/services/ledger/__tests__/query.test.ts, backend/src/services/gas-backstop/__tests__/gas-manager.test.ts
+- Files modified: None
+- Tests: 89/89 suites, 622/622 — ALL PASS (29 new tests: 19 query + 10 gas-manager)
+- Health check pre: ✅ Backend OK, DB OK, disk 19%
+- Issues: None
+- Timestamp: 2026-03-16T14:05:00Z
