@@ -596,3 +596,15 @@
 - Health check post: ✅ 122/122, 1012/1012
 - Issues: 1 test prompt bug caught and fixed during run
 - Timestamp: 2026-03-16T21:50:00Z
+
+## Sprint 050 — EVENTS-INVOICE-001 + CONFIG-CHAINS-001
+- Status: PASS
+- Branch: sprint-050-events-chains → merged to main
+- Commit: a3de321
+- Files created: backend/src/events/__tests__/invoiceEvents.test.ts, backend/src/config/__tests__/chains.test.ts
+- Tests: 124/124 suites, 1033/1033 — ALL PASS (21 new tests)
+- Coverage added: createInvoiceEvent (publish channel, JSON payload with type/payload, timestamp, graceful degradation on Redis throw, all 5 event types); UnsupportedChainError (Error instance, chainId field, message, name); DEFAULT_CHAIN; SUPPORTED_CHAINS (base/solana has, base fields); getChainConfig (base ok, unknown throws, message); getSupportedChainIds (array, includes base/solana); isChainSupported (true/false)
+- Health check pre: ✅ 122/122, 1012/1012
+- Health check post: ✅ 124/124, 1033/1033
+- Issues: None
+- Timestamp: 2026-03-16T22:05:00Z
