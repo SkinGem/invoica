@@ -24,6 +24,11 @@ export const invoiceQuerySchema = z.object({
   status: z.enum(['pending', 'processing', 'completed', 'failed']).optional(),
 });
 
+export const updateInvoiceStatusSchema = z.object({
+  status: z.enum(['PENDING', 'PROCESSING', 'SETTLED', 'COMPLETED']),
+});
+
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;
 export type UpdateInvoiceInput = z.infer<typeof updateInvoiceSchema>;
 export type InvoiceQuery = z.infer<typeof invoiceQuerySchema>;
+export type UpdateInvoiceStatusInput = z.infer<typeof updateInvoiceStatusSchema>;
