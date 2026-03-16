@@ -386,3 +386,15 @@
 - Coverage: SettlementPollerError (message/code/name/cause), constructor+getStatus, clearProcessedCache, pollSettlements (empty/axios-error), processSettlement (in-memory idempotency), createSettlementPollerService (missing-key/valid)
 - Issues: Initial idempotency test failed — processedTransactionIds only populated on successful match, not on "no pending invoice" path. Fixed by injecting mockInvoice into findFirst.
 - Timestamp: 2026-03-16T18:00:00Z
+
+## Sprint 033 — env-validator Coverage Improvement
+- Status: PASS
+- Branch: sprint-033-env-validator-coverage → merged to main
+- Commit: 3016635
+- Files modified: backend/src/utils/__tests__/env-validator.test.ts (+97 lines, 11 new tests)
+- Tests: 100/100 suites, 754/754 — ALL PASS (11 new tests, total 16 in file)
+- Health check pre: ✅ 100/100 suites
+- Health check post: ✅ 100/100 suites
+- Coverage added: ClawRouter mode throws, legacy mode suffix, success paths ×2, PORT coerce (default/value/NaN), LOG_LEVEL (default/debug)
+- Issues: None
+- Timestamp: 2026-03-16T18:15:00Z
