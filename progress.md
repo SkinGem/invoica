@@ -1,5 +1,18 @@
 # Invoica Sprint Progress Log
 
+## Sprint 089 — LEDGER-BALANCE-001
+- Status: PASS
+- Branch: sprint-089-ledger-balance → merged to main
+- Commit: 4973763
+- Files created: backend/src/routes/__tests__/ledger-balance.test.ts
+- Files modified: backend/src/routes/ledger.ts, sprints/week-89.json
+- Tests: 5/5 new tests — ALL PASS (163 total suites, 1354 total tests)
+- Health check pre: ✅ All 5 services healthy
+- Health check post: (skipped — no infra change)
+- Issues: none
+- Timestamp: 2026-03-16T18:00:00Z
+
+
 ## Sprint HF-JEST — Configure Jest for TypeScript
 - Status: PASS
 - Commit: 7d71034
