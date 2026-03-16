@@ -1305,3 +1305,13 @@
 - Health check post: 227/227 suites, 1674/1674 tests — ALL PASS
 - Notes: Score buckets 0-20/21-40/41-60/61-80/81-100. Registered before /:agentId/stats to avoid param capture.
 - Timestamp: 2026-03-16T22:15:00Z
+## Sprint 154 — METRICS-PEAK-HOURS-001
+- Status: PASS
+- Branch: sprint-154-metrics-peak-hours-001 → merged to main
+- Commit: 922d74d
+- Files created: backend/src/routes/__tests__/metrics-peak-hours.test.ts
+- Files modified: backend/src/routes/metrics.ts (+GET /v1/metrics/peak-hours)
+- Tests: 5 new tests (200-returns-shape, 200-has-hour-fields, 200-correct-count, 200-empty-state, 500-db-error) — PASS
+- Health check post: 228/228 suites, 1679/1679 tests — ALL PASS
+- Notes: 24 hour-of-day buckets (UTC). Different from /metrics/hourly (timeline) — this aggregates patterns over 30 days.
+- Timestamp: 2026-03-16T22:30:00Z

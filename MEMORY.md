@@ -1,9 +1,9 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: c0c729e on main, pushed to origin (clean)
-- **Last Sprint**: 153 — REPUTATION-SCORE-DISTRIBUTION-001 (GET /v1/reputation/distribution)
-- **Tests**: 227/227 suites, 1674/1674 tests — ALL PASS (+5 Sprint 153)
+- **Git**: 922d74d on main, pushed to origin (clean)
+- **Last Sprint**: 154 — METRICS-PEAK-HOURS-001 (GET /v1/metrics/peak-hours)
+- **Tests**: 228/228 suites, 1679/1679 tests — ALL PASS (+5 Sprint 154)
 - **New feature**: GET /v1/invoices/export (CSV download) — LIVE in app.ts
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK at /v1/health — DB connected, Redis not_configured
