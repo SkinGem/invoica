@@ -1,10 +1,10 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: 445408c on main, pushed to origin (clean)
-- **Tests**: 76/76 suites, 481/481 tests — ALL PASS
-- **TypeScript**: 0 source errors (6 in node_modules/ox — skipLibCheck)
-- **Backend**: Running on Hetzner (port 3001), health OK, DB connected — RECOVERED (HF-002)
+- **Git**: c83d31b on main, pushed to origin (clean)
+- **Tests**: 77/77 suites, 492/492 tests — ALL PASS
+- **TypeScript**: 0 source errors
+- **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
 - **Frontend**: Vercel (no local node_modules — deps installed by Vercel)
 - **Sprint Runner**: Waiting (cron */30)
@@ -32,6 +32,11 @@
 11. Sprint 011 — Wire Solana invoice route (8ffeeea)
 12. HF-001 — PM2 listen_timeout 10s→60s fix (445408c)
 13. HF-002 — Kill stale root node process holding port 3001 (server-only, no code change)
+14. Sprint 012 — Tax Compliance Engine wiring: routes/tax.ts + invoice tax integration (c83d31b)
+15. HF-003 — PM2 max_restarts 50→20, listen_timeout 60s→120s (ecosystem.config.js)
+16. HF-004 — Remove wait_ready (PM2 IPC incompatible with bash wrappers)
+17. HF-005 — Remove max_restarts entirely (bounded by min_uptime:"30s" instead)
+18. HF-006 — flock mutex in backend-wrapper.sh (prevents parallel wrapper race on port 3001)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
@@ -48,12 +53,16 @@
 - [x] ASSESS-001 — caching NO-GO
 - [ ] CMO-001 — blocked on human action (MANUS_API_KEY)
 
-## Next Sprint: Sprint 012 — Tax Compliance Engine Wiring
-Tax service is built (services/tax/) but not wired to any routes. Sprint 012 will:
-- Add tax fields to Prisma Invoice schema (nullable, backward compat)
-- Create routes/tax.ts with 3 endpoints
-- Wire calculateTax() into POST /v1/invoices
-- Add test coverage
+## Sprint 012 — COMPLETE
+- routes/tax.ts: POST /v1/tax/calculate + GET /v1/tax/jurisdictions
+- invoices.ts: POST /v1/invoices now accepts buyerCountryCode/buyerStateCode/buyerVatNumber, stores tax in paymentDetails.tax
+- app.ts: taxRoutes registered
+- 11 new tests — 77/77 suites, 492/492 pass
+- No Prisma migration needed (tax stored in existing paymentDetails JSON field)
+
+## Next Sprint: Sprint 013
+- Health check first → then plan based on week-76.json remaining or new week-77.json tasks
+- Possible: Reputation Scoring API (Priority 1), webhook improvements, or OpenClaw agent improvements
 
 ## V17 + Solana Migration — COMPLETE
 - All 4 V17 sprints COMPLETE

@@ -115,3 +115,42 @@
 - Server action: killed PID 4004937 (root-owned ts-node holding port 3001), restarted backend
 - Backend: ONLINE — /v1/health returns {"status":"ok","database":"ok"}
 - Timestamp: 2026-03-16T12:38:00Z
+
+## Sprint 012 — Tax Compliance Engine Wiring
+- Status: PASS
+- Branch: sprint-012-tax-wiring → merged to main
+- Commit: e21fcf5 (Sprint 012), c83d31b (includes HF-003 through HF-006)
+- Files created: backend/src/routes/tax.ts, backend/src/routes/__tests__/tax.test.ts
+- Files modified: backend/src/app.ts (+2 lines: import + use taxRoutes), backend/src/routes/invoices.ts (+calculateTax wiring + tax fields in POST body)
+- Tests: 77/77 suites, 492/492 tests — ALL PASS (11 new tax tests)
+- Notes: Tax stored in paymentDetails.tax JSON sub-object — no Prisma migration needed
+- Timestamp: 2026-03-16T13:05:00Z
+
+## HF-003 — PM2 Restart Config Tightening
+- Status: PASS
+- Commit: part of post-Sprint-012 hotfix series
+- Files modified: ecosystem.config.js (max_restarts 50→20, listen_timeout 60000→120000)
+- Fix: tsc check on Hetzner takes 15-60s + port wait 30s + ts-node startup 5s = up to 95s total; old 60s timeout caused loop
+- Timestamp: 2026-03-16T13:07:00Z
+
+## HF-004 — Remove wait_ready (PM2 IPC Incompatible with Bash)
+- Status: PASS
+- Commit: part of post-Sprint-012 hotfix series
+- Files modified: ecosystem.config.js (removed wait_ready:true and listen_timeout)
+- Fix: PM2 wait_ready requires Node.js IPC (child_process.fork()); bash wrappers cannot send process.send('ready'); PM2 never received signal → restarted every 120s
+- Timestamp: 2026-03-16T13:08:00Z
+
+## HF-005 — Remove max_restarts (Bounded by min_uptime Instead)
+- Status: PASS
+- Commit: part of post-Sprint-012 hotfix series
+- Files modified: ecosystem.config.js (removed max_restarts:20)
+- Fix: Rapid HF commits triggered git-autodeploy → multiple pm2 restart calls → 21 restarts exceeded max_restarts:20 → PM2 stopped auto-restarting. Now bounded by min_uptime:"30s" (unlimited restarts, but each must run ≥30s)
+- Timestamp: 2026-03-16T13:09:00Z
+
+## HF-006 — flock Mutex in backend-wrapper.sh (EADDRINUSE Cascade Fix)
+- Status: PASS
+- Commit: c83d31b
+- Files modified: backend-wrapper.sh (added flock /tmp/invoica-backend.lock fd 200, port wait 20s→30s)
+- Fix: Multiple PM2 wrapper instances spawned simultaneously (race on port 3001 every ~14s). flock ensures only one wrapper proceeds; others block 90s then exit 0. exec ts-node inherits lock fd — held until ts-node exits.
+- Verification: Backend ID 27, 2m uptime, 0 restarts, health OK
+- Timestamp: 2026-03-16T13:13:00Z
