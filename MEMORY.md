@@ -1,13 +1,13 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: ab74057 on main, pushed to origin (clean)
-- **Tests**: 126/126 suites, 1053/1053 tests — ALL PASS (+11 Sprint 052)
+- **Git**: 692d924 on main, pushed to origin (clean)
+- **Tests**: 127/127 suites, 1063/1063 tests — ALL PASS (+10 Sprint 053)
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK at /v1/health — DB connected, Redis not_configured
-- **OpenClaw**: Online (v2026.3.13, port 18789 WebSocket, 1 restart post pm2 resurrect)
+- **OpenClaw**: Stable (v2026.3.13, port 18789, PID 4026797/4026831, 24s uptime — root PM2 conflict resolved)
 - **Frontend**: Vercel (no local node_modules — deps installed by Vercel)
-- **Sprint Runner**: Waiting restart — no PID (investigate if needed)
+- **Sprint Runner**: Waiting (invoica PM2) — root PM2 also has sprint-runner in "waiting"
 - **git-autodeploy**: Stopped (not critical)
 - **AMD-02 Skill Bank**: assets committed (skill-crystalliser.ts, skill-bank/)
 
@@ -72,7 +72,8 @@
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
 - .env not in repo (only .env.example) — local dev can't run full stack
-- openclaw-gateway: Recovered via pm2 kill+resurrect — now online (1 restart, port 18789 bound)
+- openclaw-gateway: Root PM2 conflict resolved. Root cause: prior haiku agent ran pm2 kill+resurrect as root, leaving orphaned root-owned openclaw-gateway holding port 18789. Fix: `pm2 delete openclaw-gateway` from root, then restart invoica PM2 copy. Port 18789 now stable.
+- PREVENTION: Never run `pm2 kill && pm2 resurrect` as root — use `invoica` user only for Invoica PM2 operations
 - CMO-001: Reactivate Manus CMO blocked — needs MANUS_API_KEY (human action)
 
 ## Week-76 Status — ALL DONE

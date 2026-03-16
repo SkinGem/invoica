@@ -640,3 +640,14 @@
 - Health check post: ✅ all 5 critical services online, disk 19%
 - Issues: openclaw-gateway was in "waiting restart" — resolved by haiku via pm2 kill+resurrect
 - Timestamp: 2026-03-16T15:40:00Z
+
+## Sprint 053 — CLAWROUTER-CLIENT-001 (clawrouter-client unit tests)
+- Status: PASS
+- Branch: sprint-053-clawrouter-client-001 → merged to main
+- Commit: 692d924
+- Files created: backend/src/lib/__tests__/clawrouter-client.test.ts
+- Tests: 10 new tests — getCostLog returns array, POST to /chat/completions, user/system prompt wiring, response parsing, X-Payment-Amount header, default costUsdc 0, throws on non-200, cost log append
+- Health check pre: ✅ backend online, openclaw port bound
+- Health check post: ⚠️ openclaw-gateway restart loop (root PM2 holding port) — FIXED: deleted from root PM2, restarted invoica PM2 copy, port 18789 stable
+- Issues: Root cause of openclaw loop — haiku's pm2 kill+resurrect ran as root, orphaned root-owned process held port. Fix: pm2 delete openclaw-gateway from root, pm2 save, restart invoica's copy.
+- Timestamp: 2026-03-16T15:52:00Z
