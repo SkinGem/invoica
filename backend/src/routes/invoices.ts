@@ -651,6 +651,50 @@ router.post('/v1/invoices/:id/remind', async (req: Request, res: Response, next:
 });
 
 /**
+ * POST /v1/invoices/:id/cancel
+ * Cancel a PENDING invoice. Returns 400 if not PENDING, 404 if not found.
+ */
+router.post('/v1/invoices/:id/cancel', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const sb = getSupabase();
+
+    const { data: existing, error: fetchErr } = await sb
+      .from('Invoice')
+      .select('id, status')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !existing) {
+      res.status(404).json({ success: false, error: { message: 'Invoice not found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    if (existing.status === 'CANCELLED') {
+      res.status(400).json({ success: false, error: { message: 'Invoice is already cancelled', code: 'ALREADY_CANCELLED' } });
+      return;
+    }
+
+    if (existing.status !== 'PENDING') {
+      res.status(400).json({ success: false, error: { message: `Cannot cancel invoice with status ${existing.status}`, code: 'INVALID_STATUS' } });
+      return;
+    }
+
+    const { data, error } = await sb
+      .from('Invoice')
+      .update({ status: 'CANCELLED', updatedAt: new Date().toISOString() })
+      .eq('id', id)
+      .select(SELECT_FIELDS)
+      .single();
+
+    if (error) throw error;
+    res.json({ success: true, data: mapInvoice(data) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /v1/invoices/:id/void
  * Void an invoice by setting its status to CANCELLED.
  * Returns 400 if already CANCELLED, 404 if not found.
