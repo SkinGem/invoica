@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 128 — INVOICE-BULK-CANCEL-001
+- Status: PASS | Commit: 8ab7119 | Branch: sprint-128-invoice-bulk-cancel → main | Tests: 5/5 | Files: invoices.ts +35 lines, invoice-bulk-cancel.test.ts (new), week-97.json (new) | Timestamp: 2026-03-16T20:55:00Z
+
 ## Sprint 127 — SETTLEMENTS-BY-CURRENCY-001
 - Status: PASS | Commit: 082e92a | Branch: sprint-127-settlements-by-currency → main | Tests: 5/5 | Files: settlements.ts +31 lines, settlements-by-currency.test.ts (new) | Timestamp: 2026-03-16T20:50:00Z
 
