@@ -45,4 +45,39 @@ describe('graceful-shutdown', () => {
     await handler();
     expect(onShutdown).toHaveBeenCalledTimes(1);
   });
+
+  it('server.close error is caught and does not reject the shutdown promise', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation();
+    const server = { close: jest.fn((cb) => cb(new Error('close failed'))) };
+    const handler = createShutdownHandler(server);
+    await expect(handler()).resolves.toBeUndefined();
+    expect(consoleError).toHaveBeenCalledWith(
+      '[shutdown] Error during shutdown:',
+      expect.any(Error)
+    );
+    consoleError.mockRestore();
+  });
+
+  it('onShutdown error is caught and does not reject the shutdown promise', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation();
+    const onShutdown = jest.fn().mockRejectedValue(new Error('cleanup failed'));
+    const server = { close: jest.fn((cb) => cb()) };
+    const handler = createShutdownHandler(server, { onShutdown });
+    await expect(handler()).resolves.toBeUndefined();
+    consoleError.mockRestore();
+  });
+
+  it('accepts custom timeout and signals config without throwing', () => {
+    const server = { close: jest.fn((cb) => cb()) };
+    expect(() =>
+      createShutdownHandler(server, { timeout: 5000, signals: ['SIGUSR2'] })
+    ).not.toThrow();
+  });
+
+  it('shutdown logs initiation message', async () => {
+    const server = { close: jest.fn((cb) => cb()) };
+    const handler = createShutdownHandler(server);
+    await handler();
+    expect(consoleLog).toHaveBeenCalledWith('[shutdown] Graceful shutdown initiated...');
+  });
 });
