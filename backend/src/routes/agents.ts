@@ -11,6 +11,56 @@ function getSb() {
 }
 
 // ─────────────────────────────────────────────
+// GET /v1/agents/activity/summary
+// Platform-wide agent activity summary.
+// Must be registered before /:agentId to avoid param capture.
+// ─────────────────────────────────────────────
+router.get('/v1/agents/activity/summary', async (_req: Request, res: Response): Promise<void> => {
+  const sb = getSb();
+
+  const { data, error } = await sb
+    .from('Invoice')
+    .select('agentId, amount, status, updatedAt');
+
+  if (error) {
+    res.status(500).json({ success: false, error: { message: error.message, code: 'DB_ERROR' } });
+    return;
+  }
+
+  const rows = data || [];
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const settledStatuses = new Set(['SETTLED', 'COMPLETED']);
+
+  const allAgents = new Set<string>(rows.map((r: any) => r.agentId).filter(Boolean));
+  const activeAgents = new Set<string>(
+    rows
+      .filter((r: any) => r.agentId && new Date(r.updatedAt) >= thirtyDaysAgo)
+      .map((r: any) => r.agentId)
+  );
+
+  let totalRevenue = 0;
+  let totalSettled = 0;
+
+  for (const r of rows) {
+    if (settledStatuses.has(r.status)) {
+      totalSettled++;
+      totalRevenue += Number(r.amount) || 0;
+    }
+  }
+
+  res.json({
+    success: true,
+    data: {
+      totalAgents:  allAgents.size,
+      activeAgents: activeAgents.size,
+      totalInvoices: rows.length,
+      totalSettled,
+      totalRevenue,
+    },
+  });
+});
+
+// ─────────────────────────────────────────────
 // GET /v1/agents
 // List distinct agents with invoice counts and settled value.
 // Must be registered before /:agentId to avoid param capture.
