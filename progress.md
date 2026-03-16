@@ -1,5 +1,15 @@
 # Invoica Sprint Progress Log
 
+## Sprint 093 — INVOICE-VOID-001
+- Status: PASS
+- Branch: sprint-093-invoice-void → merged to main
+- Commit: 633af69
+- Files created: backend/src/routes/__tests__/invoice-void.test.ts, sprints/week-90.json
+- Files modified: backend/src/routes/invoices.ts
+- Tests: 5/5 new tests — ALL PASS
+- Issues: none
+- Timestamp: 2026-03-16T18:30:00Z
+
 ## Sprint 092 — METRICS-COMPARE-001
 - Status: PASS
 - Branch: sprint-092-metrics-compare → merged to main
