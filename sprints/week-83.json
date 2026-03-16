@@ -1,0 +1,46 @@
+{
+  "week": 83,
+  "created": "2026-03-16",
+  "tasks": [
+    {
+      "id": "WEBHOOK-SIG-001",
+      "title": "webhook signature unit tests",
+      "description": "Unit tests for backend/src/services/webhook/signature.ts — signPayload (deterministic HMAC-SHA256), verifySignature (match, mismatch, length mismatch).",
+      "file": "backend/src/services/webhook/__tests__/signature.test.ts",
+      "status": "done",
+      "sprint": "046"
+    },
+    {
+      "id": "WEBHOOK-DISPATCH-001",
+      "title": "webhook dispatch unit tests",
+      "description": "Unit tests for backend/src/services/webhook/dispatch.ts — dispatch (event filter, fetch POST, response ok, fetch error, multiple registrations, non-matching event skipped).",
+      "file": "backend/src/services/webhook/__tests__/dispatch.test.ts",
+      "status": "done",
+      "sprint": "046"
+    },
+    {
+      "id": "WEBHOOK-EVENTS-001",
+      "title": "webhook events unit tests",
+      "description": "Unit tests for backend/src/services/webhook/events.ts — event creation helpers, event type constants.",
+      "file": "backend/src/services/webhook/__tests__/events.test.ts",
+      "status": "pending",
+      "sprint": "047"
+    },
+    {
+      "id": "API-ROUTER-001",
+      "title": "router registration tests",
+      "description": "Unit tests for backend/src/api/router.ts — verify all route paths are registered (GET/POST/DELETE/PATCH for invoices, api-keys, webhooks, settlements, reputation).",
+      "file": "backend/src/api/__tests__/router.test.ts",
+      "status": "pending",
+      "sprint": "047"
+    },
+    {
+      "id": "DASHBOARD-ACTIVITY-001",
+      "title": "dashboard-activity handler unit tests",
+      "description": "Unit tests for backend/src/api/dashboard-activity.ts — response shape, activity list format, empty state.",
+      "file": "backend/src/api/__tests__/dashboard-activity.test.ts",
+      "status": "pending",
+      "sprint": "047"
+    }
+  ]
+}
