@@ -16,8 +16,10 @@ module.exports = {
       min_uptime: "30s",       // only counts as stable if it lives 30s (catches fast crash loops)
       restart_delay: 5000,     // 5s between restart attempts (gives port TIME_WAIT time to clear)
       kill_timeout: 15000,     // 15s: server.close() + prisma.$disconnect() completes in <10s now (graceful shutdown added)
-      wait_ready: true,        // don't route traffic until process.send('ready') fires (after server.listen())
-      listen_timeout: 120000,  // 120s: backend-wrapper.sh tsc check (15-60s) + port wait (0-20s) + startup (~5s) = up to 85s worst case
+      // NOTE: wait_ready REMOVED — PM2 IPC requires Node.js fork(), but backend-wrapper.sh is a bash script.
+      // Bash cannot inherit the PM2 IPC fd, so process.send?.('ready') is always undefined → silent no-op.
+      // Without wait_ready, PM2 marks the process "online" when bash starts (before tsc check).
+      // The backend health endpoint (/v1/health) is the source of truth for actual readiness.
       env: {
         // x402 seller wallet — receives USDC from agent inference payments
         X402_SELLER_WALLET: "0x3e127c918C83714616CF2416f8A620F1340C19f1",
