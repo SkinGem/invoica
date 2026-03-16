@@ -39,8 +39,8 @@
       "title": "GET /v1/invoices/stats/customers — top customers by invoice count and value",
       "description": "New endpoint: GET /v1/invoices/stats/customers. Returns top customers: [{ customerEmail, customerName, count, totalAmount }], sorted by totalAmount DESC. Accepts ?limit=N (default 10, max 50). Tests: 200-returns-array, 200-has-customer-email, 200-sorted-by-amount, 200-respects-limit, 500-db-error. File: backend/src/routes/invoices.ts (add in stats section) + tests at backend/src/routes/__tests__/invoice-customer-stats.test.ts.",
       "file": "backend/src/routes/invoices.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 147
     }
   ]
 }
