@@ -833,3 +833,15 @@
 - Health check post: 145/145 suites, 1256/1256 tests — ALL PASS
 - Notes: Added GET /v1/health/detailed with openclaw probe (port 18791), degraded logic, 1s timeout
 - Timestamp: 2026-03-16T17:10:00Z
+
+## Sprint 071 — REP-HISTORY-001
+- Status: PASS
+- Branch: sprint-071-rep-history-001 → merged to main
+- Commit: 3c692b3
+- Files created: backend/src/routes/reputation-history.ts, backend/src/routes/__tests__/reputation-history.test.ts
+- Files modified: backend/src/app.ts (import + app.use registration)
+- Tests: 5 new tests (200+history, 200+empty, 500-error, 30d-filter, shape) — PASS
+- Health check pre: ✅ All services healthy
+- Health check post: 146/146 suites, 1261/1261 tests — ALL PASS
+- Notes: Queries AgentReputation with 30-day updatedAt filter; returns single-entry or empty history array
+- Timestamp: 2026-03-16T17:20:00Z

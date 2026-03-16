@@ -31,8 +31,8 @@
       "title": "GET /v1/reputation/:agentId/history endpoint",
       "description": "Returns score history for an agent over the last 30 days. Query AgentReputation table with updatedAt filter. Response: { agentId, history: [{ score, tier, timestamp }] }. Max 60 lines. File: backend/src/routes/reputation-history.ts + route registration + 3 tests.",
       "file": "backend/src/routes/reputation-history.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "done",
+      "sprint": "071"
     },
     {
       "id": "DASHBOARD-REFRESH-001",
