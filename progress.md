@@ -374,3 +374,15 @@
 - Coverage: findById (null/mapped), findByCustomerId (array/empty), findByKeyPrefix (null/found), create (error/success), update (error/success), delete (true/false), rotate (not-found), rowToApiKey email default
 - Issues: None
 - Timestamp: 2026-03-16T17:45:00Z
+
+## Sprint 032 — SETTLE-POLL-001: SettlementPollerService Unit Tests
+- Status: PASS (1 fix required during dev — in-memory idempotency test needed successful match path)
+- Branch: sprint-032-settle-poll-tests → merged to main
+- Commit: b7c7a4e
+- Files created: backend/src/services/__tests__/settlement-poller.test.ts (162 lines, 13 tests)
+- Tests: 100/100 suites, 743/743 — ALL PASS (13 new tests)
+- Health check pre: ✅ 99/99 suites
+- Health check post: ✅ 100/100 suites
+- Coverage: SettlementPollerError (message/code/name/cause), constructor+getStatus, clearProcessedCache, pollSettlements (empty/axios-error), processSettlement (in-memory idempotency), createSettlementPollerService (missing-key/valid)
+- Issues: Initial idempotency test failed — processedTransactionIds only populated on successful match, not on "no pending invoice" path. Fixed by injecting mockInvoice into findFirst.
+- Timestamp: 2026-03-16T18:00:00Z

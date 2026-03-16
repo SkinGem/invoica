@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: 5e94886 on main, pushed to origin (clean)
-- **Tests**: 99/99 suites, 730/730 tests — ALL PASS
+- **Git**: b7c7a4e on main, pushed to origin (clean)
+- **Tests**: 100/100 suites, 743/743 tests — ALL PASS
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
@@ -56,6 +56,7 @@
 35. Sprint 029 — REP-003: leaderboard disputeRate + completionRate fields + 2 tests (c8b57fe)
 36. Sprint 030 — week-79.json created (3 tasks) + ORCH-CONFIG-001: orchestrator-config pure function tests (15 tests) (90e8714)
 37. Sprint 031 — API-REPO-001: SupabaseApiKeyRepository unit tests (14 tests) (5e94886)
+38. Sprint 032 — SETTLE-POLL-001: SettlementPollerService unit tests (13 tests) (b7c7a4e)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
@@ -110,10 +111,16 @@
 ## Week-79 Status — IN PROGRESS
 - ORCH-CONFIG-001 ✅ (Sprint 030)
 - API-REPO-001 ✅ (Sprint 031)
-- SETTLE-POLL-001 pending — SettlementPollerService tests
+- SETTLE-POLL-001 ✅ (Sprint 032)
 
-## Next Sprint: Sprint 032
-- Execute SETTLE-POLL-001: unit tests for SettlementPollerService (error class + constructor, mocking Bull/Prisma/axios)
+## Week-79 Status — ALL DONE ✅
+- ORCH-CONFIG-001, API-REPO-001, SETTLE-POLL-001 — all complete (Sprints 030-032)
+
+## Next Sprint: Sprint 033
+- week-79.json fully complete — need week-80.json
+- All service files now have test coverage
+- Remaining untested: orchestrator.ts (complex, deferred), utils/ files
+- Priority: survey utils/ for quick unit test wins, or route integration tests
 
 ## V17 + Solana Migration — COMPLETE
 - All 4 V17 sprints COMPLETE
