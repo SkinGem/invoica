@@ -53,6 +53,9 @@ router.get('/v1/settlements', async (req: Request, res: Response, next: NextFunc
     const limit = Math.min(parseInt(req.query.limit as string || '20', 10) || 20, 100);
     const offset = parseInt(req.query.offset as string || '0', 10) || 0;
     const statusFilter = req.query.status as string;
+    const agentId = req.query.agentId as string | undefined;
+    const from = req.query.from as string | undefined;
+    const to = req.query.to as string | undefined;
 
     const sb = getSupabase();
     let query = sb
@@ -67,6 +70,10 @@ router.get('/v1/settlements', async (req: Request, res: Response, next: NextFunc
     } else if (statusFilter === 'pending') {
       query = query.in('status', ['SETTLED', 'PROCESSING']);
     }
+
+    if (agentId) query = query.eq('companyId', agentId);
+    if (from) query = query.gte('settledAt', from);
+    if (to) query = query.lte('settledAt', to);
 
     const { data, error, count } = await query;
     if (error) throw error;
