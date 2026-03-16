@@ -84,6 +84,38 @@ router.get('/v1/agents/:agentId/invoices', async (req: Request, res: Response): 
 });
 
 // ─────────────────────────────────────────────
+// GET /v1/agents/:agentId/settlements/summary
+// Settlement summary for a specific agent.
+// Must be before /:agentId (profile).
+// ─────────────────────────────────────────────
+router.get('/v1/agents/:agentId/settlements/summary', async (req: Request, res: Response): Promise<void> => {
+  const { agentId } = req.params;
+  const sb = getSb();
+
+  const { data, error } = await sb
+    .from('Invoice')
+    .select('amount, currency, status')
+    .eq('agentId', agentId)
+    .in('status', ['SETTLED', 'COMPLETED']);
+
+  if (error) {
+    res.status(500).json({ success: false, error: { message: error.message, code: 'DB_ERROR' } });
+    return;
+  }
+
+  const rows = data || [];
+  const totalSettled = rows.length;
+  const totalAmount = rows.reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+  const avgAmount = totalSettled > 0 ? totalAmount / totalSettled : 0;
+  const currencies = [...new Set(rows.map((r: any) => r.currency).filter(Boolean))] as string[];
+
+  res.json({
+    success: true,
+    data: { agentId, totalSettled, totalAmount, avgAmount, currencies },
+  });
+});
+
+// ─────────────────────────────────────────────
 // GET /v1/agents/:agentId
 // Combined agent profile: reputation + invoice stats
 // ─────────────────────────────────────────────
