@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 137 — INVOICE-STATS-CURRENCY-001
+- Status: PASS | Commit: 9f8a61f | Branch: sprint-137-invoice-stats-currency → main | Tests: 5/5 | Files: invoices.ts +28 lines, invoice-stats-currency.test.ts (new) | Note: GET /v1/invoices/stats/currency — sorted by totalAmount DESC | Timestamp: 2026-03-16T22:10:00Z
+
 ## Sprint 136 — SETTLEMENTS-STATS-001
 - Status: PASS | Commit: e422c99 | Branch: sprint-136-settlements-stats → main | Tests: 5/5 | Files: settlements.ts +42 lines, settlements-stats.test.ts (new) | Note: GET /v1/settlements/stats — aggregate total/totalAmount/avgAmount/last24h/7d/30d | Timestamp: 2026-03-16T22:00:00Z
 

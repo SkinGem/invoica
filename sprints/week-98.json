@@ -39,8 +39,8 @@
       "title": "GET /v1/invoices/stats/currency — invoice breakdown by currency",
       "description": "New endpoint: GET /v1/invoices/stats/currency. Returns invoice counts and amounts grouped by currency: [{ currency, count, totalAmount }], sorted by totalAmount DESC. Tests: 200-returns-array, 200-has-currency-field, 200-sorted-by-amount, 200-empty-state, 500-db-error. File: backend/src/routes/invoices.ts (add in stats section after /v1/invoices/stats/status) + tests at backend/src/routes/__tests__/invoice-stats-currency.test.ts.",
       "file": "backend/src/routes/invoices.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 137
     }
   ]
 }
