@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: ea18678 on main, pushed to origin (clean)
-- **Tests**: 96/96 suites, 683/683 tests — ALL PASS
+- **Git**: ed4901f on main, pushed to origin (clean)
+- **Tests**: 96/96 suites, 686/686 tests — ALL PASS
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected — STABLE (HF-006 flock mutex applied, 0 restarts)
 - **OpenClaw**: Stable (v2026.3.13, port 18789 WebSocket)
@@ -51,6 +51,7 @@
 30. Sprint 024 — week-78.json created: 5 tasks queued (TASK-VALID-001, API-KEY-001, API-ROTATE-001, REP-003, SETTLE-004) (87a6ea0)
 31. Sprint 025 — TASK-VALID-001: task-complexity-validator tests — 14 tests (killswitch, ORCH-*, AGENT-034-*, keywords) (15e30fe)
 32. Sprint 026 — API-KEY-001: api-keys.ts pure function tests — 15 tests (generate, hash, verify, prefix, validate) (ea18678)
+33. Sprint 027 — SETTLE-004: settlement-summary edge cases — 3 tests (JSON string, null paymentDetails, SETTLED+COMPLETED) (ed4901f)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured — non-blocking)
@@ -99,9 +100,9 @@
 ## Week-77 Status — ALL DONE ✅
 - INVOICE-002, INVOICE-003, REP-002, ENFORCE-001, SETTLE-002 — all complete (Sprints 019-023)
 
-## Next Sprint: Sprint 027
-- week-78.json: TASK-VALID-001 ✅, API-KEY-001 ✅, 3 remaining (API-ROTATE-001, REP-003, SETTLE-004)
-- Next: SETTLE-004 (settlement summary edge cases) or REP-003 (leaderboard disputeRate)
+## Next Sprint: Sprint 028
+- week-78.json: TASK-VALID-001 ✅, API-KEY-001 ✅, SETTLE-004 ✅, 2 remaining (API-ROTATE-001, REP-003)
+- Next: REP-003 (leaderboard disputeRate) or API-ROTATE-001 (rotation service tests)
 
 ## V17 + Solana Migration — COMPLETE
 - All 4 V17 sprints COMPLETE

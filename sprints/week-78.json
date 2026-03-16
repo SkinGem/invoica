@@ -77,7 +77,7 @@
       "priority": "medium",
       "dependencies": [],
       "description": "Unit tests for settlement-summary route — paymentDetails JSON string parsing + unknown chain fallback",
-      "context": "The GET /v1/settlements/summary route (Sprint 023) has 3 tests but is missing edge case coverage for two important code paths:\n\n1. paymentDetails stored as a JSON STRING (not object) — the route has: typeof inv.paymentDetails === 'string' ? JSON.parse(inv.paymentDetails) : inv.paymentDetails — this branch needs a test\n2. paymentDetails is null/missing — should fall back to chain = 'unknown'\n3. SETTLED status invoices (not just COMPLETED) — verifying both statuses count toward totals\n\nEDIT: backend/src/routes/__tests__/settlement-summary.test.ts\n\nAdd 3 more tests to the existing describe block (file currently has 3 tests, add 3 more):\n1. paymentDetails as JSON string — mock invoice with paymentDetails: '{\"network\":\"arbitrum\"}' (string) — verify chain='arbitrum' in byChain\n2. paymentDetails null — verify chain='unknown' in byChain result\n3. SETTLED status counts — mock 1 SETTLED + 1 COMPLETED invoice, verify totalSettlements=2\n\nThe test file mock pattern uses buildChain() and buildChainWithEq() helpers already defined in the file — reuse them.\n\nMax 120 lines total for the test file after additions.",
+      "context": "DONE — Sprint 027 (ed4901f). 3 edge case tests: JSON string paymentDetails, null paymentDetails, SETTLED+COMPLETED both counted.",
       "deliverables": {
         "code": [],
         "tests": [
@@ -85,7 +85,7 @@
         ],
         "docs": []
       },
-      "status": "pending"
+      "status": "approved"
     }
   ]
 }
