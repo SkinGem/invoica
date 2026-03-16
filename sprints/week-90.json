@@ -31,8 +31,8 @@
       "title": "GET /v1/settlements/export.csv — export settlements as CSV",
       "description": "New endpoint: GET /v1/settlements/export.csv. Returns CSV of all settled/completed invoices: headers [Date, Invoice#, AgentId, Amount, Currency, Network, TxHash]. Sets Content-Type: text/csv and Content-Disposition: attachment. Tests: 200-returns-csv, 200-csv-has-headers, 200-csv-data-rows, 200-content-type-header, 500-db-error. File: backend/src/routes/settlements.ts (add route) + tests.",
       "file": "backend/src/routes/settlements.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "done",
+      "sprint": 96
     },
     {
       "id": "WEBHOOK-STATS-001",

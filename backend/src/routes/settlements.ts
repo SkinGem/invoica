@@ -9,6 +9,44 @@ function getSupabase() {
   return createClient(url, key);
 }
 
+// ─────────────────────────────────────────────
+// GET /v1/settlements/export.csv
+// Export settled/completed invoices as CSV
+// Must be before /:id to avoid param capture
+// ─────────────────────────────────────────────
+router.get('/v1/settlements/export.csv', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('id, invoiceNumber, agentId, amount, currency, paymentDetails, createdAt, settledAt')
+      .in('status', ['SETTLED', 'COMPLETED'])
+      .order('settledAt', { ascending: false });
+
+    if (error) throw error;
+
+    const rows = data || [];
+    const header = ['Date', 'Invoice#', 'AgentId', 'Amount', 'Currency', 'Network', 'TxHash'].join(',');
+    const csvRows = rows.map((row: any) => {
+      const pd = row.paymentDetails || {};
+      return [
+        new Date(row.settledAt || row.createdAt).toISOString(),
+        row.invoiceNumber,
+        row.agentId || '',
+        row.amount || 0,
+        row.currency || 'USD',
+        pd.network || '',
+        pd.txHash || '',
+      ].join(',');
+    });
+
+    const csv = '\uFEFF' + [header, ...csvRows].join('\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="settlements.csv"');
+    res.send(csv);
+  } catch (err) { next(err); }
+});
+
 router.get('/v1/settlements/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
