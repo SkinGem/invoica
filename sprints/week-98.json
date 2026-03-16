@@ -23,8 +23,8 @@
       "title": "GET /v1/metrics/weekly — weekly invoice counts for last 12 weeks",
       "description": "New endpoint: GET /v1/metrics/weekly. Returns invoice creation counts grouped by ISO week for the last 12 weeks: [{ week: '2026-W11', count, amount }], zero-filled for empty weeks, sorted chronologically. Tests: 200-returns-12-weeks, 200-has-week-field, 200-has-count-field, 200-zeros-for-empty-weeks, 500-db-error. File: backend/src/routes/metrics.ts (add after /v1/metrics/hourly) + tests at backend/src/routes/__tests__/metrics-weekly.test.ts.",
       "file": "backend/src/routes/metrics.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 135
     },
     {
       "id": "SETTLEMENTS-STATS-001",

@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 135 — METRICS-WEEKLY-001
+- Status: PASS | Commit: 05487e8 | Branch: sprint-135-metrics-weekly → main | Tests: 5/5 | Files: metrics.ts +48 lines, metrics-weekly.test.ts (new) | Note: GET /v1/metrics/weekly — 12-week ISO week buckets with zero-fill | Timestamp: 2026-03-16T21:50:00Z
+
 ## Sprint 134 — AGENTS-COUNT-001
 - Status: PASS | Commit: 9e259f2 | Branch: sprint-134-agents-count → main | Tests: 5/5 | Files: agents.ts +27 lines, agents-count.test.ts (new) | Note: GET /v1/agents/count — distinct total + withActivity | Timestamp: 2026-03-16T21:40:00Z
 
