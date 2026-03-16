@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 140 — AGENTS-ACTIVITY-SUMMARY-001
+- Status: PASS | Commit: 38252cd | Branch: sprint-140-agents-activity-summary → main | Tests: 5/5 | Files: agents.ts +50 lines, agents-activity-summary.test.ts (new) | Note: GET /v1/agents/activity/summary — platform-wide KPIs | Timestamp: 2026-03-16T22:40:00Z
+
 ## Sprint 139 — INVOICE-SEARCH-ADVANCED-001
 - Status: PASS | Commit: 3f6a8bc | Branch: sprint-139-invoice-search-advanced → main | Tests: 5/5 | Files: invoices.ts +43 lines, invoice-search-advanced.test.ts (new) | Note: GET /v1/invoices/search/advanced — multi-field with pagination | Timestamp: 2026-03-16T22:30:00Z
 

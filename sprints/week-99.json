@@ -23,8 +23,8 @@
       "title": "GET /v1/agents/activity/summary — platform-wide agent activity summary",
       "description": "New endpoint: GET /v1/agents/activity/summary. Returns platform-wide stats: { totalAgents, activeAgents (last 30d), totalInvoices, totalSettled, totalRevenue }. Tests: 200-returns-shape, 200-has-total-agents, 200-has-total-revenue, 200-zero-when-empty, 500-db-error. File: backend/src/routes/agents.ts (add before /v1/agents/count) + tests at backend/src/routes/__tests__/agents-activity-summary.test.ts.",
       "file": "backend/src/routes/agents.ts",
-      "status": "pending",
-      "sprint": null
+      "status": "approved",
+      "sprint": 140
     },
     {
       "id": "METRICS-CHAIN-BREAKDOWN-001",
