@@ -1295,3 +1295,13 @@
 - Health check post: 226/226 suites, 1669/1669 tests — ALL PASS
 - Notes: Returns null for all stats when no settled invoices. Uses settledAt || completedAt.
 - Timestamp: 2026-03-16T22:00:00Z
+## Sprint 153 — REPUTATION-SCORE-DISTRIBUTION-001
+- Status: PASS
+- Branch: sprint-153-reputation-score-distribution-001 → merged to main
+- Commit: c0c729e
+- Files created: backend/src/routes/__tests__/reputation-distribution.test.ts
+- Files modified: backend/src/routes/reputation.ts (+GET /v1/reputation/distribution before /:agentId)
+- Tests: 5 new tests (200-returns-shape, 200-buckets-correct, 200-empty-state, 200-multiple-same-bucket, 500-db-error) — PASS
+- Health check post: 227/227 suites, 1674/1674 tests — ALL PASS
+- Notes: Score buckets 0-20/21-40/41-60/61-80/81-100. Registered before /:agentId/stats to avoid param capture.
+- Timestamp: 2026-03-16T22:15:00Z
