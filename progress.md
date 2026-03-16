@@ -432,3 +432,16 @@
 - Coverage added: production JSON format, production JSON+meta, dev mode with meta, pino-style object msg, object no-msg fallback
 - Issues: None
 - Timestamp: 2026-03-16T19:00:00Z
+
+## Sprint 037 — week-80.json + 4 Test Suites (apiKeyAuth, lib/errors, chain-registry, chain-validator)
+- Status: PASS
+- Branch: sprint-037-week80-coverage → merged to main
+- Commit: e4fd741
+- Files created: sprints/week-80.json, backend/src/middleware/__tests__/apiKeyAuth.test.ts, backend/src/lib/__tests__/errors.test.ts, backend/src/lib/__tests__/chain-registry.test.ts, backend/src/lib/__tests__/chain-validator.test.ts
+- Files modified: None
+- Tests: 104/104 suites, 825/825 — ALL PASS (48 new tests: apiKeyAuth 12, errors 12, chain-registry 13, chain-validator 11)
+- Coverage added: API key auth middleware critical security path, lib error hierarchy, chain registry data integrity, chain validator all branches
+- Health check pre: ✅ Git clean, 100/100 suites
+- Health check post: ✅ 104/104 suites, 825/825 tests
+- Issues: Worker graceful-exit warning (pre-existing open handles, not new)
+- Timestamp: 2026-03-16T19:15:00Z
