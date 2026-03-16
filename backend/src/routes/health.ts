@@ -122,4 +122,21 @@ router.get('/v1/health/detailed', async (_req: Request, res: Response) => {
   });
 });
 
+router.get('/v1/health/metrics', (_req: Request, res: Response) => {
+  const mem = process.memoryUsage();
+  res.json({
+    success: true,
+    data: {
+      uptimeSeconds: process.uptime(),
+      memoryMB: {
+        rss: Math.round(mem.rss / 1024 / 1024 * 100) / 100,
+        heapUsed: Math.round(mem.heapUsed / 1024 / 1024 * 100) / 100,
+        heapTotal: Math.round(mem.heapTotal / 1024 / 1024 * 100) / 100,
+      },
+      processId: process.pid,
+      nodeVersion: process.version,
+    },
+  });
+});
+
 export default router;
