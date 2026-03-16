@@ -424,4 +424,47 @@ router.get('/v1/metrics/agents/top', async (req: Request, res: Response): Promis
   }
 });
 
+/**
+ * GET /v1/metrics/hourly
+ * Invoice creation counts by hour for the last 24 hours. Zero-fills empty hours.
+ */
+router.get('/v1/metrics/hourly', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const sb = getSb();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const { data, error } = await sb
+      .from('Invoice')
+      .select('amount, createdAt')
+      .gte('createdAt', oneDayAgo.toISOString());
+
+    if (error) throw error;
+
+    // Pre-fill last 24 hours with zeros (most recent hour last)
+    const hourMap = new Map<string, { count: number; amount: number }>();
+    for (let i = 23; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 60 * 60 * 1000);
+      d.setMinutes(0, 0, 0);
+      const key = d.toISOString().slice(0, 13) + ':00:00Z';
+      hourMap.set(key, { count: 0, amount: 0 });
+    }
+
+    for (const row of (data || [])) {
+      const d = new Date(row.createdAt);
+      d.setMinutes(0, 0, 0);
+      const key = d.toISOString().slice(0, 13) + ':00:00Z';
+      if (hourMap.has(key)) {
+        const entry = hourMap.get(key)!;
+        entry.count += 1;
+        entry.amount += row.amount || 0;
+      }
+    }
+
+    const result = Array.from(hourMap.entries()).map(([hour, vals]) => ({ hour, ...vals }));
+    res.json({ success: true, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } });
+  }
+});
+
 export default router;
