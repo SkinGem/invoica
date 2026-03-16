@@ -1,8 +1,8 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: 77f6a81 on main, pushed to origin (clean)
-- **Tests**: 135/135 suites, 1159/1159 tests — ALL PASS (+16 Sprint 062)
+- **Git**: 6efda0e on main, pushed to origin (clean)
+- **Tests**: 136/136 suites, 1179/1179 tests — ALL PASS (+20 Sprint 063)
 - **TypeScript**: 0 source errors
 - **Backend**: Running on Hetzner (port 3001), health OK at /v1/health — DB connected, Redis not_configured
 - **OpenClaw**: Stable (v2026.3.13, port 18789, PID 4026797/4026831, 24s uptime — root PM2 conflict resolved)
@@ -136,11 +136,11 @@
 - DASHBOARD-ACTIVITY-001 ✅ (Sprint 046), UTILS-TASK-VALID-001 ✅ (Sprint 046)
 - WEBHOOK-EVENTS-001 pending, API-ROUTER-001 pending, DASHBOARD-ACTIVITY-001 ✅
 
-## Next Sprint: Sprint 063
-- SOLANA-TYPES-001 ✅ (Sprint 062) — 16 tests (constants 7 + interfaces 9)
-- MILESTONE: 1159 tests across 135 suites
-- Session 052-062: 11 sprints, +117 tests (1042 → 1159), 11 new test files
-- Next candidates: services/settlement/solana-rpc.ts tests, webhook/dispatcher.ts, or feature work (FIX-007 invoices schema, WEBSITE-001 hero widget)
+## Next Sprint: Sprint 064
+- RATE-LIMIT-001 ✅ (Sprint 063) — 20 tests (enum, tierConfigs, schema, keyGen, null-guards)
+- MILESTONE: 1179 tests across 136 suites
+- Session 052-063: 12 sprints, +137 tests (1042 → 1179), 12 new test files
+- Next candidates: middleware/rate-limiter.ts additional coverage, services/settlement/solana-rpc.ts, or feature work
 
 ## Week-81 Status — ALL DONE ✅
 - ORCH-001 ✅ (Sprint 039), SETTLE-EVM-001 ✅ (Sprint 040), SOLANA-PDA-001 ✅ (Sprint 040)

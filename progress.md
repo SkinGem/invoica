@@ -739,3 +739,13 @@
 - Correction: TOKEN_PROGRAM and MEMO_PROGRAM are 43 chars (not 44) — valid base58 Solana pubkeys can be 43 or 44 chars
 - Total: 135/135 suites, 1159/1159 tests
 - Timestamp: 2026-03-16T18:30:00Z
+
+## Sprint 063 — RATE-LIMIT-001 (rate-limit middleware tests)
+- Status: PASS
+- Branch: sprint-063-rate-limit-001 → merged to main
+- Commit: 6efda0e
+- Files created: backend/src/middleware/__tests__/rate-limit.test.ts
+- Tests: 20 new tests — CustomerTier enum (2), tierConfigs (5: windowMs + per-tier max), rateLimitOptionsSchema (4: valid, windowMs<1000, max>100000, empty), generateRateLimitKey (5: with/without customerId, IPv6 colon sanitization, socket fallback, unknown fallback), null-guards (4: getRateLimitStatus, resetCustomerRateLimit, closeRateLimitRedis, getRedisClient)
+- Mocks: jest.mock('express-rate-limit') + jest.mock('redis') — prevents live connections on module load
+- Total: 136/136 suites, 1179/1179 tests
+- Timestamp: 2026-03-16T19:00:00Z
