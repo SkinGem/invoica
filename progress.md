@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 142 — SETTLEMENTS-BY-AGENT-SUMMARY-001
+- Status: PASS | Commit: ed300a5 | Branch: sprint-142-settlements-by-agent → main | Tests: 5/5 | Files: settlements.ts +32 lines, settlements-by-agent.test.ts (new) | Note: GET /v1/settlements/by-agent — grouped by agentId, sorted DESC, ?limit= | Timestamp: 2026-03-16T23:00:00Z
+
 ## Sprint 141 — METRICS-CHAIN-BREAKDOWN-001
 - Status: PASS | Commit: 4572589 | Branch: sprint-141-metrics-chain-breakdown → main | Tests: 5/5 | Files: metrics.ts +32 lines, metrics-chain-breakdown.test.ts (new) | Note: GET /v1/metrics/chains/breakdown with settledCount | Timestamp: 2026-03-16T22:50:00Z
 
