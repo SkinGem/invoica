@@ -59,4 +59,42 @@ router.get('/v1/metrics', async (_req: Request, res: Response): Promise<void> =>
   }
 });
 
+/**
+ * GET /v1/metrics/agent/:agentId
+ * Per-agent metrics: invoices, settled value, and reputation snapshot.
+ */
+router.get('/v1/metrics/agent/:agentId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { agentId } = req.params;
+    const sb = getSb();
+
+    const [invoiceRes, reputationRes] = await Promise.all([
+      sb.from('Invoice').select('status, amount').eq('companyId', agentId),
+      sb.from('AgentReputation').select('score, tier').eq('agentId', agentId).single(),
+    ]);
+
+    if (invoiceRes.error) throw invoiceRes.error;
+
+    const invoices = invoiceRes.data || [];
+    const byStatus: Record<string, number> = { PENDING: 0, PROCESSING: 0, SETTLED: 0, COMPLETED: 0 };
+    let totalValueSettled = 0;
+    for (const inv of invoices) {
+      if (inv.status in byStatus) byStatus[inv.status]++;
+      if (inv.status === 'SETTLED' || inv.status === 'COMPLETED') {
+        totalValueSettled += parseFloat(inv.amount as string) || 0;
+      }
+    }
+
+    const rep = reputationRes.data;
+    res.json({
+      agentId,
+      invoices: { total: invoices.length, byStatus },
+      totalValueSettled: Math.round(totalValueSettled * 100) / 100,
+      reputation: rep ? { score: rep.score, tier: rep.tier } : null,
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } });
+  }
+});
+
 export default router;
