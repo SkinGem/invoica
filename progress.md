@@ -1,5 +1,8 @@
 # Invoica Sprint Progress Log
 
+## Sprint 129 — METRICS-HOURLY-001
+- Status: PASS | Commit: 3072508 | Branch: sprint-129-metrics-hourly → main | Tests: 5/5 | Files: metrics.ts +43 lines, metrics-hourly.test.ts (new) | Timestamp: 2026-03-16T21:00:00Z
+
 ## Sprint 128 — INVOICE-BULK-CANCEL-001
 - Status: PASS | Commit: 8ab7119 | Branch: sprint-128-invoice-bulk-cancel → main | Tests: 5/5 | Files: invoices.ts +35 lines, invoice-bulk-cancel.test.ts (new), week-97.json (new) | Timestamp: 2026-03-16T20:55:00Z
 
