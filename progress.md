@@ -90,3 +90,28 @@
 - Tests: 76/76 suites, 481/481 tests — ALL PASS (removed files were dead code)
 - Also committed: autonomous-prompt.txt + run-autonomous.sh (user's automation)
 - Timestamp: 2026-03-16T12:40:00Z
+
+## Sprint 011 — Wire Solana Invoice Route
+- Status: PASS
+- Branch: sprint-011-solana-route → merged to main
+- Commit: 8ffeeea
+- Files modified: backend/src/routes/invoices.ts (+73 lines), backend/src/middleware/x402-solana.ts (TS fix), sprints/week-76.json
+- Changes: POST /v1/invoices now chain-aware (EVM + Solana), base58 address validation, programId/tokenMint validation
+- Tests: 76/76 suites, 481/481 tests — ALL PASS
+- TypeScript: 0 src errors
+- Timestamp: 2026-03-16T12:50:00Z
+
+## HF-001 — PM2 Listen Timeout Fix
+- Status: PASS
+- Branch: merged to main
+- Commit: 445408c
+- Files modified: ecosystem.config.js (listen_timeout 10000→60000)
+- Fix: tsc --noEmit takes 15-30s on Hetzner; PM2's 10s timeout caused restart loop (58+ unnecessary restarts)
+- Tests: N/A (config change)
+- Timestamp: 2026-03-16T12:55:00Z
+
+## HF-002 — Kill Stale Root Process (Server-Only)
+- Status: PASS (server fix, no code change)
+- Server action: killed PID 4004937 (root-owned ts-node holding port 3001), restarted backend
+- Backend: ONLINE — /v1/health returns {"status":"ok","database":"ok"}
+- Timestamp: 2026-03-16T12:38:00Z
