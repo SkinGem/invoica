@@ -588,4 +588,54 @@ router.get('/v1/metrics/conversion', async (_req: Request, res: Response): Promi
   }
 });
 
+/**
+ * GET /v1/metrics/growth
+ * Week-over-week growth: compares last 7 days vs previous 7 days.
+ * Returns invoices and settlements with current, previous, and growthPct.
+ * growthPct is null when previous period has zero entries.
+ */
+router.get('/v1/metrics/growth', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const sb = getSb();
+    const now = Date.now();
+    const MS_7D = 7 * 24 * 60 * 60 * 1000;
+    const last7Start  = new Date(now - MS_7D).toISOString();
+    const prev7Start  = new Date(now - 2 * MS_7D).toISOString();
+    const prev7End    = last7Start;
+
+    const [currInv, prevInv, currSet, prevSet] = await Promise.all([
+      sb.from('Invoice').select('id').gte('createdAt', last7Start),
+      sb.from('Invoice').select('id').gte('createdAt', prev7Start).lt('createdAt', prev7End),
+      sb.from('Settlement').select('id').gte('createdAt', last7Start),
+      sb.from('Settlement').select('id').gte('createdAt', prev7Start).lt('createdAt', prev7End),
+    ]);
+
+    if (currInv.error) throw currInv.error;
+    if (prevInv.error) throw prevInv.error;
+    if (currSet.error) throw currSet.error;
+    if (prevSet.error) throw prevSet.error;
+
+    function growthPct(current: number, previous: number): number | null {
+      if (previous === 0) return null;
+      return Math.round(((current - previous) / previous) * 10000) / 100;
+    }
+
+    const invoicesCurrent  = (currInv.data || []).length;
+    const invoicesPrevious = (prevInv.data || []).length;
+    const settleCurrent    = (currSet.data || []).length;
+    const settlePrevious   = (prevSet.data || []).length;
+
+    res.json({
+      success: true,
+      data: {
+        invoices:    { current: invoicesCurrent,  previous: invoicesPrevious, growthPct: growthPct(invoicesCurrent, invoicesPrevious) },
+        settlements: { current: settleCurrent,    previous: settlePrevious,   growthPct: growthPct(settleCurrent, settlePrevious) },
+        period: { current: { from: last7Start }, previous: { from: prev7Start, to: prev7End } },
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } });
+  }
+});
+
 export default router;
