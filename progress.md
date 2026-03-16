@@ -582,3 +582,17 @@
 - Health check post: ✅ 121/121, 992/992
 - Issues: None
 - Timestamp: 2026-03-16T21:35:00Z
+
+## Sprint 049 — LIB-MODEL-ROUTER-001 (model-router unit tests)
+- Status: PASS
+- Branch: sprint-049-lib-model-router → merged to main
+- Commit: 599333c
+- Files created: backend/src/lib/__tests__/model-router.test.ts
+- Tests: 122/122 suites, 1012/1012 — ALL PASS (20 new tests)
+- MILESTONE: First sprint to break 1000 total tests!
+- Coverage added: classifyTask (code/audit/data/lang/reason/content/util/default); selectModel (slash passthrough, legacy alias, task-type-name, auto-classify); getFallbackModel (code, audit, all 7 types); getSupportedAliases (object type, MiniMax alias, copy safety)
+- Fix: audit test prompt changed from "Run a security audit on this code" (matched 'code' first) to "vulnerability and penetration test" (correctly matches 'audit')
+- Health check pre: ✅ 121/121, 992/992
+- Health check post: ✅ 122/122, 1012/1012
+- Issues: 1 test prompt bug caught and fixed during run
+- Timestamp: 2026-03-16T21:50:00Z
