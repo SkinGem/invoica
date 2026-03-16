@@ -12,7 +12,9 @@ cd /home/invoica/apps/Invoica
 # If PM2 spawns multiple wrappers (e.g. rapid restarts, reload cascade), only
 # one proceeds. Others wait up to 90s for the lock, then exit cleanly.
 # flock fd is inherited by exec ts-node — held until ts-node exits.
-LOCK_FILE="/tmp/invoica-backend.lock"
+# Lock file in app dir (not /tmp/) — avoids permission denied when /tmp/ file
+# is owned by root but PM2 runs as 'invoica' user (caused 592-restart cascade).
+LOCK_FILE="/home/invoica/apps/Invoica/.backend.lock"
 exec 200>"$LOCK_FILE"
 if ! flock -w 90 200; then
   echo "[backend-wrapper] Could not acquire startup lock within 90s — another instance is starting. Exiting."
