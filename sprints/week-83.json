@@ -23,7 +23,7 @@
       "title": "webhook events unit tests",
       "description": "Unit tests for backend/src/services/webhook/events.ts — event creation helpers, event type constants.",
       "file": "backend/src/services/webhook/__tests__/events.test.ts",
-      "status": "pending",
+      "status": "approved",
       "sprint": "047"
     },
     {
@@ -31,16 +31,16 @@
       "title": "router registration tests",
       "description": "Unit tests for backend/src/api/router.ts — verify all route paths are registered (GET/POST/DELETE/PATCH for invoices, api-keys, webhooks, settlements, reputation).",
       "file": "backend/src/api/__tests__/router.test.ts",
-      "status": "pending",
-      "sprint": "047"
+      "status": "done",
+      "sprint": "052"
     },
     {
       "id": "DASHBOARD-ACTIVITY-001",
       "title": "dashboard-activity handler unit tests",
       "description": "Unit tests for backend/src/api/dashboard-activity.ts — response shape, activity list format, empty state.",
       "file": "backend/src/api/__tests__/dashboard-activity.test.ts",
-      "status": "pending",
-      "sprint": "047"
+      "status": "approved",
+      "sprint": "046"
     }
   ]
 }
