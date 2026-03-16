@@ -1,7 +1,7 @@
 # Invoica Project State
 
 ## Current State (2026-03-16)
-- **Git**: dd1529a on main, pushed to origin
+- **Git**: 3de6abd on main, pushed to origin
 - **Tests**: 76/76 suites, 481/481 tests — ALL PASS
 - **TypeScript**: 0 source errors (6 in node_modules/ox — skipLibCheck)
 - **Backend**: Running on Hetzner (port 3001), health OK, DB connected
@@ -27,10 +27,11 @@
 7. Sprint 007 — Low-score pattern monitoring script (MONITOR-001)
 8. Sprint 008 — Agent health monitoring assessment (CTO-20260217-002 — already done)
 9. Sprint 009 — Backend PM2 stability fix (removed cron restart loop)
+10. Sprint 010 — Legacy test cleanup (38 dead files, 6122 lines removed)
 
 ## Known Issues
 - Redis: not_configured (backend health shows redis: not_configured)
-- backend/tests/ directory: legacy vitest-based tests excluded from jest config
+- ~~backend/tests/ directory~~ REMOVED in Sprint 010
 - .env not in repo (only .env.example) — local dev can't run full stack
 
 ## Remaining week-76 Items

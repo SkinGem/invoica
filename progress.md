@@ -80,3 +80,13 @@
 - Health check: Backend OK (0 restarts), OpenClaw stable
 - Issues: Removed spurious */30 cron_restart from backend PM2 process
 - Timestamp: 2026-03-16T12:30:00Z
+
+## Sprint 010 — Legacy Test Cleanup
+- Status: PASS
+- Branch: sprint-010-test-cleanup → merged to main
+- Commit: 3de6abd
+- Files deleted: 38 (36 in backend/tests/ + 2 stale test files outside __tests__/)
+- Lines removed: ~6,122
+- Tests: 76/76 suites, 481/481 tests — ALL PASS (removed files were dead code)
+- Also committed: autonomous-prompt.txt + run-autonomous.sh (user's automation)
+- Timestamp: 2026-03-16T12:40:00Z
