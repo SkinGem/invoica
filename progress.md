@@ -701,3 +701,12 @@
 - Tests: 15 new tests — isPolygonAddress (5 via it.each), createPolygonAddress (3), PolygonAddressSchema (1), PolygonCurrency (1), PolygonChains+DEFAULT (1)
 - Zero mocks needed — pure functions only
 - Timestamp: 2026-03-16T17:05:00Z
+
+## Sprint 059 — INVOICES-CREATE-HANDLER-001 (createInvoice handler tests)
+- Status: PASS
+- Branch: sprint-059-invoices-create-handler-001 → merged to main
+- Commit: b607c83
+- Files created: backend/src/api/__tests__/invoices-create-handler.test.ts
+- Tests: 10 new tests — all 6 branching paths: schema fail, EVM address, Solana address, programId, tokenMint, EVM-only guard, spam domain 403, success 201, Solana defaults, 500 service throw
+- Note: existing schema tests (invoices-create-schema.test.ts, invoices-create-solana.test.ts) already covered Zod layer — this sprint covers the handler execution layer
+- Timestamp: 2026-03-16T17:20:00Z
