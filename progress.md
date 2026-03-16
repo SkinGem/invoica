@@ -398,3 +398,15 @@
 - Coverage added: ClawRouter mode throws, legacy mode suffix, success paths ×2, PORT coerce (default/value/NaN), LOG_LEVEL (default/debug)
 - Issues: None
 - Timestamp: 2026-03-16T18:15:00Z
+
+## Sprint 034 — api-key-generator Coverage Improvement
+- Status: PASS
+- Branch: sprint-034-api-key-gen-coverage → merged to main
+- Commit: 6544472
+- Files modified: backend/src/utils/__tests__/api-key-generator.test.ts (+35 lines, 7 new tests)
+- Tests: 100/100 suites, 761/761 — ALL PASS (7 new tests, total 14 in file)
+- Health check pre: ✅ 100/100 suites
+- Health check post: ✅ 100/100 suites
+- Coverage added: generateApiKey default param, TypeError for non-boolean isTest, hashApiKey 64-char output, TypeError for empty/non-string, isTestKey TypeError, constants validation
+- Issues: None
+- Timestamp: 2026-03-16T18:30:00Z
