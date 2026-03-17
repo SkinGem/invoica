@@ -7,7 +7,8 @@ import * as http from 'http';
 import 'dotenv/config';
 
 // ClawRouter v2.0 — MANDATORY SINGLE GATEWAY (Exec Protocol §17)
-import { routeCall, type ClawRouterV2Request } from './lib/clawrouter-v2';
+import { routeCall, getDailyCostDigest, type ClawRouterV2Request } from './lib/clawrouter-v2';
+import { logWalletStatus, getWalletState } from './lib/wallet-state';
 // CTO Approval Gate — every autonomous sprint reviewed before execution (Exec Protocol)
 import { requestCTOApproval, type SprintProposal, type CTOApprovalResult } from './lib/cto-approval-gate';
 
@@ -659,6 +660,16 @@ class Orchestrator {
     if (pendingCount > 0) log(c.yellow, `  Pending:  ${pendingCount}`);
     log(c.blue, `  Total:    ${this.tasks.length}`);
     log(c.gray, `  Executed this run: ${tasksExecuted}`);
+
+    // Wallet status + daily cost digest (§17.5)
+    logWalletStatus();
+    try {
+      const digest = getDailyCostDigest();
+      const today = new Date().toISOString().slice(0, 10);
+      mkdirSync('logs/clawrouter', { recursive: true });
+      writeFileSync(`logs/clawrouter/digest-${today}.json`, JSON.stringify(digest, null, 2));
+      log(c.cyan, `  💰 Cost digest: $${digest.total_usd.toFixed(4)} across ${digest.call_count} calls`);
+    } catch { /* non-critical */ }
     console.log('===============================\n');
 
     await this.supervisor.notifyProgress(done, this.tasks.length);

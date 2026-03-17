@@ -1,96 +1,136 @@
 /**
- * wallet-state.ts — CFO budget tracking with persistence
+ * wallet-state.ts — CFO budget tracking for ClawRouter spend
  *
- * Tracks monthly cloud API spend across orchestrator runs.
- * Persists to ./logs/wallet/state.json so spend survives process restarts.
- * Auto-resets spentThisMonth on the first run of a new calendar month.
+ * Accumulates spend from ClawRouter X-Payment-Amount headers.
+ * Enforces degraded (≥80%) and frozen (≥95%) modes to protect the wallet.
+ * Persists to logs/wallet/state.json across sprint runs.
+ *
+ * Unified API — matches Kognai's wallet-state singleton pattern.
+ * Backward-compatible exports retained for orchestrate-agents-v2.ts.
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { resolve } from 'path';
 
-// ── Types ──────────────────────────────────────────────────────────────────
+const PROJECT_ROOT = resolve(__dirname, '../..');
+const STATE_FILE = resolve(PROJECT_ROOT, 'logs/wallet/state.json');
+const DEFAULT_BUDGET = parseFloat(process.env.CEO_WALLET_BUDGET_USDC || '25'); // $25/month default
 
-export interface WalletState {
-  monthlyBudget:  number;   // max USDC spend this month (0 = unlimited)
-  spentThisMonth: number;   // cumulative USDC spent since lastReset
-  callCount:      number;   // cloud API calls made since lastReset
-  lastReset:      string;   // ISO date YYYY-MM-DD of last monthly reset
+interface WalletStateData {
+  monthlyBudget: number;
+  spentThisMonth: number;
+  callCount: number;
+  lastReset: string; // ISO date string
 }
 
-// ── Internal ───────────────────────────────────────────────────────────────
-
-const STATE_FILE = './logs/wallet/state.json';
-
-function todayISO(): string {
-  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-}
-
-function currentMonth(): string {
-  return todayISO().slice(0, 7); // YYYY-MM
-}
-
-// ── Public API ─────────────────────────────────────────────────────────────
-
-/**
- * Load wallet state from disk. Auto-resets if a new month has started.
- * If file doesn't exist, returns a fresh default state.
- */
-export function loadWalletState(): WalletState {
-  mkdirSync('./logs/wallet', { recursive: true });
-
+function loadState(): WalletStateData {
   if (existsSync(STATE_FILE)) {
     try {
-      const stored = JSON.parse(readFileSync(STATE_FILE, 'utf-8')) as WalletState;
-      // Reset if we've crossed into a new calendar month
-      if (stored.lastReset.slice(0, 7) !== currentMonth()) {
-        const reset: WalletState = {
-          monthlyBudget:  stored.monthlyBudget,
-          spentThisMonth: 0,
-          callCount:      0,
-          lastReset:      todayISO(),
-        };
-        writeFileSync(STATE_FILE, JSON.stringify(reset, null, 2));
-        return reset;
+      const raw = JSON.parse(readFileSync(STATE_FILE, 'utf8'));
+      // Auto-reset on new month
+      const lastReset = new Date(raw.lastReset);
+      const now = new Date();
+      if (lastReset.getMonth() !== now.getMonth() || lastReset.getFullYear() !== now.getFullYear()) {
+        return freshState();
       }
-      return stored;
-    } catch {
-      // Corrupt file — fall through to default
-    }
+      return raw;
+    } catch { /* fall through */ }
   }
+  return freshState();
+}
 
-  const defaultState: WalletState = {
-    monthlyBudget:  Number(process.env.CEO_WALLET_BUDGET_USDC || 0),
+function freshState(): WalletStateData {
+  return {
+    monthlyBudget: DEFAULT_BUDGET,
     spentThisMonth: 0,
-    callCount:      0,
-    lastReset:      todayISO(),
+    callCount: 0,
+    lastReset: new Date().toISOString(),
   };
-  writeFileSync(STATE_FILE, JSON.stringify(defaultState, null, 2));
-  return defaultState;
 }
 
-/**
- * Persist wallet state to disk. Call after every cloud spend mutation.
- */
-export function saveWalletState(state: WalletState): void {
-  mkdirSync('./logs/wallet', { recursive: true });
-  writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+function saveState(data: WalletStateData): void {
+  try {
+    mkdirSync(resolve(PROJECT_ROOT, 'logs/wallet'), { recursive: true });
+    writeFileSync(STATE_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch { /* non-fatal */ }
 }
 
-/**
- * Record a cloud call. Returns updated state — does NOT persist.
- * Caller must call saveWalletState() themselves.
- */
+// Singleton
+let _state = loadState();
+
+// ── Primary API (matches Kognai pattern) ────────────────────────────────────
+
+export interface WalletState {
+  monthlyBudget: number;
+  spentThisMonth: number;
+  callCount: number;
+  remaining: number;
+  burnPct: number;
+  isDegraded: boolean; // ≥80%
+  isFrozen: boolean;   // ≥95%
+}
+
+export function getWalletState(): WalletState {
+  const remaining = Math.max(0, _state.monthlyBudget - _state.spentThisMonth);
+  const burnPct = _state.monthlyBudget > 0
+    ? (_state.spentThisMonth / _state.monthlyBudget) * 100
+    : 0;
+  return {
+    monthlyBudget: _state.monthlyBudget,
+    spentThisMonth: _state.spentThisMonth,
+    callCount: _state.callCount,
+    remaining,
+    burnPct,
+    isDegraded: burnPct >= 80,
+    isFrozen: burnPct >= 95,
+  };
+}
+
+export function recordSpend(costUsdc: number): void {
+  _state.spentThisMonth += costUsdc;
+  _state.callCount += 1;
+  saveState(_state);
+}
+
+export function resetWallet(): void {
+  _state = freshState();
+  saveState(_state);
+}
+
+export function logWalletStatus(): void {
+  const s = getWalletState();
+  const status = s.isFrozen ? '🔴 FROZEN' : s.isDegraded ? '🟡 DEGRADED' : '🟢 OK';
+  console.log(`  💳 Wallet ${status}: $${s.spentThisMonth.toFixed(4)}/$${s.monthlyBudget} (${s.burnPct.toFixed(1)}%)`);
+}
+
+// ── Backward-compatible API (for orchestrate-agents-v2.ts) ──────────────────
+
+export function loadWalletState(): WalletState {
+  _state = loadState(); // re-read from disk
+  return getWalletState();
+}
+
+export function saveWalletState(_ws: WalletState): void {
+  // Sync singleton state from caller's copy and persist
+  _state.spentThisMonth = _ws.spentThisMonth;
+  _state.callCount = _ws.callCount;
+  saveState(_state);
+}
+
 export function recordCloudCall(state: WalletState, costUsdc: number): WalletState {
   return {
     ...state,
     spentThisMonth: state.spentThisMonth + costUsdc,
-    callCount:      state.callCount + 1,
+    callCount: state.callCount + 1,
+    remaining: Math.max(0, state.monthlyBudget - state.spentThisMonth - costUsdc),
+    burnPct: state.monthlyBudget > 0
+      ? ((state.spentThisMonth + costUsdc) / state.monthlyBudget) * 100
+      : 0,
+    isDegraded: state.monthlyBudget > 0 && (state.spentThisMonth + costUsdc) / state.monthlyBudget >= 0.80,
+    isFrozen: state.monthlyBudget > 0 && (state.spentThisMonth + costUsdc) / state.monthlyBudget >= 0.95,
   };
 }
 
-/**
- * Human-readable budget report string.
- */
 export function getWalletReport(state: WalletState): string {
   const burnPct = state.monthlyBudget > 0
     ? ((state.spentThisMonth / state.monthlyBudget) * 100).toFixed(1)
@@ -98,18 +138,10 @@ export function getWalletReport(state: WalletState): string {
   return `Wallet: $${state.spentThisMonth.toFixed(4)} / $${state.monthlyBudget} budget (${burnPct}%) | ${state.callCount} cloud calls this month`;
 }
 
-/**
- * Returns true when monthly spend has hit 95% of budget.
- * Triggers sovereign mode: all tasks routed to local Ollama.
- */
 export function isFrozen(state: WalletState): boolean {
   return state.monthlyBudget > 0 && state.spentThisMonth / state.monthlyBudget >= 0.95;
 }
 
-/**
- * Returns true when monthly spend has hit 80% of budget.
- * Triggers degraded mode: non-critical tasks rerouted to local.
- */
 export function isDegraded(state: WalletState): boolean {
   return state.monthlyBudget > 0 && state.spentThisMonth / state.monthlyBudget >= 0.80;
 }
