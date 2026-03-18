@@ -11,6 +11,8 @@ import { routeCall, getDailyCostDigest, type ClawRouterV2Request } from './lib/c
 import { logWalletStatus, getWalletState } from './lib/wallet-state';
 // CTO Approval Gate — every autonomous sprint reviewed before execution (Exec Protocol)
 import { requestCTOApproval, type SprintProposal, type CTOApprovalResult } from './lib/cto-approval-gate';
+// AMD-02 Skill Bank — crystallise high-scoring task executions into reusable skills
+import { crystalliseSkill, type CrystalliseParams } from './lib/skill-crystalliser';
 
 // ===== x402 LLM Client (agent wallets spend USDC for each LLM call) =====
 // Lazy import — falls back to direct MiniMax API if x402 endpoint is unavailable
@@ -478,6 +480,42 @@ class Orchestrator {
     });
   }
 
+  /**
+   * Score a completed task execution using ClawRouter T1 LOCAL (qwen3:4b, $0).
+   * Returns 0-10 score. Used by crystalliseSkill (threshold: score >= 8 → normalized 80+).
+   */
+  private async scoreTaskExecution(task: AgentTask, files: string[]): Promise<number> {
+    try {
+      const fileSummary = files.map(f => {
+        try { return `${f}: ${readFileSync(f, 'utf-8').substring(0, 500)}`; } catch { return f; }
+      }).join('\n---\n');
+
+      const result = await routeCall({
+        task_type: 'task_scoring',
+        tier_class: 'text',
+        complexity: 'local',  // T1 LOCAL — qwen3:4b, fast, $0
+        context_tokens: Math.ceil(fileSummary.length / 4),
+        constitutional_flag: false,
+        agent_id: 'scorer-invoica',
+        payload: {
+          system: 'You are a code quality scorer. Score the task execution 0-10 based on correctness, completeness, and code quality. Respond with ONLY a JSON object: {"score": N, "approach": "brief summary", "key_patterns": ["what worked"], "anti_patterns": ["what to avoid"]}',
+          prompt: `Task: ${task.context || task.id}\nAgent: ${task.agent}\nFiles produced:\n${fileSummary}`,
+          max_tokens: 200,
+        },
+      });
+
+      const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return Math.min(10, Math.max(0, Number(parsed.score) || 0));
+      }
+      return 5; // default middle score if parsing fails
+    } catch (err: any) {
+      log(c.yellow, `  ! Scoring failed: ${err.message}`);
+      return 5; // non-critical — default score
+    }
+  }
+
   private async executeTask(task: AgentTask): Promise<'done' | 'rejected' | 'paused'> {
     const agent = this.agents.get(task.agent);
     if (!agent) {
@@ -507,6 +545,50 @@ class Orchestrator {
         task.status = 'done';
         this.saveTasks();
         log(c.green, `\nTask ${task.id} -> done (${result.files.length} files)`);
+
+        // AMD-02: Score execution + crystallise high-quality skills
+        const sprintId = this.sprintFile.replace(/.*\//, '').replace('.json', '');
+        const score = await this.scoreTaskExecution(task, result.files);
+        log(c.blue, `  📊 Quality score: ${score}/10`);
+        try {
+          // Parse scoring metadata from the scorer response for crystallisation
+          let approach = `${task.context || task.id}`.substring(0, 200);
+          let keyPatterns: string[] = [];
+          let antiPatterns: string[] = [];
+          try {
+            const scoreResult = await routeCall({
+              task_type: 'task_scoring', tier_class: 'text', complexity: 'local',
+              context_tokens: 200, constitutional_flag: false, agent_id: 'scorer-invoica',
+              payload: { system: 'Extract from task. JSON only: {"approach":"","key_patterns":[],"anti_patterns":[]}',
+                         prompt: `${task.context || task.id}`.substring(0, 300), max_tokens: 150 },
+            });
+            const m = scoreResult.content.match(/\{[\s\S]*\}/);
+            if (m) { const p = JSON.parse(m[0]); approach = p.approach || approach; keyPatterns = p.key_patterns || []; antiPatterns = p.anti_patterns || []; }
+          } catch { /* non-critical */ }
+
+          const normalizedScore = score * 10; // Invoica 0-10 → crystalliser 0-100 scale
+          const skill = crystalliseSkill({
+            agentId: task.agent,
+            taskId: task.id,
+            sprintId,
+            taskTitle: task.context || task.id || task.id,
+            taskType: task.agent,
+            model: result.model || 'minimax',
+            taskTarget: 'cloud-code',
+            score: normalizedScore,
+            approachSummary: approach,
+            keyPatterns,
+            antiPatterns,
+          });
+          if (skill) {
+            log(c.green, `  💎 Skill crystallised: ${skill.skill_id} (score ${normalizedScore})`);
+          } else {
+            log(c.yellow, `  ⏭ Score ${normalizedScore} < 75 threshold — not crystallised`);
+          }
+        } catch (crystalErr: any) {
+          log(c.yellow, `  ! Crystallisation failed: ${crystalErr.message}`);
+        }
+
         return 'done';
       } catch (error: any) {
         log(c.red, `\nx Task ${task.id} failed: ${error.message}`);
