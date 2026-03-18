@@ -355,6 +355,23 @@
         "docs": []
       },
       "status": "pending"
+    },
+    {
+      "id": "SPRINT-GUARD-001",
+      "agent": "backend-core",
+      "type": "maintenance",
+      "priority": "critical",
+      "dependencies": [],
+      "description": "Add MAX_PENDING_SPRINT_TASKS guard to run-ceo-review.ts to prevent autonomous sprint queue bloat",
+      "context": "PROBLEM: run-ceo-review.ts (cron_restart: 0 */2 * * *) generated 99 sprint files with 53 pending tasks autonomously. The sprint queue grew from ~22 → 53 pending tasks across week-85 through week-100, burying product tasks (week-76) 47 tasks deep. This depletes API credits on swarm-generated tasks instead of product work.\n\nFIX: Add a pending-task count check at the TOP of the main() function in scripts/run-ceo-review.ts. If total pending tasks across all week-*.json files exceeds MAX_PENDING_SPRINT_TASKS (default 10), log a warning and exit early WITHOUT triggering a new sprint.\n\nIMPLEMENTATION:\n\n1. Read scripts/run-ceo-review.ts lines 433-465 first (the main() function header + early-exit checks)\n\n2. Add a new helper function ABOVE main():\n\n```typescript\nfunction countPendingSprintTasks(): number {\n  const sprintDir = path.join(ROOT, 'sprints');\n  try {\n    const files = fs.readdirSync(sprintDir).filter(f => /^week-\\d+\\.json$/.test(f));\n    let total = 0;\n    for (const f of files) {\n      try {\n        const raw = fs.readFileSync(path.join(sprintDir, f), 'utf8');\n        const parsed = JSON.parse(raw);\n        const tasks = Array.isArray(parsed) ? parsed : (parsed.tasks ?? []);\n        total += (tasks as { status?: string }[]).filter(t => t.status === 'pending').length;\n      } catch { /* skip malformed files */ }\n    }\n    return total;\n  } catch { return 0; }\n}\n```\n\n3. In main(), after the LOCK_FILE check (around line 447) and BEFORE the state load, add:\n\n```typescript\n  // Sprint queue guard — don't generate new sprints if too many tasks are already pending\n  const MAX_PENDING = parseInt(process.env.MAX_PENDING_SPRINT_TASKS ?? '10', 10);\n  const currentPending = countPendingSprintTasks();\n  if (currentPending >= MAX_PENDING && !FORCE) {\n    console.log(`[ceo-review] Sprint queue guard: ${currentPending} pending tasks >= ${MAX_PENDING} max — skipping sprint generation`);\n    fs.unlinkSync(LOCK_FILE); // release lock before exit\n    return;\n  }\n```\n\nThe FORCE flag (--force CLI arg) bypasses the guard for manual overrides.\n\nAFTER WRITING:\n  Run npx tsc --noEmit 2>&1 | grep -v node_modules and confirm 0 new TypeScript errors.\n  Do NOT restart ceo-review — it will pick up the change via git-autodeploy on next trigger.",
+      "deliverables": {
+        "code": [
+          "scripts/run-ceo-review.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
     }
   ]
 }
