@@ -115,6 +115,25 @@
       "status": "pending"
     },
     {
+      "id": "FIX-010",
+      "agent": "cto-agent",
+      "type": "bugfix",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Fix backend-wrapper.sh phantom restart loop — replace lsof with ss for port 3001 check",
+      "context": "SYMPTOM: PM2 shows 769+ backend restarts. Root cause: `lsof -ti :3001` silently returns nothing when run as the `invoica` user (no permission to inspect other processes' FDs on this Linux kernel config). This causes PORT_FREE=true immediately on every restart attempt, so the new ts-node instance fails with 'Port 3001 is already in use' — triggering another PM2 restart. The actual ts-node process holds port 3001 and serves traffic correctly (71257s+ uptime), but PM2 keeps restarting the wrapper.\n\nFILE TO EDIT: /home/invoica/apps/Invoica/backend-wrapper.sh (server-side) AND backend-wrapper.sh (local repo)\n\nCHANGE 1 — Port check loop (lines 43-49):\n  CURRENT:\n    for i in $(seq 1 30); do\n      if ! lsof -ti :3001 >/dev/null 2>&1; then\n        PORT_FREE=true\n        break\n      fi\n      sleep 1\n    done\n\n  REPLACE WITH:\n    for i in $(seq 1 30); do\n      if ! ss -tlnp 2>/dev/null | grep -q ':3001 '; then\n        PORT_FREE=true\n        break\n      fi\n      sleep 1\n    done\n\nCHANGE 2 — Force-kill fallback (line 53):\n  CURRENT:\n    lsof -ti :3001 | xargs kill -9 2>/dev/null || true\n\n  REPLACE WITH:\n    ss -tlnp 2>/dev/null | awk '/:3001 /{print $NF}' | grep -oP 'pid=\\K[0-9]+' | xargs -r kill -9 2>/dev/null || true\n\nEXACT OLD_STRING for Change 1:\n  for i in $(seq 1 30); do\n    if ! lsof -ti :3001 >/dev/null 2>&1; then\n\nEXACT OLD_STRING for Change 2:\n    lsof -ti :3001 | xargs kill -9 2>/dev/null || true\n\nSTEPS:\n  1. Edit backend-wrapper.sh locally (both changes above)\n  2. Verify the file is correct: cat backend-wrapper.sh\n  3. git add backend-wrapper.sh && git commit -m 'fix: backend-wrapper.sh — replace lsof with ss for port check (fixes phantom restart loop)' && git push\n  4. Wait for git-autodeploy to pull (up to 5 min), then: pm2 restart backend\n  5. Watch: pm2 logs backend --lines 20 --nostream\n     Expected: '[backend-wrapper] Lock acquired', then ts-node starts — NO 'Port 3001 is already in use'\n  6. Write report to reports/cto/fix-010-backend-wrapper-2026-03-19.md:\n     - What was broken and why\n     - Changes made\n     - PM2 restart count before/after\n     - Confirmation that restart loop is resolved",
+      "deliverables": {
+        "code": [
+          "backend-wrapper.sh"
+        ],
+        "tests": [],
+        "docs": [
+          "reports/cto/fix-010-backend-wrapper-2026-03-19.md"
+        ]
+      },
+      "status": "pending"
+    },
+    {
       "id": "HEALTH-MONITOR-001",
       "agent": "backend-core",
       "type": "maintenance",
