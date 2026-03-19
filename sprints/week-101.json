@@ -4,6 +4,23 @@
   "notes": "Week-101: Reputation Score MVP, dashboard data refresh, CTO tech debt, invoice PDF export, agent leaderboard, health monitoring. Sprints 138-154 all confirmed done on server (week-99 + auto-sprints). These are the next highest-value product tasks.",
   "tasks": [
     {
+      "id": "CMO-001",
+      "agent": "cto-agent",
+      "type": "maintenance",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Reactivate Manus CMO — re-enable wallet, start PM2 processes, smoke test",
+      "context": "The CMO was deliberately deactivated on 2026-03-13 (CTO-20260222-002). Owner has confirmed reactivation.\n\nPREREQUISITE: MANUS_API_KEY is confirmed present in /home/invoica/apps/Invoica/.env — proceed directly.\n\nSTEP 1 — Re-enable CMO wallet in Supabase:\nRun on server:\n  cd /home/invoica/apps/Invoica\n  node -e \"\n    const { PrismaClient } = require('@prisma/client');\n    const prisma = new PrismaClient();\n    prisma.agentWallet.updateMany({ where: { agentId: 'cmo' }, data: { isActive: true } })\n      .then(r => { console.log('updated:', r.count, 'rows'); prisma.$disconnect(); })\n      .catch(e => { console.error(e); prisma.$disconnect(); });\n  \"\nIf no wallet table exists: skip this step and note it in the report.\n\nSTEP 2 — Clear stale cron guards:\n  rm -f /home/invoica/apps/Invoica/logs/cron-guard-cmo-daily-watch.json\n\nSTEP 3 — Start CMO PM2 processes:\n  cd /home/invoica/apps/Invoica\n  pm2 start ecosystem.config.js --only cmo-daily-watch,cmo-weekly-content-plan\n  pm2 save\n  pm2 status\n\nSTEP 4 — Smoke test:\n  pm2 restart cmo-daily-watch\n  sleep 10 && pm2 logs cmo-daily-watch --lines 30 --nostream\n  Check for: Manus task created, polling, completed — OR any API error\n\nSTEP 5 — Write report to: reports/cto/cmo-reactivation-2026-03-19.md\n  Include: wallet update result, PM2 status, smoke test output, any errors.",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": [
+          "reports/cto/cmo-reactivation-2026-03-19.md"
+        ]
+      },
+      "status": "pending"
+    },
+    {
       "id": "REPUTATION-001",
       "agent": "backend-core",
       "type": "feature",
