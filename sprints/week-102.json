@@ -1,0 +1,42 @@
+{
+  "week": 102,
+  "created": "2026-03-19",
+  "notes": "URGENT — Synthesis hackathon (synthesis.md). Building ends March 22. Invoica is a natural fit for 'Agents that pay' track. Repo is already public. CMO evaluates → CEO decides → CEO registers + plans submission autonomously.",
+  "tasks": [
+    {
+      "id": "SYNTHESIS-CMO-EVAL-001",
+      "agent": "cmo-agent",
+      "type": "bizdev",
+      "priority": "critical",
+      "dependencies": [],
+      "description": "Evaluate Synthesis hackathon opportunity and write a memo to the CEO recommending participation or not",
+      "context": "The Synthesis (synthesis.md) is an online builder event running March 4–25, 2026. Building ends March 22. It is described as 'the first builder event you can enter without a body' — AI agents can participate autonomously.\n\nFOUR TRACKS:\n  1. Agents that pay — transparent agent spending mechanisms ← PERFECT FIT for Invoica\n  2. Agents that trust — decentralized identity and verification\n  3. Agents that cooperate — trustless deal-making infrastructure\n  4. Agents that keep secrets — privacy-preserving agent interactions\n\nINVOICA FIT ANALYSIS (CMO to assess):\n  - Invoica IS 'agents that pay': x402 invoice middleware, on-chain USDC settlement, autonomous billing\n  - Repo is already public at github.com/skingem1/Invoica — open source requirement met\n  - Existing live demo: backend API + dashboard at app.invoica.ai\n  - On-chain artifacts: Base Mainnet settlement txns (score points with judges per skill.md)\n  - Agent-native: built entirely by 18 AI agents with zero human code\n\nCOMPETITIVE CONTEXT:\n  - This is a niche event (AI/agent builders, Ethereum-aligned) — natural early-adopter audience for Invoica\n  - Winning or placing = credibility signal for the free beta period\n  - Exposure to Ethereum/Base ecosystem developers who are exactly Invoica's ICP\n\nDELIVERABLE: Write memo to CEO at reports/cmo/synthesis-eval-2026-03-19.md\n  Structure:\n  - Opportunity summary (2–3 sentences)\n  - Track fit score (1–10) with reasoning\n  - Submission angle: what to pitch (e.g. 'Invoica = payment infrastructure for the agent economy, live on Base')\n  - Risks or concerns (e.g. deadline, open source, team size)\n  - Recommendation: PARTICIPATE or SKIP with 1 sentence rationale\n  Max 400 words. This memo goes straight to CEO for the go/no-go decision.\n\nAFTER WRITING: confirm file written at reports/cmo/synthesis-eval-2026-03-19.md",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": [
+          "reports/cmo/synthesis-eval-2026-03-19.md"
+        ]
+      },
+      "status": "pending"
+    },
+    {
+      "id": "SYNTHESIS-CEO-DECIDE-001",
+      "agent": "ceo-agent",
+      "type": "bizdev",
+      "priority": "critical",
+      "dependencies": ["SYNTHESIS-CMO-EVAL-001"],
+      "description": "Read CMO memo, decide on Synthesis participation, and if approved — register, plan submission, and execute autonomously",
+      "context": "Read CMO evaluation memo at reports/cmo/synthesis-eval-2026-03-19.md before proceeding.\n\nDECISION FRAMEWORK:\n  - If CMO recommends SKIP: agree or override with written rationale. Write decision to reports/ceo/synthesis-decision-2026-03-19.md and stop.\n  - If CMO recommends PARTICIPATE: proceed with all steps below.\n\nIF PARTICIPATING — STEP 1: Collect human registration info via Telegram\n  The Synthesis registration API requires 8 pieces of human info. Send the following message to the owner via Telegram (ceo-ai-bot):\n\n  'SYNTHESIS HACKATHON REGISTRATION — I need 8 quick answers to register Invoica:\n  1. Your full name\n  2. Your email address\n  3. Your main social handle (X/Twitter preferred)\n  4. Background: founder / developer / designer / researcher / other?\n  5. Crypto experience: none / beginner / intermediate / expert\n  6. AI/agent experience: none / beginner / intermediate / expert\n  7. Coding comfort: none / low / medium / high\n  8. One sentence: what problem does Invoica solve for agents?'\n\n  Wait for owner response (poll Telegram messages). Once received, proceed to Step 2.\n\nIF PARTICIPATING — STEP 2: Register via synthesis.md API\n  Endpoint: POST https://synthesis.md/api/register (check curl -s https://synthesis.md/skill.md for exact endpoint and field names)\n  Required fields per skill.md: agent name, description, harness type, model, human participant info from Step 1\n  Use:\n    agent name: 'Invoica CEO Agent'\n    description: 'CEO of Invoica — the Financial OS for the Agent Economy. x402 invoice middleware on Base.'\n    harness type: 'orchestrator'\n    model: 'claude-sonnet-4-6'\n  Save the returned API key (sk-synth-...) to /home/invoica/memory/synthesis-api-key.txt\n  Save team code / registration ID to /home/invoica/memory/synthesis-registration.json\n\nIF PARTICIPATING — STEP 3: Plan the submission\n  Write submission plan to reports/ceo/synthesis-submission-plan-2026-03-19.md\n  Plan must include:\n  - Track: 'Agents that pay'\n  - What we're submitting: live Invoica platform (invoica.ai + api.invoica.ai + github.com/skingem1/Invoica)\n  - Demo narrative: 'Invoica is payment infrastructure for the agent economy. Agents create invoices, receive x402 payment requests, settle in USDC on Base — fully autonomously. Built by 18 AI agents with zero human code.'\n  - On-chain evidence: point to real settlement transactions on Base Mainnet (check backend for any txHash records in the DB)\n  - conversationLog / collaboration evidence: reference the git log (769 commits, 18 agents, 96.4% approval rate)\n  - Any additional polish needed before March 22 deadline\n  - Sprint tasks to create (if any polish is needed)\n\nIF PARTICIPATING — STEP 4: Submit (or flag if manual action needed)\n  Check skill.md for submission endpoint.\n  If submission can be done via API: submit directly and record confirmation.\n  If submission requires a web UI or manual action: write clear instructions to reports/ceo/synthesis-submission-plan-2026-03-19.md and notify owner via Telegram: 'Invoica is registered for Synthesis. Final submission needs one manual step — [explain step]. Deadline: March 22.'\n\nFINAL REPORT: Write full decision + action log to reports/ceo/synthesis-decision-2026-03-19.md",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": [
+          "reports/ceo/synthesis-decision-2026-03-19.md",
+          "reports/ceo/synthesis-submission-plan-2026-03-19.md"
+        ]
+      },
+      "status": "pending"
+    }
+  ]
+}
