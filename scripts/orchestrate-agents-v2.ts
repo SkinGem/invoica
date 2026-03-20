@@ -1527,7 +1527,7 @@ class CodingAgent {
     // Pre-flight: validate all deliverable files exist for non-feature tasks
     // If a file doesn't exist and we're asked to modify it, skip rather than hallucinate
     if (task.type !== 'feature' && (task as any).type !== 'docs') {
-      const missing = deliverables.filter(f => !existsSync(f));
+      const missing = deliverables.filter(f => !existsSync(f) && !f.startsWith('reports/') && !f.startsWith('docs/'));
       if (missing.length > 0) {
         log(c.red, `  ✗ Pre-flight FAILED: File(s) not found: ${missing.join(', ')}`);
         log(c.red, `  ✗ Skipping task ${task.id} — deliverable files do not exist in repo`);
@@ -1541,7 +1541,7 @@ class CodingAgent {
     const VALID_PATH_PREFIXES = [
       'backend/', 'frontend/', 'agents/', 'scripts/', 'shared/',
       'website/', 'docs-site/', 'apps/', 'sdk/', 'x402-base/', 'x402-evm/', 'x402-test/',
-      'supabase/', 'infrastructure/',
+      'supabase/', 'infrastructure/', 'reports/',
     ];
     // Invalid patterns: paths that look like monorepo sub-dirs that don't exist
     const INVALID_PATH_PATTERNS = [
