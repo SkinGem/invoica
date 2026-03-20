@@ -50,8 +50,18 @@ done
 
 if [ "$PORT_FREE" = "false" ]; then
   echo "[backend-wrapper] Port 3001 still busy after 30s — force-killing zombie holder"
-  ss -tlnp 2>/dev/null | awk '/:3001 /{print $NF}' | grep -oP 'pid=\K[0-9]+' | xargs -r kill -9 2>/dev/null || true
+  # pkill works as non-root (kills ts-node/node processes owned by current user).
+  # ss -tlnp does NOT show PIDs for non-root on this system (confirmed Mar 2026).
+  # If the zombie is owned by a different user (e.g. root — see Mar 2026 incident),
+  # pkill will silently skip it; the wrapper will then get EADDRINUSE and exit 1,
+  # triggering a PM2 restart loop until the cross-user zombie is killed manually.
+  pkill -9 -f 'ts-node.*backend/src/server' 2>/dev/null || true
+  pkill -9 -f 'node.*backend/src/server' 2>/dev/null || true
   sleep 2
+  # Final port check — if still busy, it's a root-owned zombie requiring manual kill.
+  if ss -tlnp 2>/dev/null | grep -q ':3001 '; then
+    echo "[backend-wrapper] WARN: Port 3001 still busy after pkill — zombie may be owned by another user (e.g. root). Manual intervention required: sudo kill -9 \$(ss -tlnp | awk '/:3001 /{print \$NF}' | grep -oP 'pid=\K[0-9]+')"
+  fi
 fi
 
 # exec: replaces bash with ts-node (same PID — PM2 tracks correctly).
