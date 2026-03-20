@@ -36,7 +36,7 @@
           "reports/cmo/synthesis-eval-2026-03-19.md"
         ]
       },
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "SYNTHESIS-CEO-DECIDE-001",
@@ -54,7 +54,7 @@
           "reports/ceo/synthesis-submission-plan-2026-03-19.md"
         ]
       },
-      "status": "pending"
+      "status": "done"
     }
   ]
 }
