@@ -41,7 +41,7 @@ fi
 # Increased to 30s to accommodate PM2 graceful shutdown (kill_timeout: 15s + buffer).
 PORT_FREE=false
 for i in $(seq 1 30); do
-  if ! lsof -ti :3001 >/dev/null 2>&1; then
+  if ! ss -tlnp 2>/dev/null | grep -q ':3001 '; then
     PORT_FREE=true
     break
   fi
@@ -50,7 +50,7 @@ done
 
 if [ "$PORT_FREE" = "false" ]; then
   echo "[backend-wrapper] Port 3001 still busy after 30s — force-killing zombie holder"
-  lsof -ti :3001 | xargs kill -9 2>/dev/null || true
+  ss -tlnp 2>/dev/null | awk '/:3001 /{print $NF}' | grep -oP 'pid=\K[0-9]+' | xargs -r kill -9 2>/dev/null || true
   sleep 2
 fi
 

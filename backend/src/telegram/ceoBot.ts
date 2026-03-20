@@ -1162,7 +1162,7 @@ async function handleUpdate(update: TelegramUpdate): Promise<void> {
 // Tracks which agents are currently in "low" state to avoid repeat alerts.
 // State persisted to disk so restarts don't reset the dedup window.
 const WALLET_ALERT_STATE_FILE = path.join(ROOT, '.wallet-alert-state.json');
-const ALERT_REMINDER_MS = 4 * 60 * 60 * 1000; // re-alert every 4h (was 30min)
+const ALERT_REMINDER_MS = 24 * 60 * 60 * 1000; // re-alert every 24h
 
 function loadAlertState(): Map<string, { isLow: boolean; lastAlertAt: number }> {
   try {

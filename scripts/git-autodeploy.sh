@@ -97,9 +97,9 @@ if [ "$BACKEND_CHANGED" = "true" ]; then
   echo "[$TIMESTAMP] [AutoDeploy] backend restarted"
 fi
 
-# CEO AI bot (standalone process — replaces the old telegram-bot PM2 entry)
-if echo "$CHANGED" | grep -q "^scripts/run-ceo-bot\.ts$"; then
-  echo "[$TIMESTAMP] [AutoDeploy] run-ceo-bot.ts changed → restarting ceo-ai-bot"
+# CEO AI bot — restart when entry point OR main bot logic changes
+if echo "$CHANGED" | grep -qE "^scripts/run-ceo-bot\.ts$|^backend/src/telegram/ceoBot\.ts$"; then
+  echo "[$TIMESTAMP] [AutoDeploy] ceo-ai-bot source changed → restarting ceo-ai-bot"
   pm2 restart ceo-ai-bot
   echo "[$TIMESTAMP] [AutoDeploy] ceo-ai-bot restarted"
 fi
