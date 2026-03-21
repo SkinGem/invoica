@@ -38,7 +38,7 @@ const features: FeatureItem[] = [
   },
   {
     title: 'Settlement Detection',
-    description: 'Real-time on-chain settlement tracking on Base. Every payment includes verified txHash, network, and payer identity — no manual reconciliation.',
+    description: 'Real-time on-chain settlement tracking across Base, Polygon, Arbitrum, and Solana. Every payment includes verified txHash, network, and payer identity — no manual reconciliation.',
     gradient: 'from-[#8B5CF6] to-[#A78BFA]',
     glowColor: 'shadow-[#8B5CF6]/25',
     icon: (
@@ -53,7 +53,7 @@ const features: FeatureItem[] = [
   },
   {
     title: 'Business Verification',
-    description: 'Validate business identity across 6 jurisdictions before payment: EU VIES, UK Companies House, France SIRENE, Canada, Japan NTA, and Israel.',
+    description: 'Validate business identity across 12 countries before payment: EU VIES, UK, France, Germany, Canada, Japan, Israel, Australia, Singapore, UAE, Brazil, and Mexico.',
     gradient: 'from-[#F59E0B] to-[#FBBF24]',
     glowColor: 'shadow-[#F59E0B]/25',
     icon: (

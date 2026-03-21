@@ -1,9 +1,9 @@
 'use client';
 
 const stats = [
-  { value: '22', label: 'Invoices Created', description: 'Real invoices generated and stored on-chain since launch' },
-  { value: '14', label: 'Settlements on Base', description: 'Confirmed on-chain payments with verified txHash' },
-  { value: '6', label: 'Countries Verified', description: 'EU VIES, UK, France, Canada, Japan, Israel' },
+  { value: '22+', label: 'Invoices Created', description: 'Real invoices generated and settled on-chain since launch' },
+  { value: '4', label: 'Chains Live', description: 'Base, Polygon, Arbitrum, Solana — all mainnet, all USDC. First Solana x402 tx verified 2026-03-21.' },
+  { value: '12', label: 'Countries Verified', description: 'EU, UK, France, Germany, Canada, Japan, Israel, Australia, Singapore, UAE, Brazil, Mexico' },
   { value: '0.003', label: 'USDC per AI Call', description: 'Pay exactly what you use — no monthly subscription' },
 ];
 

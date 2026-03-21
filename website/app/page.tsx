@@ -2,6 +2,7 @@ import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import Problem from '@/components/Problem';
 import Features from '@/components/Features';
+import Chains from '@/components/Chains';
 import CodeExample from '@/components/CodeExample';
 import McpIntegration from '@/components/McpIntegration';
 import Enterprise from '@/components/Enterprise';
@@ -41,16 +42,19 @@ export default function HomePage() {
         {/* 3. Developer value prop — features grid */}
         <Features />
 
-        {/* 4. Code example — developer experience section */}
+        {/* 4. Supported chains — Base, Polygon, Arbitrum, Solana */}
+        <Chains />
+
+        {/* 5. Code example — developer experience section */}
         <CodeExample />
 
-        {/* 5. MCP Integration — Use Invoica from Claude, Cursor & Windsurf */}
+        {/* 6. MCP Integration — Use Invoica from Claude, Cursor & Windsurf */}
         <McpIntegration />
 
-        {/* 6. Enterprise value prop — RBAC, compliance, SLA */}
+        {/* 7. Enterprise value prop — RBAC, compliance, SLA */}
         <Enterprise />
 
-        {/* 7. Social proof — stats + testimonials */}
+        {/* 8. Social proof — stats + testimonials */}
         <SocialProof />
 
         {/* 8. Closing CTA */}
