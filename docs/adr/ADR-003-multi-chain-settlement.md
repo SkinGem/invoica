@@ -2,6 +2,13 @@
 
 ## Status
 Accepted — 2026-03-03
+**Verified on mainnet — 2026-03-21**
+
+Solana x402 end-to-end test passed on Solana Mainnet:
+- Tx: `5wNfiHc3UVY7kVHJhKUFmrpNTCjKQA46ds7xJzy9WXnwtCsLwW9A4JYp2EnGUBByYjFP9TUWcRVDKVeTYwhkq2WY`
+- Amount: 0.01 USDC · Slot: 407881715
+- Invoica invoice `a1119f47-0905-4968-9d86-bfae54923f22` → status: `settled`
+- Full flow verified: 402 → on-chain SPL transfer → X-Payment header → settlement detection → invoice settled
 
 ## Context
 
