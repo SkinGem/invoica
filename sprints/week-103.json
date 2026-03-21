@@ -23,7 +23,7 @@
     {
       "id": "HELIXA-002",
       "agent": "backend-core",
-      "type": "integration",
+      "type": "feature",
       "priority": "high",
       "dependencies": ["HELIXA-001"],
       "description": "Build Helixa trust-gated invoice acceptance — check Cred Score before accepting incoming invoice payments from external agents",
@@ -61,7 +61,7 @@
     },
     {
       "id": "HELIXA-004",
-      "agent": "cmo-agent",
+      "agent": "research-writer",
       "type": "content",
       "priority": "medium",
       "dependencies": ["HELIXA-001"],
