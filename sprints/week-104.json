@@ -88,7 +88,9 @@
       "deliverables": {
         "code": [],
         "tests": [],
-        "docs": []
+        "docs": [
+          "reports/cmo/sap-integration-thread.md"
+        ]
       },
       "status": "pending",
       "docs": []
