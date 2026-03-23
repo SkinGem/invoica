@@ -18,6 +18,8 @@ import reputationHistoryRoutes from './routes/reputation-history';
 import metricsRoutes from './routes/metrics';
 import taxRoutes from './routes/tax';
 import agentRoutes from './routes/agents';
+import sapRoutes from './routes/sap';
+import { requireApiKey } from './middleware/auth';
 
 const app = express();
 
@@ -64,6 +66,7 @@ app.use(reputationHistoryRoutes);
 app.use(metricsRoutes);
 app.use(taxRoutes);
 app.use(agentRoutes);
+app.use('/v1/sap', requireApiKey, sapRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, error: { message: 'Not found', code: 'NOT_FOUND' } });
