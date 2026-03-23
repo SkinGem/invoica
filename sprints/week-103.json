@@ -45,7 +45,7 @@
     },
     {
       "id": "HELIXA-003",
-      "agent": "frontend-core",
+      "agent": "frontend",
       "type": "feature",
       "priority": "medium",
       "dependencies": [
