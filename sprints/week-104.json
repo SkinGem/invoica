@@ -99,14 +99,12 @@
         "SAP-001"
       ],
       "description": "SAP x402 escrow bridge \u2014 detect SAP EscrowModule settlements on Solana and auto-create Invoica invoices",
-      "context": "CRITICAL \u2014 READ FIRST:\nbackend/src/services/settlement/sap-escrow-bridge.ts ALREADY EXISTS with 428 lines.\nIt exports: detectSapEscrowSettlement(txSignature, rpcUrl): Promise<SapEscrowMatch|null>\nDO NOT create or overwrite sap-escrow-bridge.ts. It is complete.\n\nYOUR ONLY JOBS:\n1) FILE: backend/src/services/settlement/settlement-router.ts (MODIFY, keep all existing code)\n   Add at top: import { detectSapEscrowSettlement } from './sap-escrow-bridge';\n   Add this function AFTER the existing exports (do not touch checkSettlement or verifyPayment):\n   export async function detectSapSettlement(txSignature: string, rpcUrl: string) {\n     return detectSapEscrowSettlement(txSignature, rpcUrl);\n   }\n   INTEGRITY RULE: settlement-router.ts is currently 63 lines. After edit it must be 66-70 lines.\n\n2) FILE: backend/src/services/settlement/__tests__/sap-escrow-bridge.test.ts (NEW, max 60 lines)\n   Import detectSapEscrowSettlement. Mock global fetch. Test:\n   - invalid signature returns null\n   - invalid rpcUrl returns null\n   - fetch error returns null (never throws)\n   - successful mock tx returns SapEscrowMatch with correct fields\n",
+      "context": "FILE TO MODIFY (ONLY): backend/src/services/settlement/settlement-router.ts\n\nThis file is currently 62 lines. After your edit it MUST be 65-70 lines.\nDO NOT touch any other file. DO NOT create any new files.\n\nEXACT CHANGES REQUIRED:\n\n1) After the last existing import line at the top of the file, add:\n   import { detectSapEscrowSettlement } from './sap-escrow-bridge';\n\n2) After the last closing brace at the bottom of the file, add:\n\n   export async function detectSapSettlement(\n     txSignature: string,\n     rpcUrl: string\n   ) {\n     return detectSapEscrowSettlement(txSignature, rpcUrl);\n   }\n\nThat is ALL. Keep every existing line untouched. The file grows by 4-8 lines only.\nINTEGRITY RULE: file must be >=62 lines after your change.",
       "deliverables": {
         "code": [
           "backend/src/services/settlement/settlement-router.ts"
         ],
-        "tests": [
-          "backend/src/services/settlement/__tests__/sap-escrow-bridge.test.ts"
-        ],
+        "tests": [],
         "docs": []
       },
       "status": "pending",
@@ -176,13 +174,11 @@
         "SAP-001"
       ],
       "description": "Draft @invoica_ai tweet thread announcing SAP integration \u2014 agent discovery, on-chain identity",
-      "context": "CMO SCOPE \u2014 READ FIRST: You are a CONTENT WRITING agent. Write the tweet thread as plain text in your response only. Do NOT create any files. Do NOT output file paths.\n\nContext: Invoica now detects SAP escrow settlements on Solana. When an agent pays via SAP's x402 escrow flow, Invoica auto-detects the on-chain settlement and creates the invoice automatically.\n\nTHREAD STRUCTURE (3 tweets, shipped-only, no roadmap):\n\nTweet 1 \u2014 The headline:\n  Invoica now auto-detects SAP escrow settlements on Solana.\n  When an agent pays via @OOBEProtocol SAP x402 escrow, Invoica sees it on-chain and creates the invoice automatically.\n  SAP Program: SAPpUhsWLJG1FfkGRcXagEDMrMsWGjbky7AyhGpFETZ\n\nTweet 2 \u2014 How it works:\n  detectSapEscrowSettlement(txSig, rpcUrl)\n  \u2192 checks if tx targets SAP program + USDC \u2192 Invoica wallet\n  \u2192 discriminator-based detection with fallback\n  \u2192 returns SapEscrowMatch | null. Never throws.\n\nTweet 3 \u2014 Why it matters:\n  SAP agents don't have to chase invoices. Pay via SAP escrow, Invoica auto-invoices. Fully on-chain. Zero manual steps.\n  One more step toward the fully autonomous agent economy.\n\nRULES:\n  - Do NOT include any SAP_AGENT_PDA address (registration is pending)\n  - Use SAP Program ID as-is: SAPpUhsWLJG1FfkGRcXagEDMrMsWGjbky7AyhGpFETZ\n  - Each tweet max 280 chars\n  - Max 1-2 emoji per tweet\n  - Technically precise tone\n  - Tag @OOBEProtocol\n",
+      "context": "CMO SCOPE \u2014 Write the tweet thread as plain text in your response ONLY.\nDo NOT create any files. Do NOT output file paths.\n\nCONTEXT: Invoica now detects SAP escrow settlements on Solana.\nWhen an agent pays via SAP x402 escrow, Invoica auto-detects the on-chain\nsettlement and creates the invoice automatically.\n\nWRITE 3 TWEETS (plain text, no markdown headers, no code fences):\n\nTweet 1 \u2014 Headline (max 280 chars):\n  Invoica now auto-detects SAP escrow settlements on Solana.\n  When an agent pays via @OOBEProtocol x402 escrow, Invoica sees it on-chain\n  and creates the invoice. SAP Program: SAPpUhsWLJG1FfkGRcXagEDMrMsWGjbky7AyhGpFETZ\n\nTweet 2 \u2014 How it works (max 280 chars):\n  detectSapEscrowSettlement(txSig, rpcUrl)\n  checks tx targets SAP program + USDC to Invoica wallet\n  returns SapEscrowMatch | null. Never throws.\n\nTweet 3 \u2014 Why it matters (max 280 chars):\n  SAP agents don't chase invoices. Pay via escrow, Invoica auto-invoices.\n  Fully on-chain. Zero manual steps. One step toward the autonomous agent economy.\n\nRULES: max 280 chars each, 1-2 emoji per tweet, tag @OOBEProtocol, technically precise.\nOutput ONLY the 3 tweets as plain numbered text. Nothing else.",
       "deliverables": {
         "code": [],
         "tests": [],
-        "docs": [
-          "reports/cmo/sap-integration-thread.md"
-        ]
+        "docs": []
       },
       "status": "pending",
       "docs": [],
