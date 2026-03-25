@@ -1,0 +1,26 @@
+{
+  "contacted": {
+    "1945933061235130368": {
+      "username": "Telegraphprotoc",
+      "sentAt": "2026-03-16T10:56:54.329Z",
+      "dmText": "Saw you shipped the 402 payment-required flow on Base Sepolia — Invoica automates exactly this for AI agents with on-chain settlement + pay-per-use inference at 0.003 USDC/call. Free beta at invoica.ai — happy to walk you through it."
+    }
+  },
+  "runs": [
+    {
+      "date": "2026-03-16",
+      "candidates": 13,
+      "sent": 1
+    },
+    {
+      "date": "2026-03-17",
+      "candidates": 20,
+      "sent": 0
+    },
+    {
+      "date": "2026-03-24",
+      "candidates": 20,
+      "sent": 0
+    }
+  ]
+}

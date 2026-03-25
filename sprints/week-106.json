@@ -1,0 +1,61 @@
+{
+  "sprint": "week-106",
+  "goal": "Sharpen Invoica's competitive positioning against Stripe MPP + Visa Agentic Ready. Produce landing page copy update and public-facing differentiation content.",
+  "source": "ceo-priority",
+  "tasks": [
+    {
+      "id": "POSITION-001",
+      "agent": "research-writer",
+      "type": "content",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Write updated landing page hero copy \u2014 x402-native positioning vs Stripe MPP",
+      "context": "Write updated landing page hero copy for invoica.ai reflecting the Stripe MPP competitive moment.\n\nContext:\n- Stripe Multi-Party Payments + Visa Agentic Ready launched March 17-18, 2026\n- These are Web2 solutions retrofitted for AI agents \u2014 they require Stripe accounts, USD rails, KYC\n- Invoica = x402-native from day 1: stablecoin, permissionless, multi-chain, open protocol\n- Positioning: \"Invoica = x402 ecosystem's enterprise compliance without platform lock-in\"\n- Key differentiators: open x402 vs walled garden, $0.0001 vs $0.30+ per transaction, no Stripe account needed, multi-chain vs Ethereum-only\n\nDeliverable: a Markdown file containing the new copy, NOT code changes (human will implement)\n\nWrite:\n1. Hero headline (max 8 words)\n2. Hero subheadline (max 20 words)  \n3. 3-bullet value prop (\u226410 words each)\n4. CTA button text (2-4 words)\n5. \"Why not Stripe MPP?\" section (3 comparison rows: Invoica vs Stripe MPP)\n6. Alternative headline options (3 variants)\n\nTone: direct, technical, confident \u2014 not anti-Stripe, just x402-native.\n\nOutput file: reports/positioning/landing-page-copy-v2.md",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": [
+          "reports/positioning/landing-page-copy-v2.md"
+        ]
+      },
+      "status": "pending",
+      "output": {}
+    },
+    {
+      "id": "POSITION-002",
+      "agent": "research-writer",
+      "type": "content",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Write 'Invoica vs Stripe MPP' technical comparison document",
+      "context": "Write a technical comparison document: Invoica vs Stripe Multi-Party Payments (and Visa Agentic Ready).\n\nThis doc will be:\n- Published on invoica.ai/blog or docs\n- Shared with prospects who ask \"why not just use Stripe?\"\n- Referenced in sales calls\n\nInvoica facts (all verified, shipped):\n- x402 protocol: open standard, no Stripe account needed\n- Stablecoin payments: USDC on Base, Solana, Polygon\n- Transaction cost: ~$0.0001 (gas) vs Stripe's 2.9% + $0.30\n- Multi-chain: Base, Solana, Polygon\n- Tax compliance: 12 countries built-in\n- SAP B1 ERP integration: live\n- Settlement detection: on-chain, real-time\n- No KYC required for agent-to-agent payments\n- Open protocol: any agent stack (LangChain, AutoGPT, custom)\n\nStripe MPP facts (from public announcement March 17, 2026):\n- Requires Stripe account and KYC\n- USD/fiat rails primarily\n- Centralized settlement\n- Agentic payments = Stripe's payment intent flow adapted for AI\n- Higher cost structure\n\nFormat:\n- Title: \"Invoica vs Stripe MPP: x402-native vs Web2 retrofit\"\n- Comparison table: 8 rows, 3 columns (Feature | Invoica | Stripe MPP)\n- Narrative paragraphs: problem, approach, when to use each\n- Length: ~600 words + table\n- Tone: neutral, technical, no trash-talking Stripe\n\nOutput file: reports/positioning/invoica-vs-stripe-mpp.md",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": [
+          "reports/positioning/invoica-vs-stripe-mpp.md"
+        ]
+      },
+      "status": "pending",
+      "output": {}
+    },
+    {
+      "id": "POSITION-003",
+      "agent": "research-writer",
+      "type": "content",
+      "priority": "medium",
+      "dependencies": [],
+      "description": "Write Circle Nanopayments integration feasibility brief",
+      "context": "Write a brief technical feasibility assessment: should Invoica integrate Circle Nanopayments?\n\nContext:\n- Circle Nanopayments: gas-free USDC settlements as low as $0.000001 (testnet)\n- Enables sub-cent x402 invoicing \u2014 a major unlock for high-frequency agent micropayments\n- CEO flagged as strategic research priority\n- Question: can Invoica's settlement detection + tax engine work with nanopayment transaction formats?\n\nWrite:\n1. What Circle Nanopayments is (2 paragraphs, technical)\n2. How it would work with Invoica's stack (settlement detection layer, tax implications for sub-cent transactions)\n3. Integration complexity: Low / Medium / High + why\n4. Recommended action: build now / wait for mainnet / skip\n5. Potential competitive advantage if shipped\n\nLength: ~400 words\nFormat: technical brief (not a blog post)\n\nOutput file: reports/research/circle-nanopayments-feasibility.md",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": [
+          "reports/research/circle-nanopayments-feasibility.md"
+        ]
+      },
+      "status": "pending",
+      "output": {}
+    }
+  ]
+}

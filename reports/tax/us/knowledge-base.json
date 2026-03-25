@@ -1,0 +1,149 @@
+{
+  "lastRun": "2026-03-25",
+  "entries": [
+    {
+      "id": "us-federal-crypto-property-treatment-2014",
+      "source": "IRS Notice 2014-21, Rev. Rul. 2019-24",
+      "jurisdiction": "Federal",
+      "topic": "Cryptocurrency as Property - USDC Transactions",
+      "summary": "IRS classifies all cryptocurrencies including stablecoins like USDC as property, not currency. Each USDC transaction triggers a taxable event requiring gain/loss calculation based on fair market value at transaction time. Businesses must report on Form 8949 and Schedule D.",
+      "impact": "Every USDC settlement on Base blockchain creates tax reporting obligation for Invoica and clients. Must implement automated basis tracking, FMV calculation at transaction timestamp, and generate tax reporting data (Form 8949 equivalent) for each invoice settlement. AI agent transactions compound this - potentially thousands of micro-transactions daily.",
+      "priority": "HIGH",
+      "firstSeen": "2026-03-13",
+      "lastUpdated": "2026-03-13",
+      "implemented": false
+    },
+    {
+      "id": "us-federal-ai-transactions-guidance-gap-2024",
+      "source": "IRS 2023-2024 Priority Guidance Plan",
+      "jurisdiction": "Federal",
+      "topic": "AI Agent Autonomous Commerce - No Specific Guidance",
+      "summary": "No federal tax regulations exist specifically for AI agent transactions or autonomous digital commerce as of 2023. IRS applies general IRC Section 61 income rules. IRS Priority Guidance Plan signals interest in digital economy taxation but no timeline for AI-specific rules.",
+      "impact": "Invoica operates in regulatory gray area for x402 micropayment protocol between AI agents. Unclear whether agent-to-agent payments are service income, product sales, or new category. Must classify conservatively as service income pending guidance. Risk of retroactive reclassification if IRS issues AI-specific rules.",
+      "priority": "MEDIUM",
+      "firstSeen": "2026-03-13",
+      "lastUpdated": "2026-03-13",
+      "implemented": false
+    },
+    {
+      "id": "us-state-sales-tax-wayfair-nexus-saas-2018",
+      "source": "South Dakota v. Wayfair, Inc. (2018), State Tax Authority Interpretations",
+      "jurisdiction": "Multi-State",
+      "topic": "Economic Nexus for SaaS Platforms Post-Wayfair",
+      "summary": "Supreme Court ruling eliminates physical presence requirement for sales tax nexus. States can impose sales tax obligations based on economic activity thresholds. SaaS taxation varies by state - some tax digital services, others exempt. No federal harmonization or OSS equivalent.",
+      "impact": "Invoica must track economic nexus in all 50 states. SaaS invoicing software may trigger nexus in states where AI agent clients operate. Requires state-by-state analysis of revenue thresholds, product taxability, and registration requirements. No centralized filing like EU OSS - must register separately in each nexus state. Compliance cost scales with customer base geography.",
+      "priority": "HIGH",
+      "firstSeen": "2026-03-13",
+      "lastUpdated": "2026-03-13",
+      "implemented": false
+    },
+    {
+      "id": "us-maryland-digital-ad-tax-2021",
+      "source": "Maryland Tax-Gen. Art. § 7.5-102, Maryland Comptroller",
+      "jurisdiction": "Maryland",
+      "topic": "Digital Advertising Services Tax",
+      "summary": "Maryland enacted first-in-nation Digital Advertising Services Tax (2.5%-10% on gross revenues) for companies with global annual revenues over $100M. Applies to digital advertising only, not payment processing. Currently under legal challenge since February 2021.",
+      "impact": "Does not directly impact Invoica unless platform adds advertising services. However, sets precedent for state-level digital service taxation that could expand to payment/invoicing platforms. Monitor Maryland litigation outcome and similar proposals in other states (NY S.1975/A.4473 pending).",
+      "priority": "LOW",
+      "firstSeen": "2026-03-13",
+      "lastUpdated": "2026-03-13",
+      "implemented": false
+    },
+    {
+      "id": "us-newyork-dst-proposal-2023",
+      "source": "New York State Legislature S.1975/A.4473",
+      "jurisdiction": "New York",
+      "topic": "Proposed Digital Services Tax on Platform Revenue",
+      "summary": "New York proposed digital services tax targeting revenue from digital platforms in 2023. Not enacted as of October 2023 but remains pending. Would tax platform revenue including payment processing and digital transactions if passed.",
+      "impact": "If enacted, would directly tax Invoica's platform revenue from NY-based AI agents or clients. Must monitor legislative status and prepare for potential registration/collection obligations. Could require product changes to calculate and collect NY DST on invoices processed for NY entities.",
+      "priority": "MEDIUM",
+      "firstSeen": "2026-03-13",
+      "lastUpdated": "2026-03-13",
+      "implemented": false
+    },
+    {
+      "id": "us-federal-1099-reporting-crypto-2023",
+      "source": "IRS, Infrastructure Investment and Jobs Act 2021",
+      "jurisdiction": "Federal",
+      "topic": "Form 1099 Reporting for Cryptocurrency Transactions",
+      "summary": "Infrastructure Investment and Jobs Act expanded Form 1099 reporting requirements for cryptocurrency transactions. Brokers and exchanges must report crypto transactions to IRS. Implementation delayed but forthcoming, with specific rules for stablecoins under development.",
+      "impact": "Invoica may be classified as broker/exchange for USDC transactions depending on final regulations. Could require issuing Forms 1099-B or 1099-MISC to clients for USDC settlements. Must build 1099 generation capability and collect client TINs. Automated systems needed to track reportable transactions and meet annual filing deadlines.",
+      "priority": "HIGH",
+      "firstSeen": "2026-03-13",
+      "lastUpdated": "2026-03-13",
+      "implemented": false
+    },
+    {
+      "id": "us-multistate-ssuta-digital-products-ongoing",
+      "source": "Streamlined Sales and Use Tax Agreement (SSUTA)",
+      "jurisdiction": "Multi-State (24 member states)",
+      "topic": "Digital Products Definition and Taxation Under SSUTA",
+      "summary": "24 states participate in SSUTA to simplify sales tax compliance. Agreement defines digital products but treatment of SaaS and digital services varies by member state. Some states tax SaaS as digital product, others as service (exempt or taxable depending on state). No uniform treatment.",
+      "impact": "Invoica's SaaS offering taxed differently across SSUTA member states. Must implement state-specific logic for sales tax calculation. Cannot rely on SSUTA for uniform treatment. Requires maintaining matrix of SaaS taxability by state and monitoring changes. Partial benefit from streamlined registration in member states.",
+      "priority": "MEDIUM",
+      "firstSeen": "2026-03-13",
+      "lastUpdated": "2026-03-13",
+      "implemented": false
+    },
+    {
+      "id": "us-federal-infrastructure-act-crypto-reporting-2024",
+      "source": "IRS",
+      "jurisdiction": "Federal",
+      "topic": "Expanded Digital Asset Reporting Requirements (IRC Section 6045)",
+      "summary": "The Infrastructure Investment and Jobs Act (2021) expanded reporting requirements for digital assets under IRC Section 6045, with implementation delayed to January 1, 2024. Brokers and payment processors handling cryptocurrency transactions must report transactions to IRS and issue forms to customers. Each USDC transaction triggers reporting obligations with fair market value calculation at transaction time.",
+      "impact": "Invoica must implement comprehensive transaction reporting infrastructure for all USDC settlements on Base blockchain. Every x402 micropayment requires FMV documentation at settlement time, 1099 form generation capability for customers, and broker-level reporting to IRS. This affects every invoice settlement and requires real-time tax basis tracking for each USDC payment processed.",
+      "priority": "HIGH",
+      "firstSeen": "2026-03-16",
+      "lastUpdated": "2026-03-16",
+      "implemented": false
+    },
+    {
+      "id": "us-federal-priority-guidance-digital-assets-2024",
+      "source": "IRS",
+      "jurisdiction": "Federal",
+      "topic": "2023-2024 Priority Guidance Plan - Digital Assets Focus",
+      "summary": "IRS 2023-2024 Priority Guidance Plan includes digital assets as priority area but does not explicitly address AI-driven transactions or autonomous agent commerce. Signals IRS intent to develop framework for emerging digital economy technologies beyond basic cryptocurrency treatment.",
+      "impact": "Invoica operates in regulatory gray zone for AI agent transactions. While crypto reporting is clear, AI-to-AI autonomous commerce classification remains undefined. Must monitor for forthcoming guidance that could reclassify x402 protocol transactions or impose additional reporting requirements on AI-facilitated payments. Consider proactive engagement with IRS or tax counsel to establish classification position.",
+      "priority": "MEDIUM",
+      "firstSeen": "2026-03-16",
+      "lastUpdated": "2026-03-16",
+      "implemented": false
+    },
+    {
+      "id": "us-multistate-washington-digital-bno-tax-proposal-2022",
+      "source": "Washington Department of Revenue",
+      "jurisdiction": "Washington",
+      "topic": "Proposed B&O Tax Surcharge on Digital Services (Failed 2022)",
+      "summary": "Washington proposed Business & Occupation tax surcharge on digital services in 2022 legislative session, which failed to pass. Proposal would have imposed additional tax on digital platform revenues including payment processing services. Sets precedent for future state-level digital economy taxation attempts.",
+      "impact": "While not enacted, indicates Washington's interest in taxing digital platforms. If revived, could apply to Invoica's SaaS revenue and payment processing fees for Washington-based customers. Monitor Washington legislative sessions for similar proposals. May need state-specific revenue tracking and tax calculation capability if enacted in future sessions.",
+      "priority": "LOW",
+      "firstSeen": "2026-03-16",
+      "lastUpdated": "2026-03-16",
+      "implemented": false
+    },
+    {
+      "id": "us-california-digital-services-tax-exploration-2023",
+      "source": "California Franchise Tax Board",
+      "jurisdiction": "California",
+      "topic": "Digital Economy Taxation Framework Exploration",
+      "summary": "California exploring broader digital economy taxation frameworks as of 2023, potentially encompassing AI-driven commerce and digital platform revenues. No specific legislation introduced but regulatory interest indicated by state tax authority discussions and working groups.",
+      "impact": "California represents significant portion of tech sector and potential Invoica customer base. Future California DST could apply to Invoica's payment processing fees, SaaS subscription revenue, or transaction volumes. Given California's regulatory influence, framework adopted here may spread to other states. Requires ongoing legislative monitoring and contingency planning for potential tax obligations.",
+      "priority": "MEDIUM",
+      "firstSeen": "2026-03-16",
+      "lastUpdated": "2026-03-16",
+      "implemented": false
+    },
+    {
+      "id": "us-texas-digital-services-tax-consideration-2023",
+      "source": "Texas Comptroller of Public Accounts",
+      "jurisdiction": "Texas",
+      "topic": "Digital Services Tax Consideration Status",
+      "summary": "Texas has no enacted Digital Services Tax as of October 2023 but is among states monitoring Maryland precedent and considering digital economy taxation. Texas traditionally has no state income tax but does impose franchise tax and sales tax on certain services.",
+      "impact": "Texas has large tech sector and no state income tax, making it attractive jurisdiction for Invoica operations. However, state may seek revenue from digital economy through alternative taxation mechanisms (franchise tax expansion, sales tax on digital services). Monitor Texas Comptroller guidance on SaaS and payment processing classification under existing franchise tax rules. Low immediate risk but medium-term planning needed.",
+      "priority": "LOW",
+      "firstSeen": "2026-03-16",
+      "lastUpdated": "2026-03-16",
+      "implemented": false
+    }
+  ]
+}
