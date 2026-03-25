@@ -1,0 +1,93 @@
+[
+  {
+    "run_id": "533ff1c4-05e8-4457-be8e-8121a8071022",
+    "project": "invoica",
+    "sprint_file": "/home/invoica/apps/Invoica/sprints/week-106.json",
+    "started_at": "2026-03-25T10:30:02.677Z",
+    "finished_at": "2026-03-25T10:37:39.252Z",
+    "duration_seconds": 457,
+    "git_branch": "main",
+    "git_head_before": "1b90b356",
+    "git_head_after": "1b90b356",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $0 budget (N/A%) | 0 cloud calls this month",
+    "summary": {
+      "total_tasks": 3,
+      "done": 0,
+      "rejected": 0,
+      "skipped": 0,
+      "human_pending": 0,
+      "approval_rate": 0,
+      "total_tokens": 66141
+    },
+    "tasks": [
+      {
+        "task_id": "POSITION-001",
+        "title": "POSITION-001",
+        "type": "content",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 9269,
+        "duration_seconds": 215,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "File contains invalid syntax - markdown content wrapped in TypeScript code fence, making it unparseable"
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: File contains invalid syntax - markdown content wrapped in TypeScript code fence, making it unparseable"
+      },
+      {
+        "task_id": "POSITION-003",
+        "title": "POSITION-003",
+        "type": "content",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 9488,
+        "duration_seconds": 288,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "File contains invalid markdown code fence syntax and incorrect file extension. Technical content is solid but delivery format violates basic requirements."
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: File contains invalid markdown code fence syntax and incorrect file extension. Technical content is solid but delivery format violates basic requirements."
+      },
+      {
+        "task_id": "POSITION-002",
+        "title": "POSITION-002",
+        "type": "content",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 11147,
+        "duration_seconds": 454,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "File contains invalid markdown syntax with TypeScript code fence at the beginning, making it unparseable. Content is incomplete (cuts off mid-sentence) and doesn't meet the 600-word requirement."
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: File contains invalid markdown syntax with TypeScript code fence at the beginning, making it unparseable. Content is incomplete (cuts off mid-sentence) and doesn't meet the 600-word requirement."
+      }
+    ]
+  }
+]
