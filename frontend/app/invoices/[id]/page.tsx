@@ -5,16 +5,28 @@ import Link from 'next/link';
 import { fetchInvoiceById } from '@/lib/api-client';
 import { InvoiceDetail } from '@/components/invoices/invoice-detail';
 import { Invoice } from '@/types';
+import { CredScoreBadge } from '@/components/CredScoreBadge';
 
 export default function InvoiceDetailPage({ params }: { params: { id: string } }) {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
+  const [credScore, setCredScore] = useState<{score:number|null,tier:string|null}>({score:null,tier:null});
 
   useEffect(() => {
     fetchInvoiceById(params.id)
       .then((data) => {
         setInvoice(data);
         setLoading(false);
+        
+        // Fetch Helixa reputation score for the payer agent
+        fetch(`/v1/reputation/${data.payerAgentId}`)
+          .then((res) => res.ok ? res.json() : Promise.reject())
+          .then((repData) => {
+            setCredScore({ score: repData.score, tier: repData.tier });
+          })
+          .catch(() => {
+            // Ignore errors, credScore stays null
+          });
       })
       .catch(() => {
         setLoading(false);
@@ -46,6 +58,7 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
         ← Back to Invoices
       </Link>
       <InvoiceDetail invoice={invoice} />
+      {invoice.payerAgentId && <div className="mt-4"><CredScoreBadge score={credScore.score} tier={credScore.tier} /></div>}
     </div>
   );
 }
