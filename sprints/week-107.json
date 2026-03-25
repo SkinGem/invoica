@@ -1,0 +1,24 @@
+{
+  "week": 107,
+  "created": "2026-03-25",
+  "notes": "ClawRouter gateway 404 fix. Port 18789 is the OpenClaw WebSocket UI — it does not serve /v1/chat/completions. CEO/CTO constitutional phases (T3 APEX) all fail with 404 → sprint CEO assessment, CTO analysis, and daily report phases are broken. Fix: add direct Anthropic API fallback in callCloudGateway() when gateway returns 404 and ANTHROPIC_API_KEY is set.",
+  "tasks": [
+    {
+      "id": "CLAWROUTER-001",
+      "agent": "backend-core",
+      "type": "bugfix",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Fix ClawRouter T3 APEX 404 — add direct Anthropic API fallback when OpenClaw gateway is unavailable",
+      "context": "BACKGROUND:\nThe OpenClaw gateway (CLAWROUTER_GATEWAY = http://localhost:18789/v1) returns 404 on POST /chat/completions because port 18789 serves the OpenClaw WebSocket UI, not an LLM proxy. This breaks all constitutional_flag=true calls (T3 APEX = CEO/CTO review phases in the sprint runner).\n\nFIX — modify scripts/lib/clawrouter-v2.ts:\n\nREAD THE FILE FIRST: scripts/lib/clawrouter-v2.ts\nThe callCloudGateway() function is at line ~334. When gateway returns 404 and ANTHROPIC_API_KEY is set, fall back to direct Anthropic API.\n\nSTEP 1 — Add callAnthropicDirect() helper (insert after callCloudGateway, around line 391):\n```typescript\nasync function callAnthropicDirect(model: string, messages: Array<{ role: string; content: string }>, maxTokens: number = 4096): Promise<{\n  content: string; input_tokens: number; output_tokens: number; cost_usd: number;\n}> {\n  const apiKey = process.env.ANTHROPIC_API_KEY;\n  if (!apiKey) throw new Error('callAnthropicDirect: ANTHROPIC_API_KEY not set');\n  // Strip 'anthropic/' prefix if present (ClawRouter uses 'anthropic/claude-...' naming)\n  const modelId = model.startsWith('anthropic/') ? model.slice('anthropic/'.length) : model;\n  const body = JSON.stringify({ model: modelId, max_tokens: maxTokens, messages });\n  const res = await httpRequest('https://api.anthropic.com/v1/messages', body, 'POST', {\n    'x-api-key': apiKey,\n    'anthropic-version': '2023-06-01',\n  });\n  if (res.status !== 200) throw new Error(`Anthropic API returned ${res.status}: ${res.data.slice(0, 300)}`);\n  const json = JSON.parse(res.data);\n  const content = json.content?.[0]?.text || '';\n  const usage = json.usage || {};\n  // Approximate cost: claude-sonnet ~$3/$15 per M tokens (input/output)\n  const cost_usd = ((usage.input_tokens || 0) * 3 + (usage.output_tokens || 0) * 15) / 1_000_000;\n  return { content, input_tokens: usage.input_tokens || 0, output_tokens: usage.output_tokens || 0, cost_usd };\n}\n```\n\nSTEP 2 — In callCloudGateway(), after the final non-200 check (around line 373), add fallback:\nFind:\n```typescript\n  if (res.status !== 200) {\n    throw new Error(`ClawRouter gateway returned ${res.status}: ${res.data.slice(0, 300)}`);\n  }\n```\nReplace with:\n```typescript\n  if (res.status !== 200) {\n    // Gateway unavailable (404) — fall back to direct Anthropic API if key is set\n    if ((res.status === 404 || res.status === 0) && process.env.ANTHROPIC_API_KEY) {\n      console.warn(`[clawrouter] Gateway ${res.status} on ${model} — falling back to direct Anthropic API`);\n      return callAnthropicDirect(model, messages, maxTokens);\n    }\n    throw new Error(`ClawRouter gateway returned ${res.status}: ${res.data.slice(0, 300)}`);\n  }\n```\n\nNOTES:\n- callAnthropicDirect() must be declared BEFORE callCloudGateway() in the file (or use a forward reference). Best approach: insert callAnthropicDirect right BEFORE callCloudGateway (around line 322).\n- Do NOT change the routing logic or tier resolution — only touch callCloudGateway().\n- httpRequest() already handles HTTPS (checks parsed.protocol === 'https:') so the Anthropic HTTPS call will work.\n- Max file size: 200 lines. Current file is 569 lines. callAnthropicDirect adds ~15 lines + 2 line change = net +17 lines. This is a script (not a backend route file) so the 200-line rule applies loosely — the file is already over limit. Keep the addition minimal (≤20 new lines).\n\nAFTER WRITING: npx tsc --noEmit 2>&1 | grep -E 'clawrouter|error' — 0 new TypeScript errors.",
+      "deliverables": {
+        "code": [
+          "scripts/lib/clawrouter-v2.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    }
+  ]
+}

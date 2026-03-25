@@ -69,7 +69,7 @@
       "priority": "high",
       "dependencies": [],
       "description": "Draft enterprise pilot pricing proposal for Messari",
-      "context": "Draft a pricing proposal for Messari as an enterprise pilot customer.\n\nContext on current pricing model:\n- Free beta until April 22, 2026 (day 61 billing starts)\n- Post-beta: tiered by invoice volume and API calls\n- Enterprise: custom pricing, SLA, dedicated support\n- Goal: first paying customer within 14 days\n\nProposal spec:\n- 3-month pilot: free (covers their evaluation period)\n- Month 4+: suggested pricing at $299/month (Pro tier equivalent) or custom enterprise rate\n- Include: what's included (all features, dedicated onboarding, API integration support, direct Slack channel with founder)\n- Frame as: \"Founding Partner\" pricing — locked in at beta rate permanently\n- Keep it short: ≤ 300 words, 1 table for tier comparison\n\nOutput file: reports/bizdev/messari-pricing-proposal.md",
+      "context": "CRITICAL OUTPUT FORMAT: Write plain Markdown directly to the output file. Do NOT wrap content in code fences or backtick blocks. The file must start with a # heading or plain text, not with backticks. Draft a pricing proposal for Messari as an enterprise pilot customer.\n\nContext on current pricing model:\n- Free beta until April 22, 2026 (day 61 billing starts)\n- Post-beta: tiered by invoice volume and API calls\n- Enterprise: custom pricing, SLA, dedicated support\n- Goal: first paying customer within 14 days\n\nProposal spec:\n- 3-month pilot: free (covers their evaluation period)\n- Month 4+: suggested pricing at $299/month (Pro tier equivalent) or custom enterprise rate\n- Include: what's included (all features, dedicated onboarding, API integration support, direct Slack channel with founder)\n- Frame as: \"Founding Partner\" pricing — locked in at beta rate permanently\n- Keep it short: ≤ 300 words, 1 table for tier comparison\n\nOutput file: reports/bizdev/messari-pricing-proposal.md",
       "deliverables": {
         "code": [],
         "tests": [],
@@ -77,7 +77,7 @@
           "reports/bizdev/messari-pricing-proposal.md"
         ]
       },
-      "status": "suspended",
+      "status": "pending",
       "output": {
         "files": [
           "reports/bizdev/messari-pricing-proposal.md"
@@ -116,7 +116,7 @@
       "priority": "high",
       "dependencies": [],
       "description": "Write demo walkthrough script for a Messari discovery call",
-      "context": "Write a 15-minute demo script for Tarek to use on a discovery call with Messari.\n\nStructure:\n1. Opening (2 min): What Invoica is + why now (Stripe MPP launched last week, x402 is winning)\n2. Live demo flow (10 min):\n   a. Create an invoice via API (show the curl command)\n   b. Show settlement detection on-chain\n   c. Show tax compliance output (12-country)\n   d. Show SAP ERP sync (enterprise proof point)\n   e. Show OOBE LangChain integration (their use case)\n3. Q&A prep (3 min): 5 likely objections + responses:\n   - \"We don't use x402 yet\" → response\n   - \"We have our own invoicing\" → response\n   - \"Security/compliance concerns\" → response\n   - \"What about pricing?\" → response\n   - \"Can it integrate with X?\" → response\n\nFormat: script-style with [TAREK SAYS] and [SHOW ON SCREEN] markers\nTone: technical peer conversation, not a sales pitch\n\nOutput file: reports/bizdev/messari-demo-script.md",
+      "context": "CRITICAL OUTPUT FORMAT: Write plain Markdown directly to the output file. Do NOT wrap content in code fences or backtick blocks. The file must start with a # heading or plain text, not with backticks. Write a 15-minute demo script for Tarek to use on a discovery call with Messari.\n\nStructure:\n1. Opening (2 min): What Invoica is + why now (Stripe MPP launched last week, x402 is winning)\n2. Live demo flow (10 min):\n   a. Create an invoice via API (show the curl command)\n   b. Show settlement detection on-chain\n   c. Show tax compliance output (12-country)\n   d. Show SAP ERP sync (enterprise proof point)\n   e. Show OOBE LangChain integration (their use case)\n3. Q&A prep (3 min): 5 likely objections + responses:\n   - \"We don't use x402 yet\" → response\n   - \"We have our own invoicing\" → response\n   - \"Security/compliance concerns\" → response\n   - \"What about pricing?\" → response\n   - \"Can it integrate with X?\" → response\n\nFormat: script-style with [TAREK SAYS] and [SHOW ON SCREEN] markers\nTone: technical peer conversation, not a sales pitch\n\nOutput file: reports/bizdev/messari-demo-script.md",
       "deliverables": {
         "code": [],
         "tests": [],
@@ -124,7 +124,7 @@
           "reports/bizdev/messari-demo-script.md"
         ]
       },
-      "status": "suspended",
+      "status": "pending",
       "output": {
         "files": [
           "reports/bizdev/messari-demo-script.md"
