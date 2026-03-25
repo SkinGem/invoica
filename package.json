@@ -15,6 +15,7 @@
     "invoica-mcp": "./backend/src/mcp/invoica-mcp-server.ts"
   },
   "dependencies": {
+    "@godman-protocols/pact": "file:../../kognai/workspace/godman-protocols/pact",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@noble/ed25519": "^3.0.0",
     "@prisma/client": "^5.22.0",
