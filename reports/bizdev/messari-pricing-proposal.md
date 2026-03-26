@@ -44,4 +44,4 @@ All features currently live: invoice generation, PDF rendering, on-chain settlem
 
 Reply to schedule a 15-minute integration call, or access the API directly at [invoica.ai](https://invoica.ai). No account creation required to test the API.
 
-*Tarek Mnif, Invoica — tarek@invoica.ai*
+*The Invoica Team — team@invoica.ai*
