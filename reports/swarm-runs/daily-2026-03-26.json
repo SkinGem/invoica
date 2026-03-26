@@ -45,5 +45,96 @@
         "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: CRITICAL: File was destructively truncated from 569 lines to 1 line, losing all existing functionality. This is a complete rewrite that destroys the working codebase."
       }
     ]
+  },
+  {
+    "run_id": "f325b5e0-6a51-4fc7-8184-9cc61e2c84f0",
+    "project": "invoica",
+    "sprint_file": "/home/invoica/apps/Invoica/sprints/week-106.json",
+    "started_at": "2026-03-26T07:00:04.010Z",
+    "finished_at": "2026-03-26T07:06:01.923Z",
+    "duration_seconds": 358,
+    "git_branch": "main",
+    "git_head_before": "b026ffd4",
+    "git_head_after": "b026ffd4",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $0 budget (N/A%) | 0 cloud calls this month",
+    "summary": {
+      "total_tasks": 3,
+      "done": 0,
+      "rejected": 0,
+      "skipped": 0,
+      "human_pending": 0,
+      "approval_rate": 0,
+      "total_tokens": 61984
+    },
+    "tasks": [
+      {
+        "task_id": "POSITION-001",
+        "title": "POSITION-001",
+        "type": "content",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 9209,
+        "duration_seconds": 271,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "File contains invalid TypeScript syntax - this is a Markdown file incorrectly wrapped in TypeScript code fence"
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: File contains invalid TypeScript syntax - this is a Markdown file incorrectly wrapped in TypeScript code fence"
+      },
+      {
+        "task_id": "POSITION-003",
+        "title": "POSITION-003",
+        "type": "content",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 9838,
+        "duration_seconds": 348,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "File contains invalid TypeScript syntax - markdown content wrapped in TypeScript code fence"
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: File contains invalid TypeScript syntax - markdown content wrapped in TypeScript code fence"
+      },
+      {
+        "task_id": "POSITION-002",
+        "title": "POSITION-002",
+        "type": "content",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 12977,
+        "duration_seconds": 355,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "Content is incomplete and appears to be cut off mid-sentence. The document ends abruptly in the Summary section with 'For teams bu' - this is a critical delivery failure."
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: Content is incomplete and appears to be cut off mid-sentence. The document ends abruptly in the Summary section with 'For teams bu' - this is a critical delivery failure."
+      }
+    ]
   }
 ]
