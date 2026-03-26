@@ -1,0 +1,49 @@
+[
+  {
+    "run_id": "8b98b9b1-b025-49a0-bb2c-901f0764f8d6",
+    "project": "invoica",
+    "sprint_file": "/home/invoica/apps/Invoica/sprints/week-107.json",
+    "started_at": "2026-03-26T01:30:03.038Z",
+    "finished_at": "2026-03-26T01:42:20.852Z",
+    "duration_seconds": 738,
+    "git_branch": "main",
+    "git_head_before": "032cab63",
+    "git_head_after": "032cab63",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $0 budget (N/A%) | 0 cloud calls this month",
+    "summary": {
+      "total_tasks": 1,
+      "done": 0,
+      "rejected": 0,
+      "skipped": 0,
+      "human_pending": 0,
+      "approval_rate": 0,
+      "total_tokens": 51417
+    },
+    "tasks": [
+      {
+        "task_id": "CLAWROUTER-001",
+        "title": "CLAWROUTER-001",
+        "type": "bugfix",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 32270,
+        "duration_seconds": 735,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 0,
+          "summary": "CRITICAL: File was destructively truncated from 569 lines to 1 line, losing all existing functionality. This is a complete rewrite that destroys the working codebase."
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: CRITICAL: File was destructively truncated from 569 lines to 1 line, losing all existing functionality. This is a complete rewrite that destroys the working codebase."
+      }
+    ]
+  }
+]

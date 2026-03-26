@@ -1,7 +1,4 @@
 {
-  "week": 107,
-  "created": "2026-03-25",
-  "notes": "ClawRouter gateway 404 fix. Port 18789 is the OpenClaw WebSocket UI — it does not serve /v1/chat/completions. CEO/CTO constitutional phases (T3 APEX) all fail with 404 → sprint CEO assessment, CTO analysis, and daily report phases are broken. Fix: add direct Anthropic API fallback in callCloudGateway() when gateway returns 404 and ANTHROPIC_API_KEY is set.",
   "tasks": [
     {
       "id": "CLAWROUTER-001",
@@ -18,7 +15,39 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "suspended",
+      "_integrityFailed": true,
+      "_integrityDetails": "File scripts/lib/clawrouter-v2.ts shrank from 569 to 1 lines (0%). Possible destructive rewrite.",
+      "output": {
+        "files": [
+          "scripts/lib/clawrouter-v2.ts"
+        ],
+        "commit": "",
+        "model": "MiniMax-M2.5",
+        "review": {
+          "verdict": "REJECTED",
+          "score": 0,
+          "summary": "CRITICAL: File was destructively truncated from 569 lines to 1 line, losing all existing functionality. This is a complete rewrite that destroys the working codebase.",
+          "issues": [
+            {
+              "severity": "critical",
+              "file": "scripts/lib/clawrouter-v2.ts",
+              "description": "File was destructively truncated from 569 lines to 1 line (0% remaining). The entire ClawRouter implementation was deleted, breaking all LLM routing functionality across the system."
+            },
+            {
+              "severity": "critical",
+              "file": "scripts/lib/clawrouter-v2.ts",
+              "description": "Task spec explicitly requested minimal changes (~17 lines added) but agent performed complete rewrite instead of targeted modification."
+            },
+            {
+              "severity": "critical",
+              "file": "scripts/lib/clawrouter-v2.ts",
+              "description": "File ends mid-function with incomplete code, indicating truncation during generation rather than intentional refactoring."
+            }
+          ],
+          "strengths": []
+        }
+      }
     }
   ]
 }
