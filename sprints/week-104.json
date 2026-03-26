@@ -23,7 +23,20 @@
       "code": [
         "backend/src/lib/sap-client.ts",
         "backend/scripts/sap-register-agent.ts"
-      ]
+      ],
+      "actualOutcome": {
+        "completedAt": "2026-03-26",
+        "note": "Original MiniMax output created TypeScript files but never ran the registration. Actual on-chain registration completed manually in this session.",
+        "network": "mainnet-beta",
+        "walletPubkey": "9qyeZysjUadvgUERrYzMHgku846EjBJDquyvbszKk4A9",
+        "agentPda": "F7ZgQpK1yXahRrHav5DFfaibuMEcNHn8KVBHWWsKop7P",
+        "registrationTx": "M3uEMQJTodeJ4AC5moP6NnC3vUmKZ2FCGgDNZTHVzBqqsE2HeSsYyY1TTWzZjAMe94HaEZeruEgBNoG8fdk1M5f",
+        "sapProgram": "SAPpUhsWLJG1FfkGRcXagEDMrMsWGjbky7AyhGpFETZ",
+        "envVarsWritten": ["SAP_RPC_URL", "SAP_WALLET_PUBKEY", "SAP_AGENT_PDA", "SAP_WALLET_SECRET_KEY", "SAP_REGISTRATION_TX"],
+        "keypairStoredAt": "/home/invoica/memory/sap-agent-keypair.json",
+        "sdkVersion": "@oobe-protocol-labs/synapse-sap-sdk@0.4.1",
+        "reportFile": "reports/cto/sap-001-registration-2026-03-26.md"
+      }
     },
     {
       "id": "SAP-002",
