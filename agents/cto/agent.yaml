@@ -72,8 +72,9 @@ email_support:
     credentials: SUPPORT_EMAIL / SUPPORT_EMAIL_PASSWORD (from .env)
   smtp:
     host: smtp.ionos.fr
-    port: 465
-    ssl: true
+    port: 587
+    ssl: false
+    starttls: true
   response_model: anthropic/claude-sonnet-4
 email_bd:
   inbox: team@invoica.ai
@@ -85,8 +86,9 @@ email_bd:
     credentials: TEAM_EMAIL / TEAM_EMAIL_PASSWORD (from .env)
   smtp:
     host: smtp.ionos.fr
-    port: 465
-    ssl: true
+    port: 587
+    ssl: false
+    starttls: true
   signature: "The Invoica Team\nteam@invoica.ai | invoica.ai"
   response_model: anthropic/claude-sonnet-4
   categories:
