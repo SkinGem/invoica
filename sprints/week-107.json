@@ -41,7 +41,7 @@
     {
       "id": "CLAWROUTER-002",
       "agent": "backend-core",
-      "type": "bugfix",
+      "type": "feature",
       "priority": "critical",
       "dependencies": [],
       "description": "Create Anthropic proxy server — NEW file only, no edits to existing files",
