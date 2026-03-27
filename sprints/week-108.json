@@ -21,6 +21,59 @@
       "status": "pending"
     },
     {
+      "id": "SAP-MERCH-001",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": [],
+      "description": "Expose GET /.well-known/x402 discovery manifest — SAP merchant registration",
+      "context": "BACKGROUND:\nInvoica is registered on SAP mainnet (agent PDA: F7ZgQpK1yXahRrHav5DFfaibuMEcNHn8KVBHWWsKop7P) with capabilities (payment:invoice, payment:settle, compliance:tax) but the on-chain metadata has no x402Endpoint field, and /.well-known/x402 returns 404. External agents (like Oobe/0xKPT) cannot auto-discover how to call us. This is the blocker.\n\nTASK: Create a new route file and register it WITHOUT auth middleware.\n\n---\nFILE: backend/src/routes/well-known.ts\n---\n// well-known.ts — SAP/x402 discovery manifest\n// No auth required — public endpoint for agent auto-discovery\nimport { Router, Request, Response } from 'express';\n\nconst router = Router();\n\nrouter.get('/x402', (_req: Request, res: Response) => {\n  res.json({\n    version: '1.0',\n    agent: {\n      name: 'Invoica',\n      description: 'x402-native invoice middleware for AI agents — invoice, settle, and comply autonomously',\n      wallet: process.env.INVOICA_AGENT_WALLET || '26z3UHjGbF2LKbgS2r34BSzBH3DBBoLofF1c2EvaEwWQ',\n      pda: process.env.SAP_AGENT_PDA || 'F7ZgQpK1yXahRrHav5DFfaibuMEcNHn8KVBHWWsKop7P'\n    },\n    x402Endpoint: 'https://api.invoica.ai/api/sap/execute',\n    capabilities: [\n      { id: 'payment:invoice', price: 0.01, currency: 'USDC', description: 'Create an x402 invoice for a completed agent service' },\n      { id: 'payment:settle', price: 0.005, currency: 'USDC', description: 'Check on-chain settlement status for an invoice' },\n      { id: 'compliance:tax', price: 0.02, currency: 'USDC', description: '12-country tax classification and compliance report' }\n    ],\n    networks: ['solana-mainnet'],\n    programId: 'SAPpUhsWLJG1FfkGRcXagEDMrMsWGjbky7AyhGpFETZ'\n  });\n});\n\nexport default router;\n---\n\nREGISTER IN app.ts:\nAdd BEFORE any authenticated routes. Find this line in app.ts:\n\nimport healthRoutes from './routes/health';\n\nAdd after it:\n\nimport wellKnownRoutes from './routes/well-known';\n\nThen find where routes are mounted (look for app.use('/v1/health') or similar) and add BEFORE authenticated routes:\n\napp.use('/.well-known', wellKnownRoutes);\n\nAFTER:\n1. Confirm GET /.well-known/x402 returns 200 JSON with x402Endpoint field\n2. Run: npx tsc --noEmit 2>&1 | grep -E 'well-known|error'\n   Expected: 0 new TypeScript errors\n3. Do NOT touch any other file",
+      "deliverables": {
+        "code": [
+          "backend/src/routes/well-known.ts",
+          "backend/src/app.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "SAP-MERCH-002",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": ["SAP-MERCH-001"],
+      "description": "Implement POST /api/sap/execute — SAP merchant endpoint that accepts X-Payment headers, verifies escrow, serves action",
+      "context": "BACKGROUND:\nExternal AI agents (like Oobe) fund a Solana escrow PDA and then call our endpoint with SAP payment headers. We must: (1) read those headers, (2) verify the escrow USDC balance on-chain, (3) if funded — serve the requested action, (4) if not funded — return 402. After serving, log the escrow PDA for async settlement processing.\n\nThe escrow PDA is a Solana token account holding USDC. We can verify it using the standard Solana getTokenAccountBalance RPC call. No SDK required for verification.\n\nExpected inbound headers (from calling agent):\n  X-Payment-Protocol: SAP-x402\n  X-Payment-Escrow-PDA: <base58 escrow PDA address>\n  X-Payment-Agent-PDA: <base58 Invoica agent PDA>\n  X-Payment-Depositor: <base58 caller wallet>\n  X-Payment-Price: <float, USDC amount>\n  X-Payment-Network: solana-mainnet\n\nRequest body (JSON): { \"capability\": \"payment:invoice\" | \"payment:settle\" | \"compliance:tax\", \"params\": { ... } }\n\nTASK: Create backend/src/routes/sap-execute.ts (~180 lines).\n\nCapability routing:\n- payment:invoice → call internal invoice creation (POST /v1/invoices equivalent logic, return invoice object)\n- payment:settle → check settlement for invoiceId in params, return settlement status\n- compliance:tax → return stub { status: 'queued', message: 'Tax report will be delivered to your agent wallet' } (full wiring in later sprint)\n\nEscrow verification logic:\n```typescript\nasync function verifyEscrow(escrowPda: string, requiredUsdc: number): Promise<{ ok: boolean; balance: number; error?: string }> {\n  const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com';\n  const body = JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'getTokenAccountBalance', params: [escrowPda] });\n  const resp = await fetch(rpcUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });\n  const json = await resp.json() as any;\n  if (json.error || !json.result?.value) return { ok: false, balance: 0, error: 'Escrow account not found or invalid' };\n  const balance = parseFloat(json.result.value.uiAmount || '0');\n  return { ok: balance >= requiredUsdc, balance };\n}\n```\n\nCapability pricing (match .well-known/x402):\n- payment:invoice → 0.01 USDC\n- payment:settle → 0.005 USDC\n- compliance:tax → 0.02 USDC\n\nAfter serving, insert a row into a pending_sap_settlements table OR log to logger — do NOT attempt an on-chain settle call (that requires a signer keypair, handled separately). Log format: logger.info(`[sap-execute] settled escrow=${escrowPda} depositor=${depositor} capability=${capability} price=${price}`);\n\nMount in app.ts WITHOUT authenticate middleware:\nAdd import: import sapExecuteRoutes from './routes/sap-execute';\nMount: app.use('/api/sap', sapExecuteRoutes);\nPlace this BEFORE the authenticated '/v1/sap' routes.\n\nAFTER:\n1. Run: npx tsc --noEmit 2>&1 | grep -E 'sap-execute|error'\n   Expected: 0 new TypeScript errors\n2. Verify POST /api/sap/execute with missing X-Payment-Protocol header returns 400\n3. File must be under 200 lines",
+      "deliverables": {
+        "code": [
+          "backend/src/routes/sap-execute.ts",
+          "backend/src/app.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "SAP-MERCH-003",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": ["SAP-MERCH-001", "SAP-MERCH-002"],
+      "description": "One-shot script: update Invoica SAP on-chain metadata to include x402Endpoint URL",
+      "context": "BACKGROUND:\nInvoica's SAP agent PDA (F7ZgQpK1yXahRrHav5DFfaibuMEcNHn8KVBHWWsKop7P) was registered on Solana mainnet but the x402Endpoint field was left blank. External agents probing the registry see capabilities but no callable endpoint. We need to run a one-shot script to update the metadata.\n\nThe SAP client is available at backend/src/lib/sap-client.ts (getSapClient()). Check what update/register methods it exposes. If it has agent.update() or agent.setEndpoint(), use it. If not, use the @synapse-sap/sdk directly if available in node_modules.\n\nIf neither SDK method is available, create the script using @solana/web3.js to send a raw updateAgent instruction to program SAPpUhsWLJG1FfkGRcXagEDMrMsWGjbky7AyhGpFETZ. The server keypair is available via process.env.SERVER_KEYPAIR_PATH or process.env.SAP_KEYPAIR (check .env for the right key name — look for KEYPAIR, WALLET, or PRIVATE_KEY env vars).\n\nTASK: Create scripts/sap-update-x402endpoint.ts (~80 lines).\n\nThe script must:\n1. Load the Invoica server keypair from env\n2. Connect to Solana mainnet\n3. Call the SAP program's updateAgent instruction (or SDK equivalent) to set:\n   x402Endpoint = 'https://api.invoica.ai/api/sap/execute'\n4. Print the transaction signature on success\n5. Be runnable as: npx ts-node scripts/sap-update-x402endpoint.ts\n\nIMPORTANT: Check sap-client.ts first. If getSapClient().agent.update() or similar exists, use it — don't reinvent. Also check what env vars are available for the keypair (look at .env.example or other scripts that send Solana transactions).\n\nThis is a one-shot migration script. It does NOT need to be wired into PM2 or cron.\n\nAFTER:\n1. Script compiles: npx tsc --noEmit scripts/sap-update-x402endpoint.ts 2>&1 | grep error\n   Expected: 0 errors\n2. Print instructions for running: 'To apply on server: npx ts-node scripts/sap-update-x402endpoint.ts'\n3. Do NOT run the script — just write and compile it. Tarek will execute it manually.",
+      "deliverables": {
+        "code": [
+          "scripts/sap-update-x402endpoint.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
       "id": "PACT-002",
       "agent": "backend-core",
       "type": "feature",
