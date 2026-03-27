@@ -116,6 +116,23 @@
       "status": "pending"
     },
     {
+      "id": "FRONT-FIX-001",
+      "agent": "frontend-core",
+      "type": "bugfix",
+      "priority": "critical",
+      "dependencies": [],
+      "description": "Fix CredScoreBadge.tsx TypeScript error — Badge does not accept style prop → 19 consecutive ERROR deployments on invoica-b89o",
+      "context": "ROOT CAUSE:\nfrontend/components/CredScoreBadge.tsx line 33 passes style={{ backgroundColor: tierColor }} to <Badge>.\nThe Badge component (frontend/components/Badge.tsx) defines BadgeProps as: children, variant?, size?, rounded?, className? — NO style prop.\nTypeScript strict check at build time: 'Property style does not exist on type IntrinsicAttributes & BadgeProps' → exit code 1 → every Vercel deployment has been ERROR since March 25.\n\nFIX: 2 surgical edits to frontend/components/CredScoreBadge.tsx (44 lines). Do NOT touch Badge.tsx.\n\n---\n\nEDIT 1 — Remove the Badge import (it will no longer be used):\n\nFind this exact line:\n\nimport { Badge } from '@/components/Badge';\n\nDelete it entirely (replace with empty string / remove the line).\n\n---\n\nEDIT 2 — Replace the Badge usage with a plain span:\n\nFind this exact block (lines 32–37):\n\n      <Badge\n        style={{ backgroundColor: tierColor }}\n        className=\"text-white font-medium px-3 py-1\"\n      >\n        {tierLabel}\n      </Badge>\n\nReplace with:\n\n      <span\n        style={{ backgroundColor: tierColor }}\n        className=\"inline-flex items-center font-medium text-white rounded-full px-3 py-1 text-sm\"\n      >\n        {tierLabel}\n      </span>\n\n(Badge renders a <span> internally — this is visually identical, just without the BadgeProps type constraint.)\n\n---\n\nAFTER BOTH EDITS:\n1. Confirm CredScoreBadge.tsx no longer contains any reference to Badge\n2. Confirm the span has style={{ backgroundColor: tierColor }} on it\n3. Run: npx tsc --noEmit 2>&1 | grep -E 'CredScoreBadge|error'\n   Expected: 0 TypeScript errors\n4. Do NOT touch any other file",
+      "deliverables": {
+        "code": [
+          "frontend/components/CredScoreBadge.tsx"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
       "id": "PACT-002",
       "agent": "backend-core",
       "type": "feature",
