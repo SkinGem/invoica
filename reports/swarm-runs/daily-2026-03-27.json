@@ -1,0 +1,95 @@
+[
+  {
+    "run_id": "19235920-1aad-42ee-bba9-7e171b2cb192",
+    "project": "invoica",
+    "sprint_file": "/home/invoica/apps/Invoica/sprints/week-108.json",
+    "started_at": "2026-03-27T20:00:03.979Z",
+    "finished_at": "2026-03-27T20:04:59.433Z",
+    "duration_seconds": 295,
+    "git_branch": "main",
+    "git_head_before": "9fad2615",
+    "git_head_after": "89e8a560",
+    "daily_plan_loaded": "plans/daily/2026-03-27.md",
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $0 budget (N/A%) | 0 cloud calls this month",
+    "summary": {
+      "total_tasks": 8,
+      "done": 3,
+      "rejected": 2,
+      "skipped": 1,
+      "human_pending": 0,
+      "approval_rate": 0.07142857142857142,
+      "total_tokens": 119940
+    },
+    "tasks": [
+      {
+        "task_id": "HELIXA-005",
+        "title": "HELIXA-005",
+        "type": "feature",
+        "task_target": "cloud-code",
+        "status": "done",
+        "attempts": 1,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 2727,
+        "duration_seconds": 30,
+        "files_written": [
+          "backend/src/lib/helixa.ts"
+        ],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "APPROVED",
+          "score": 95,
+          "summary": "Excellent implementation that perfectly follows the append-only requirement. Code is clean, well-typed, and follows existing patterns."
+        },
+        "error": null,
+        "rejection_reason": null
+      },
+      {
+        "task_id": "PACT-002",
+        "title": "PACT-002",
+        "type": "feature",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 27005,
+        "duration_seconds": 165,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 0,
+          "summary": "Critical failure: Agent attempted destructive rewrite of 1077-line file despite explicit warnings. File integrity protection triggered, preserving original content."
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: Critical failure: Agent attempted destructive rewrite of 1077-line file despite explicit warnings. File integrity protection triggered, preserving original content."
+      },
+      {
+        "task_id": "SAP-MERCH-002",
+        "title": "SAP-MERCH-002",
+        "type": "feature",
+        "task_target": "cloud-code",
+        "status": "rejected",
+        "attempts": 3,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 24686,
+        "duration_seconds": 293,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "Code is incomplete and has critical implementation gaps. The main route file is truncated mid-function, missing the actual route handler, and lacks proper capability routing logic."
+        },
+        "error": null,
+        "rejection_reason": "Code is incomplete and has critical implementation gaps. The main route file is truncated mid-function, missing the actual route handler, and lacks proper capability routing logic."
+      }
+    ]
+  }
+]
