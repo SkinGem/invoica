@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { calculateTax } from '../services/tax/calculator';
+import { calculateAgentTax, resolveTransactionType } from '../services/tax/agenttax-client';
 import { checkTrustGate } from '../middleware/trust-gate';
 
 const router = Router();
@@ -614,6 +615,7 @@ router.post('/v1/invoices', async (req: Request, res: Response, next: NextFuncti
       buyerCountryCode,
       buyerStateCode,
       buyerVatNumber,
+      transactionType,
     } = req.body;
 
     if (!customerEmail || typeof customerEmail !== 'string') {
@@ -676,23 +678,64 @@ router.post('/v1/invoices', async (req: Request, res: Response, next: NextFuncti
 
     // Wire tax calculation when buyer location is provided
     if (buyerCountryCode && typeof buyerCountryCode === 'string') {
-      const taxResult = calculateTax({
-        amount: Number(amount),
-        buyerLocation: {
-          countryCode: buyerCountryCode,
-          stateCode: buyerStateCode,
-          vatNumber: buyerVatNumber,
-        },
-      });
-      paymentDetails.tax = {
-        taxRate: taxResult.taxRate,
-        taxAmount: taxResult.taxAmount,
-        jurisdiction: taxResult.jurisdiction,
-        invoiceNote: taxResult.invoiceNote || null,
-        buyerCountryCode,
-        buyerStateCode: buyerStateCode || null,
-        buyerVatNumber: buyerVatNumber || null,
-      };
+      const isUSBuyer = buyerCountryCode.toUpperCase() === 'US' && buyerStateCode;
+
+      if (isUSBuyer) {
+        // US buyers: AgentTax API first (AMD-22 — 51 states + statute citations)
+        // TICKET-017-AGENTTAX-02
+        const atxLine = await calculateAgentTax({
+          role: 'seller',
+          amount: Number(amount),
+          buyer_state: String(buyerStateCode).toUpperCase(),
+          transaction_type: resolveTransactionType(transactionType, companyId),
+          counterparty_id: String(companyId || customerEmail),
+          is_b2b: !!companyId,
+        });
+
+        if (atxLine) {
+          // AgentTax success — store AMD-22 tax_line + legacy tax for backwards compat
+          paymentDetails.tax_line = atxLine;
+          paymentDetails.tax = {
+            taxRate: atxLine.rate,
+            taxAmount: atxLine.total_tax,
+            jurisdiction: atxLine.jurisdiction,
+            invoiceNote: atxLine.statute || null,
+            buyerCountryCode,
+            buyerStateCode: buyerStateCode || null,
+            buyerVatNumber: buyerVatNumber || null,
+          };
+        } else {
+          // AgentTax null (no key / error / demo mode) → local calculator fallback
+          const taxResult = calculateTax({
+            amount: Number(amount),
+            buyerLocation: { countryCode: buyerCountryCode, stateCode: buyerStateCode, vatNumber: buyerVatNumber },
+          });
+          paymentDetails.tax = {
+            taxRate: taxResult.taxRate,
+            taxAmount: taxResult.taxAmount,
+            jurisdiction: taxResult.jurisdiction,
+            invoiceNote: taxResult.invoiceNote || null,
+            buyerCountryCode,
+            buyerStateCode: buyerStateCode || null,
+            buyerVatNumber: buyerVatNumber || null,
+          };
+        }
+      } else {
+        // Non-US buyers: local EU VAT calculator (unchanged)
+        const taxResult = calculateTax({
+          amount: Number(amount),
+          buyerLocation: { countryCode: buyerCountryCode, stateCode: buyerStateCode, vatNumber: buyerVatNumber },
+        });
+        paymentDetails.tax = {
+          taxRate: taxResult.taxRate,
+          taxAmount: taxResult.taxAmount,
+          jurisdiction: taxResult.jurisdiction,
+          invoiceNote: taxResult.invoiceNote || null,
+          buyerCountryCode,
+          buyerStateCode: buyerStateCode || null,
+          buyerVatNumber: buyerVatNumber || null,
+        };
+      }
     }
 
     const sb = getSupabase();
