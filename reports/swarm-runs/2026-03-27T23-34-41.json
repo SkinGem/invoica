@@ -1,0 +1,93 @@
+{
+  "run_id": "7da21a68-bbde-42f8-846a-970a1ca18db9",
+  "project": "invoica",
+  "sprint_file": "/home/invoica/apps/Invoica/sprints/week-108.json",
+  "started_at": "2026-03-27T23:30:02.974Z",
+  "finished_at": "2026-03-27T23:34:41.395Z",
+  "duration_seconds": 278,
+  "git_branch": "main",
+  "git_head_before": "9d456014",
+  "git_head_after": "a8789379",
+  "daily_plan_loaded": "plans/daily/2026-03-27.md",
+  "pending_cto_proposals": 0,
+  "wallet": "Wallet: $0.0000 / $0 budget (N/A%) | 0 cloud calls this month",
+  "summary": {
+    "total_tasks": 8,
+    "done": 3,
+    "rejected": 2,
+    "skipped": 1,
+    "human_pending": 0,
+    "approval_rate": 0.07142857142857142,
+    "total_tokens": 104994
+  },
+  "tasks": [
+    {
+      "task_id": "HELIXA-005",
+      "title": "HELIXA-005",
+      "type": "feature",
+      "task_target": "cloud-code",
+      "status": "done",
+      "attempts": 1,
+      "model_used": "MiniMax-M2.5",
+      "provider": "minimax",
+      "routing_reason": "fallback-legacy",
+      "tokens_used": 2742,
+      "duration_seconds": 46,
+      "files_written": [
+        "backend/src/lib/helixa.ts"
+      ],
+      "review": {
+        "reviewer": "dual-supervisor",
+        "verdict": "APPROVED",
+        "score": 92,
+        "summary": "Clean append-only implementation that correctly adds Helixa Cred functionality without modifying existing code. All requirements met with proper TypeScript types and error handling."
+      },
+      "error": null,
+      "rejection_reason": null
+    },
+    {
+      "task_id": "PACT-002",
+      "title": "PACT-002",
+      "type": "feature",
+      "task_target": "cloud-code",
+      "status": "suspended",
+      "attempts": 5,
+      "model_used": "MiniMax-M2.5",
+      "provider": "minimax",
+      "routing_reason": "fallback-legacy",
+      "tokens_used": 11167,
+      "duration_seconds": 116,
+      "files_written": [],
+      "review": {
+        "reviewer": "dual-supervisor",
+        "verdict": "REJECTED",
+        "score": 0,
+        "summary": "Critical failure: Agent attempted destructive rewrite of 1078-line file despite explicit warnings. File integrity protection triggered."
+      },
+      "error": null,
+      "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: TypeScript syntax errors (TS1xxx) detected — auto-rejected before supervisor review"
+    },
+    {
+      "task_id": "SAP-MERCH-002",
+      "title": "SAP-MERCH-002",
+      "type": "feature",
+      "task_target": "cloud-code",
+      "status": "rejected",
+      "attempts": 3,
+      "model_used": "MiniMax-M2.5",
+      "provider": "minimax",
+      "routing_reason": "fallback-legacy",
+      "tokens_used": 23610,
+      "duration_seconds": 277,
+      "files_written": [],
+      "review": {
+        "reviewer": "dual-supervisor",
+        "verdict": "REJECTED",
+        "score": 25,
+        "summary": "Critical issues: incomplete file (truncated mid-function), missing error handling, no tests, hardcoded values, and architectural violations. The sap-execute.ts file is cut off at line ~130 and missing the actual route handler."
+      },
+      "error": null,
+      "rejection_reason": "Critical issues: incomplete file (truncated mid-function), missing error handling, no tests, hardcoded values, and architectural violations. The sap-execute.ts file is cut off at line ~130 and missing the actual route handler."
+    }
+  ]
+}
