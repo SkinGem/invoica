@@ -8,6 +8,7 @@ import webhookRoutes from './routes/webhooks';
 import settlementSummaryRoutes from './routes/settlement-summary';
 import settlementRoutes from './routes/settlements';
 import healthRoutes from './routes/health';
+import wellKnownRoutes from './routes/well-known';
 import aiInferenceRoutes from './routes/ai-inference';
 import ledgerRoutes from './routes/ledger';
 import adminRoutes from './routes/admin';
@@ -66,6 +67,7 @@ app.use(reputationHistoryRoutes);
 app.use(metricsRoutes);
 app.use(taxRoutes);
 app.use(agentRoutes);
+app.use('/.well-known', wellKnownRoutes);
 app.use('/v1/sap', authenticate, sapRoutes);
 
 app.use((_req, res) => {
