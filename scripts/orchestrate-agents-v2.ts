@@ -2340,8 +2340,13 @@ ONLY output the JSON array. No markdown, no explanation.`;
         try {
           const headAfter = execSync('git rev-parse HEAD', { encoding: 'utf-8', timeout: 5000 }).trim();
           if (headAfter !== headBefore) {
-            execSync('git reset --hard HEAD~1', { timeout: 10000 });
-            log(c.gray, '  Reset to previous commit (dropped failed task commit)');
+            const _orgHdB = (() => { try { return execSync('git rev-parse origin/main', { encoding: 'utf-8', timeout: 5000 }).trim(); } catch { return ''; } })();
+            if (_orgHdB && headAfter === _orgHdB) {
+              log(c.gray, '  Reset skipped — commit already at origin/main floor');
+            } else {
+              execSync('git reset --hard HEAD~1', { timeout: 10000 });
+              log(c.gray, '  Reset to previous commit (dropped failed task commit)');
+            }
           } else {
             log(c.gray, '  No commit was made — skipping reset');
           }
@@ -2381,8 +2386,14 @@ ONLY output the JSON array. No markdown, no explanation.`;
           strengths: [],
         };
         try {
-          execSync('git reset --hard HEAD~1', { timeout: 10000 });
-          log(c.gray, '  Reset to previous commit (dropped TS-broken code)');
+          const _orgHdC = (() => { try { return execSync('git rev-parse origin/main', { encoding: 'utf-8', timeout: 5000 }).trim(); } catch { return ''; } })();
+          const _curHdC = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf-8', timeout: 5000 }).trim(); } catch { return ''; } })();
+          if (_orgHdC && _curHdC === _orgHdC) {
+            log(c.gray, '  Reset skipped — already at origin/main floor');
+          } else {
+            execSync('git reset --hard HEAD~1', { timeout: 10000 });
+            log(c.gray, '  Reset to previous commit (dropped TS-broken code)');
+          }
         } catch (resetErr: any) {
           log(c.yellow, `  ! Reset failed (no prior commit?): ${resetErr.message?.substring(0, 80)}`);
           try { execSync('git restore .', { timeout: 5000 }); } catch {}
@@ -2400,7 +2411,11 @@ ONLY output the JSON array. No markdown, no explanation.`;
         log(c.yellow, `\n⚠ Task ${task.id}: supervisor review failed (${reviewErr.message?.substring(0, 80)}) — treating as rejection`);
         task.status = 'pending'; // reset so it will be retried
         this.stats.rejected++;
-        try { execSync('git reset --hard HEAD~1', { timeout: 10000 }); } catch {}
+        try {
+          const _orgHdD = (() => { try { return execSync('git rev-parse origin/main', { encoding: 'utf-8', timeout: 5000 }).trim(); } catch { return ''; } })();
+          const _curHdD = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf-8', timeout: 5000 }).trim(); } catch { return ''; } })();
+          if (!_orgHdD || _curHdD !== _orgHdD) { execSync('git reset --hard HEAD~1', { timeout: 10000 }); }
+        } catch {}
         continue; // next attempt
       }
       lastReview = review;
@@ -2436,6 +2451,20 @@ ONLY output the JSON array. No markdown, no explanation.`;
           await brvCurate(task.id, `Task completed: ${task.description}`, deliverableFiles);
         } catch { /* curate is optional — never block the pipeline */ }
 
+        // SPRINT-FIX-001: Push approved commit immediately — prevents parallel task resets from wiping it
+        try {
+          execSync('git push origin main', { timeout: 30000, stdio: 'pipe' });
+          log(c.green, `  ✓ Pushed approved commit for ${task.id}`);
+        } catch {
+          try {
+            execSync('git pull --rebase origin main', { timeout: 15000, stdio: 'pipe' });
+            execSync('git push origin main', { timeout: 30000, stdio: 'pipe' });
+            log(c.green, `  ✓ Pushed ${task.id} (after rebase)`);
+          } catch {
+            log(c.yellow, `  ! Push failed for ${task.id} — approved-unpushed (post-run sync will recover)`);
+          }
+        }
+
         return;
       }
 
@@ -2451,8 +2480,14 @@ ONLY output the JSON array. No markdown, no explanation.`;
       }
 
       try {
-        execSync('git reset --hard HEAD~1', { timeout: 10000 });
-        log(c.gray, '  Reset to previous commit (dropped rejected code)');
+        const _orgHdE = (() => { try { return execSync('git rev-parse origin/main', { encoding: 'utf-8', timeout: 5000 }).trim(); } catch { return ''; } })();
+        const _curHdE = (() => { try { return execSync('git rev-parse HEAD', { encoding: 'utf-8', timeout: 5000 }).trim(); } catch { return ''; } })();
+        if (_orgHdE && _curHdE === _orgHdE) {
+          log(c.gray, '  Reset skipped — already at origin/main floor');
+        } else {
+          execSync('git reset --hard HEAD~1', { timeout: 10000 });
+          log(c.gray, '  Reset to previous commit (dropped rejected code)');
+        }
       } catch {
         log(c.gray, '  Reset skipped (nothing to reset)');
       }

@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { calculateTax } from '../services/tax/calculator';
 import { calculateAgentTax, resolveTransactionType } from '../services/tax/agenttax-client';
 import { checkTrustGate } from '../middleware/trust-gate';
+import { verifyPactMandate } from '../lib/pact-verify';
+import { fetchHelixaCred, getHelixaTrustCeiling } from '../lib/helixa';
 
 const router = Router();
 
@@ -869,13 +871,49 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
     const sb = getSupabase();
     const { data: existing, error: fetchErr } = await sb
       .from('Invoice')
-      .select('id, status')
+      .select('id, status, amount')
       .eq('id', id)
       .single();
 
     if (fetchErr || !existing) {
       res.status(404).json({ success: false, error: { message: 'Invoice not found', code: 'NOT_FOUND' } });
       return;
+    }
+
+    if (status === 'SETTLED') {
+      const pactResult = verifyPactMandate(
+        req.headers['x-pact-mandate'] as string | undefined,
+        Number(existing.amount) || 0
+      );
+      if (!pactResult.allowed) {
+        res.status(403).json({
+          success: false,
+          error: { message: pactResult.reason || 'PACT mandate denied', code: 'PACT_DENIED' },
+        });
+        return;
+      }
+      // Helixa trust ceiling check (PACT Chamber 2 — non-blocking on API failure)
+      const mandateHeader = req.headers['x-pact-mandate'] as string | undefined;
+      if (mandateHeader) {
+        try {
+          const mandate = JSON.parse(mandateHeader) as { grantor?: string };
+          if (mandate.grantor) {
+            const cred = await fetchHelixaCred(mandate.grantor);
+            if (cred) {
+              const { ceiling, maxUsdc } = getHelixaTrustCeiling(cred.score, cred.verification_status);
+              const invoiceAmount = Number(existing.amount) || 0;
+              if (ceiling === 'REJECTED') {
+                res.status(403).json({ success: false, error: { message: 'Helixa trust score below minimum threshold', code: 'HELIXA_REJECTED' } });
+                return;
+              }
+              if (invoiceAmount > maxUsdc) {
+                res.status(403).json({ success: false, error: { message: `Helixa ceiling ${ceiling}: max ${maxUsdc} USDC`, code: 'HELIXA_CEILING_EXCEEDED' } });
+                return;
+              }
+            }
+          }
+        } catch { /* non-blocking — if Helixa unavailable, proceed */ }
+      }
     }
 
     if (!VALID_TRANSITIONS[existing.status]?.includes(status)) {

@@ -108,6 +108,11 @@
       "type": "feature",
       "priority": "high",
       "dependencies": ["HELIXA-005", "PACT-002"],
+      "status": "done",
+      "verdict": "APPROVED",
+      "approvedBy": "ceo",
+      "approvedAt": "2026-03-28",
+      "note": "Helixa import + trust ceiling check wired into SETTLED branch of invoices.ts. Manual apply — part of batch PACT+HELIXA commit.",
       "description": "Wire Helixa trust ceiling check into invoice settlement — 2 surgical edits to invoices.ts",
       "context": "BACKGROUND:\nHELIXA-005 added fetchHelixaCred() and getHelixaTrustCeiling() to helixa.ts.\nPACT-002 added a PACT mandate check block inside the if (status === 'SETTLED') branch in invoices.ts.\nThis task adds a Helixa trust ceiling check immediately after the PACT block — if the paying agent's Helixa score is REJECTED or the invoice exceeds their ceiling, the settlement is denied.\n\nThe check is non-blocking: if Helixa API returns null (unavailable), we proceed as normal.\n\n⚠️ CRITICAL WARNING: backend/src/routes/invoices.ts is ~1091 lines after PACT-002 edits.\nDO NOT rewrite the file. DO NOT use write_file on this file.\nMAKE ONLY THE 2 SURGICAL FIND-REPLACE EDITS DESCRIBED BELOW.\nAfter each edit, verify the file still has 1000+ lines.\n\n---\n\nEDIT 1 — Update helixa import to include new exports:\n\nSearch the file for an import line containing '../lib/helixa'. It will look like one of:\n  import { fetchHelixaScore } from '../lib/helixa';\n  import { fetchHelixaScore, someOtherFn } from '../lib/helixa';\n\nWhatever the existing import contains, add `fetchHelixaCred, getHelixaTrustCeiling` to it.\nFor example, if you find:\n  import { fetchHelixaScore } from '../lib/helixa';\nReplace with:\n  import { fetchHelixaScore, fetchHelixaCred, getHelixaTrustCeiling } from '../lib/helixa';\n\nIf NO helixa import exists in the file, add this line immediately after the pact-verify import:\n  import { fetchHelixaCred, getHelixaTrustCeiling } from '../lib/helixa';\n\n---\n\nEDIT 2 — Add Helixa ceiling check after the PACT mandate block:\n\nFind this exact block (added by PACT-002):\n\n      if (!pactResult.allowed) {\n        res.status(403).json({\n          success: false,\n          error: { message: pactResult.reason || 'PACT mandate denied', code: 'PACT_DENIED' },\n        });\n        return;\n      }\n    }\n\n    if (!VALID_TRANSITIONS[existing.status]?.includes(status)) {\n\nReplace with:\n\n      if (!pactResult.allowed) {\n        res.status(403).json({\n          success: false,\n          error: { message: pactResult.reason || 'PACT mandate denied', code: 'PACT_DENIED' },\n        });\n        return;\n      }\n      // Helixa trust ceiling check (PACT Chamber 2 — non-blocking on API failure)\n      const mandateHeader = req.headers['x-pact-mandate'] as string | undefined;\n      if (mandateHeader) {\n        try {\n          const mandate = JSON.parse(mandateHeader) as { grantor?: string };\n          if (mandate.grantor) {\n            const cred = await fetchHelixaCred(mandate.grantor);\n            if (cred) {\n              const { ceiling, maxUsdc } = getHelixaTrustCeiling(cred.score, cred.verification_status);\n              const invoiceAmount = Number(existing.amount) || 0;\n              if (ceiling === 'REJECTED') {\n                res.status(403).json({ success: false, error: { message: 'Helixa trust score below minimum threshold', code: 'HELIXA_REJECTED' } });\n                return;\n              }\n              if (invoiceAmount > maxUsdc) {\n                res.status(403).json({ success: false, error: { message: `Helixa ceiling ${ceiling}: max ${maxUsdc} USDC`, code: 'HELIXA_CEILING_EXCEEDED' } });\n                return;\n              }\n            }\n          }\n        } catch { /* non-blocking — if Helixa unavailable, proceed */ }\n      }\n    }\n\n    if (!VALID_TRANSITIONS[existing.status]?.includes(status)) {\n\n---\n\nAFTER BOTH EDITS:\n1. Verify file still has 1000+ lines: wc -l backend/src/routes/invoices.ts\n   If fewer than 1000 → ABORT, report truncation failure\n2. Run: npx tsc --noEmit 2>&1 | grep -E 'invoices|helixa|error'\n   Expected: 0 new TypeScript errors\n3. Confirm fetchHelixaCred and getHelixaTrustCeiling are imported and used in the file",
       "deliverables": {
@@ -116,8 +121,7 @@
         ],
         "tests": [],
         "docs": []
-      },
-      "status": "pending"
+      }
     },
     {
       "id": "FRONT-FIX-001",
@@ -167,7 +171,11 @@
       "description": "PACT-002 Edit 1 of 3 — add verifyPactMandate import to invoices.ts",
       "context": "CONTEXT: PACT-001 created backend/src/lib/pact-verify.ts with verifyPactMandate(). Now make ONE surgical import edit to backend/src/routes/invoices.ts.\n\n⚠️ invoices.ts is 1077 lines. DO NOT rewrite it. DO NOT use write_file. Make ONLY the edit below.\n\nFind this exact import line (it is the last import in the file's import block):\n\nimport { checkTrustGate } from '../middleware/trust-gate';\n\nReplace with:\n\nimport { checkTrustGate } from '../middleware/trust-gate';\nimport { verifyPactMandate } from '../lib/pact-verify';\n\nAFTER:\n1. wc -l backend/src/routes/invoices.ts → must be 1078 lines (one line added)\n2. npx tsc --noEmit 2>&1 | grep -E 'invoices|pact' → 0 new errors\n3. Do NOT touch any other file",
       "deliverables": { "code": ["backend/src/routes/invoices.ts"], "tests": [], "docs": [] },
-      "status": "pending"
+      "status": "done",
+      "verdict": "APPROVED",
+      "approvedBy": "ceo",
+      "approvedAt": "2026-03-28",
+      "note": "verifyPactMandate import added. Manual CEO apply — part of batch PACT+HELIXA commit."
     },
     {
       "id": "PACT-002B",
@@ -178,7 +186,11 @@
       "description": "PACT-002 Edit 2 of 3 — add 'amount' to .select() in PATCH /v1/invoices/:id/status",
       "context": "CONTEXT: PACT-002A added the import. Now make ONE surgical edit to the Supabase query inside PATCH /v1/invoices/:id/status.\n\n⚠️ invoices.ts is now 1078 lines. DO NOT rewrite. DO NOT use write_file. ONE edit only.\n\nFind this exact block inside the PATCH /v1/invoices/:id/status route handler:\n\n    const { data: existing, error: fetchErr } = await sb\n      .from('Invoice')\n      .select('id, status')\n      .eq('id', id)\n      .single();\n\nReplace with:\n\n    const { data: existing, error: fetchErr } = await sb\n      .from('Invoice')\n      .select('id, status, amount')\n      .eq('id', id)\n      .single();\n\nAFTER:\n1. wc -l backend/src/routes/invoices.ts → must still be 1078 lines (same line count, just 'amount' added)\n2. npx tsc --noEmit 2>&1 | grep -E 'invoices|pact' → 0 new errors\n3. Do NOT touch any other file",
       "deliverables": { "code": ["backend/src/routes/invoices.ts"], "tests": [], "docs": [] },
-      "status": "pending"
+      "status": "done",
+      "verdict": "APPROVED",
+      "approvedBy": "ceo",
+      "approvedAt": "2026-03-28",
+      "note": "'amount' added to .select(). Manual CEO apply — part of batch PACT+HELIXA commit."
     },
     {
       "id": "PACT-002C",
@@ -189,7 +201,11 @@
       "description": "PACT-002 Edit 3 of 3 — insert PACT mandate check block before VALID_TRANSITIONS guard",
       "context": "CONTEXT: PACT-002A added the import, PACT-002B added 'amount' to .select(). Now insert the PACT check block. ONE surgical find-replace edit.\n\n⚠️ invoices.ts is 1078 lines. DO NOT rewrite. DO NOT use write_file. ONE edit only.\n\nFind this exact line (it appears after the not-found early return inside PATCH /v1/invoices/:id/status):\n\n    if (!VALID_TRANSITIONS[existing.status]?.includes(status)) {\n\nReplace with:\n\n    if (status === 'SETTLED') {\n      const pactResult = verifyPactMandate(\n        req.headers['x-pact-mandate'] as string | undefined,\n        Number(existing.amount) || 0\n      );\n      if (!pactResult.allowed) {\n        res.status(403).json({\n          success: false,\n          error: { message: pactResult.reason || 'PACT mandate denied', code: 'PACT_DENIED' },\n        });\n        return;\n      }\n    }\n\n    if (!VALID_TRANSITIONS[existing.status]?.includes(status)) {\n\nAFTER:\n1. wc -l backend/src/routes/invoices.ts → must be 1092+ lines (14 lines added)\n2. npx tsc --noEmit 2>&1 | grep -E 'invoices|pact' → 0 new errors\n3. grep 'verifyPactMandate' backend/src/routes/invoices.ts → must match 2 lines (import + usage)\n4. Do NOT touch any other file",
       "deliverables": { "code": ["backend/src/routes/invoices.ts"], "tests": [], "docs": [] },
-      "status": "pending"
+      "status": "done",
+      "verdict": "APPROVED",
+      "approvedBy": "ceo",
+      "approvedAt": "2026-03-28",
+      "note": "PACT mandate check block inserted before VALID_TRANSITIONS guard. Manual CEO apply — part of batch PACT+HELIXA commit."
     },
     {
       "id": "SPRINT-FIX-001",
@@ -200,11 +216,15 @@
       "description": "Fix sprint runner parallel git bug — push approved commits immediately to protect from subsequent resets",
       "context": "BACKGROUND:\nThe sprint runner fans out multiple tasks in parallel on the same git branch. When tasks run in parallel: HELIXA-005 commits first (approved), SAP-MERCH-002 commits concurrently. SAP-MERCH-002 gets rejected → git reset --hard HEAD~1 → this also rolls back HELIXA-005's commit because the commits are interleaved and the reset goes back too far.\n\nResult: HELIXA-005 was approved 4 times on March 27 but code was lost every time due to cascading resets from other rejected tasks in the same parallel batch.\n\nFILE: scripts/sprint-runner.ts (read the full file before editing)\n\nFIX REQUIRED:\nAfter a task is approved and committed locally, immediately push to origin/main BEFORE processing any other task outcomes. This makes the approved commit unreachable by subsequent resets.\n\nSpecifically:\n1. Find the section that handles task approval (after supervisor verdict = APPROVED)\n2. After the git commit for an approved task, immediately run: git push origin main\n3. Protect this push — if push fails, retry once, then mark task as 'approved-unpushed' rather than failing\n4. For reset operations (rejected tasks), verify the reset does NOT go past the last pushed commit:\n   - Use `git merge-base HEAD origin/main` to find the safe reset floor\n   - Never reset past origin/main HEAD\n\nAFTER:\n1. Verify sprint-runner.ts still compiles: npx tsc --noEmit 2>&1 | grep sprint-runner\n2. Verify the push-on-approve logic is present in the file\n3. Do NOT change any other sprint runner behavior",
       "deliverables": {
-        "code": ["scripts/sprint-runner.ts"],
+        "code": ["scripts/orchestrate-agents-v2.ts"],
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done",
+      "verdict": "APPROVED",
+      "approvedBy": "ceo",
+      "approvedAt": "2026-03-28",
+      "note": "Push-on-approve + origin/main floor protection applied to orchestrate-agents-v2.ts (task spec had wrong file — sprint-runner.ts has no git logic). Manual CEO apply."
     }
   ]
 }
