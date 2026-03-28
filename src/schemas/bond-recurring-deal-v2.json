@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bond-recurring-deal-v2",
+  "title": "BOND Recurring Deal v2.0",
+  "description": "Bilateral On-chain Negotiated Delegation — recurring mandate schema with AgentTax integration (TICKET-017-AGENTTAX-04)",
+  "type": "object",
+  "required": ["deal_id", "payer_address", "payee_address", "amount_usdc", "interval_seconds", "network"],
+  "properties": {
+    "deal_id": { "type": "string", "description": "EAS attestation UID for this mandate" },
+    "payer_address": { "type": "string" },
+    "payee_address": { "type": "string" },
+    "amount_usdc": { "type": "number", "description": "Recurring payment amount in USDC" },
+    "interval_seconds": { "type": "integer", "description": "Payment interval (e.g. 2592000 = 30 days)" },
+    "network": { "type": "string", "enum": ["base", "solana"], "default": "base" },
+    "buyer_state": { "type": "string", "maxLength": 2, "description": "US state code for tax nexus" },
+    "transaction_type": { "type": "string", "description": "AgentTax transaction type (e.g. subscription, api_access)" },
+    "tax_line": {
+      "type": "object",
+      "description": "AgentTax-computed tax obligation for this recurring deal's jurisdiction",
+      "nullable": true,
+      "properties": {
+        "amount_usd": { "type": "number" },
+        "rate": { "type": "number" },
+        "jurisdiction": { "type": "string" },
+        "calculated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

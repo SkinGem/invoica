@@ -46,6 +46,18 @@ export interface Invoice {
   buyerVat?: string;
   /** Payer agent ID (used for Helixa reputation score lookup) */
   payerAgentId?: string;
+  /** AgentTax-computed US sales tax line (TICKET-017-AGENTTAX-02) */
+  tax_line?: {
+    amount_usd: number;
+    rate: number;
+    type: 'sales' | 'use' | 'exempt';
+    jurisdiction: string;
+    note: string;
+    confidence_score: number;
+    confidence_level: string;
+    mode: 'live' | 'demo' | 'skipped';
+    calculated_at: string;
+  } | null;
 }
 
 /**
