@@ -20,6 +20,7 @@ import metricsRoutes from './routes/metrics';
 import taxRoutes from './routes/tax';
 import agentRoutes from './routes/agents';
 import sapRoutes from './routes/sap';
+import sapExecuteRoutes from './routes/sap-execute';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -68,6 +69,7 @@ app.use(metricsRoutes);
 app.use(taxRoutes);
 app.use(agentRoutes);
 app.use('/.well-known', wellKnownRoutes);
+app.use('/api/sap', sapExecuteRoutes);
 app.use('/v1/sap', authenticate, sapRoutes);
 
 app.use((_req, res) => {

@@ -62,7 +62,11 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done",
+      "verdict": "APPROVED",
+      "approvedBy": "ceo",
+      "approvedAt": "2026-03-28",
+      "note": "sap-execute.ts created (167 lines). Escrow verify + capability routing (payment:invoice, payment:settle, compliance:tax stub). Mounted /api/sap in app.ts before auth. Manual CEO apply."
     },
     {
       "id": "SAP-MERCH-003",
