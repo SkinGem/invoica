@@ -96,7 +96,11 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done",
+      "verdict": "APPROVED",
+      "approvedBy": "ceo",
+      "approvedAt": "2026-03-27",
+      "note": "fetchHelixaCred + getHelixaTrustCeiling appended to helixa.ts (97 lines). Manual apply — sprint runner parallel git bug wiped approved commits 4x today."
     },
     {
       "id": "HELIXA-006",
@@ -130,7 +134,11 @@
         "tests": [],
         "docs": []
       },
-      "status": "pending"
+      "status": "done",
+      "verdict": "APPROVED",
+      "approvedBy": "ceo",
+      "approvedAt": "2026-03-27",
+      "note": "Badge→span swap in CredScoreBadge.tsx. Badge import removed. Manual apply — fixes 19+ consecutive Vercel ERROR deployments on invoica-b89o."
     },
     {
       "id": "PACT-002",
@@ -144,6 +152,55 @@
         "code": [
           "backend/src/routes/invoices.ts"
         ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "suspended",
+      "note": "Suspended after 5 consecutive failures. MiniMax truncates invoices.ts (1077 lines) on every attempt — 'All existing route handlers and functionality beyond the first few imports have been lost'. Replaced by 3 atomic sub-tasks: PACT-002A, PACT-002B, PACT-002C."
+    },
+    {
+      "id": "PACT-002A",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": ["PACT-001"],
+      "description": "PACT-002 Edit 1 of 3 — add verifyPactMandate import to invoices.ts",
+      "context": "CONTEXT: PACT-001 created backend/src/lib/pact-verify.ts with verifyPactMandate(). Now make ONE surgical import edit to backend/src/routes/invoices.ts.\n\n⚠️ invoices.ts is 1077 lines. DO NOT rewrite it. DO NOT use write_file. Make ONLY the edit below.\n\nFind this exact import line (it is the last import in the file's import block):\n\nimport { checkTrustGate } from '../middleware/trust-gate';\n\nReplace with:\n\nimport { checkTrustGate } from '../middleware/trust-gate';\nimport { verifyPactMandate } from '../lib/pact-verify';\n\nAFTER:\n1. wc -l backend/src/routes/invoices.ts → must be 1078 lines (one line added)\n2. npx tsc --noEmit 2>&1 | grep -E 'invoices|pact' → 0 new errors\n3. Do NOT touch any other file",
+      "deliverables": { "code": ["backend/src/routes/invoices.ts"], "tests": [], "docs": [] },
+      "status": "pending"
+    },
+    {
+      "id": "PACT-002B",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": ["PACT-002A"],
+      "description": "PACT-002 Edit 2 of 3 — add 'amount' to .select() in PATCH /v1/invoices/:id/status",
+      "context": "CONTEXT: PACT-002A added the import. Now make ONE surgical edit to the Supabase query inside PATCH /v1/invoices/:id/status.\n\n⚠️ invoices.ts is now 1078 lines. DO NOT rewrite. DO NOT use write_file. ONE edit only.\n\nFind this exact block inside the PATCH /v1/invoices/:id/status route handler:\n\n    const { data: existing, error: fetchErr } = await sb\n      .from('Invoice')\n      .select('id, status')\n      .eq('id', id)\n      .single();\n\nReplace with:\n\n    const { data: existing, error: fetchErr } = await sb\n      .from('Invoice')\n      .select('id, status, amount')\n      .eq('id', id)\n      .single();\n\nAFTER:\n1. wc -l backend/src/routes/invoices.ts → must still be 1078 lines (same line count, just 'amount' added)\n2. npx tsc --noEmit 2>&1 | grep -E 'invoices|pact' → 0 new errors\n3. Do NOT touch any other file",
+      "deliverables": { "code": ["backend/src/routes/invoices.ts"], "tests": [], "docs": [] },
+      "status": "pending"
+    },
+    {
+      "id": "PACT-002C",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": ["PACT-002B"],
+      "description": "PACT-002 Edit 3 of 3 — insert PACT mandate check block before VALID_TRANSITIONS guard",
+      "context": "CONTEXT: PACT-002A added the import, PACT-002B added 'amount' to .select(). Now insert the PACT check block. ONE surgical find-replace edit.\n\n⚠️ invoices.ts is 1078 lines. DO NOT rewrite. DO NOT use write_file. ONE edit only.\n\nFind this exact line (it appears after the not-found early return inside PATCH /v1/invoices/:id/status):\n\n    if (!VALID_TRANSITIONS[existing.status]?.includes(status)) {\n\nReplace with:\n\n    if (status === 'SETTLED') {\n      const pactResult = verifyPactMandate(\n        req.headers['x-pact-mandate'] as string | undefined,\n        Number(existing.amount) || 0\n      );\n      if (!pactResult.allowed) {\n        res.status(403).json({\n          success: false,\n          error: { message: pactResult.reason || 'PACT mandate denied', code: 'PACT_DENIED' },\n        });\n        return;\n      }\n    }\n\n    if (!VALID_TRANSITIONS[existing.status]?.includes(status)) {\n\nAFTER:\n1. wc -l backend/src/routes/invoices.ts → must be 1092+ lines (14 lines added)\n2. npx tsc --noEmit 2>&1 | grep -E 'invoices|pact' → 0 new errors\n3. grep 'verifyPactMandate' backend/src/routes/invoices.ts → must match 2 lines (import + usage)\n4. Do NOT touch any other file",
+      "deliverables": { "code": ["backend/src/routes/invoices.ts"], "tests": [], "docs": [] },
+      "status": "pending"
+    },
+    {
+      "id": "SPRINT-FIX-001",
+      "agent": "backend-core",
+      "type": "maintenance",
+      "priority": "critical",
+      "dependencies": [],
+      "description": "Fix sprint runner parallel git bug — push approved commits immediately to protect from subsequent resets",
+      "context": "BACKGROUND:\nThe sprint runner fans out multiple tasks in parallel on the same git branch. When tasks run in parallel: HELIXA-005 commits first (approved), SAP-MERCH-002 commits concurrently. SAP-MERCH-002 gets rejected → git reset --hard HEAD~1 → this also rolls back HELIXA-005's commit because the commits are interleaved and the reset goes back too far.\n\nResult: HELIXA-005 was approved 4 times on March 27 but code was lost every time due to cascading resets from other rejected tasks in the same parallel batch.\n\nFILE: scripts/sprint-runner.ts (read the full file before editing)\n\nFIX REQUIRED:\nAfter a task is approved and committed locally, immediately push to origin/main BEFORE processing any other task outcomes. This makes the approved commit unreachable by subsequent resets.\n\nSpecifically:\n1. Find the section that handles task approval (after supervisor verdict = APPROVED)\n2. After the git commit for an approved task, immediately run: git push origin main\n3. Protect this push — if push fails, retry once, then mark task as 'approved-unpushed' rather than failing\n4. For reset operations (rejected tasks), verify the reset does NOT go past the last pushed commit:\n   - Use `git merge-base HEAD origin/main` to find the safe reset floor\n   - Never reset past origin/main HEAD\n\nAFTER:\n1. Verify sprint-runner.ts still compiles: npx tsc --noEmit 2>&1 | grep sprint-runner\n2. Verify the push-on-approve logic is present in the file\n3. Do NOT change any other sprint runner behavior",
+      "deliverables": {
+        "code": ["scripts/sprint-runner.ts"],
         "tests": [],
         "docs": []
       },

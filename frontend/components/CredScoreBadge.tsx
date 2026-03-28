@@ -1,6 +1,5 @@
 'use client';
 
-import { Badge } from '@/components/Badge';
 
 interface CredScoreBadgeProps {
   score: number | null;
@@ -29,12 +28,12 @@ export function CredScoreBadge({ score, tier }: CredScoreBadgeProps) {
 
   return (
     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
-      <Badge
+      <span
         style={{ backgroundColor: tierColor }}
-        className="text-white font-medium px-3 py-1"
+        className="inline-flex items-center font-medium text-white rounded-full px-3 py-1 text-sm"
       >
         {tierLabel}
-      </Badge>
+      </span>
       <div className="flex flex-col">
         <span className="text-2xl font-bold text-gray-900">{score}</span>
         <span className="text-xs text-gray-500 uppercase tracking-wide">Helixa CredScore</span>
