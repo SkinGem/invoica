@@ -40,5 +40,99 @@
         "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: INVALID_PATH: \"pact/package.json\" is not in a recognized project directory"
       }
     ]
+  },
+  {
+    "run_id": "4ece3873-3035-48e8-91db-02c1e2f5b540",
+    "project": "invoica",
+    "sprint_file": "/home/invoica/apps/Invoica/sprints/week-110.json",
+    "started_at": "2026-04-02T12:38:28.107Z",
+    "finished_at": "2026-04-02T12:45:55.278Z",
+    "duration_seconds": 447,
+    "git_branch": "main",
+    "git_head_before": "dca56706",
+    "git_head_after": "073b3955",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $50 budget (0.0%) | 49 cloud calls this month",
+    "summary": {
+      "total_tasks": 4,
+      "done": 1,
+      "rejected": 0,
+      "skipped": 0,
+      "human_pending": 0,
+      "approval_rate": 0.09090909090909091,
+      "total_tokens": 89264
+    },
+    "tasks": [
+      {
+        "task_id": "SAP-SDK-001",
+        "title": "SAP-SDK-001",
+        "type": "upgrade",
+        "task_target": "cloud-code",
+        "status": "done",
+        "attempts": 1,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 6316,
+        "duration_seconds": 36,
+        "files_written": [
+          "package.json",
+          "backend/src/lib/sap-client.ts"
+        ],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "APPROVED",
+          "score": 92,
+          "summary": "Clean implementation of SAP SDK v0.6 upgrade with proper singleton pattern and graceful error handling. Code follows TypeScript best practices and matches task requirements exactly."
+        },
+        "error": null,
+        "rejection_reason": null
+      },
+      {
+        "task_id": "SAP-MERCH-004",
+        "title": "SAP-MERCH-004",
+        "type": "feature",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 23853,
+        "duration_seconds": 269,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 15,
+          "summary": "File is truncated and incomplete. The code cuts off mid-line in the switch statement, making it syntactically invalid. This appears to be a generation error where the full file content was not provided."
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: File is truncated and incomplete. The code cuts off mid-line in the switch statement, making it syntactically invalid. This appears to be a generation error where the full file content was not provided."
+      },
+      {
+        "task_id": "SAP-MERCH-006",
+        "title": "SAP-MERCH-006",
+        "type": "bugfix",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 16183,
+        "duration_seconds": 135,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 0,
+          "summary": "Critical failure: Destructive rewrite detected. File shrank from 168 lines to 6 lines (4% retention), indicating complete loss of existing functionality."
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: Critical failure: Destructive rewrite detected. File shrank from 168 lines to 6 lines (4% retention), indicating complete loss of existing functionality."
+      }
+    ]
   }
 ]
