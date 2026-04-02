@@ -158,5 +158,74 @@
       "total_tokens": 0
     },
     "tasks": []
+  },
+  {
+    "run_id": "7abf6825-871e-400c-bcd9-b0fafe50c302",
+    "project": "invoica",
+    "sprint_file": "/home/invoica/apps/Invoica/sprints/week-110.json",
+    "started_at": "2026-04-02T14:13:13.369Z",
+    "finished_at": "2026-04-02T14:20:03.069Z",
+    "duration_seconds": 410,
+    "git_branch": "main",
+    "git_head_before": "ba8b8f3e",
+    "git_head_after": "ba8b8f3e",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $50 budget (0.0%) | 54 cloud calls this month",
+    "summary": {
+      "total_tasks": 4,
+      "done": 1,
+      "rejected": 0,
+      "skipped": 0,
+      "human_pending": 0,
+      "approval_rate": 0,
+      "total_tokens": 77553
+    },
+    "tasks": [
+      {
+        "task_id": "SAP-MERCH-004",
+        "title": "SAP-MERCH-004",
+        "type": "feature",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 24215,
+        "duration_seconds": 270,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "File is incomplete and truncated. The generated code cuts off mid-function in the payment:invoice case, missing critical functionality including the settle call that was the primary objective of this task."
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: File is incomplete and truncated. The generated code cuts off mid-function in the payment:invoice case, missing critical functionality including the settle call that was the primary objective of this task."
+      },
+      {
+        "task_id": "SAP-MERCH-006",
+        "title": "SAP-MERCH-006",
+        "type": "bugfix",
+        "task_target": "cloud-code",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 16213,
+        "duration_seconds": 137,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 15,
+          "summary": "Critical destructive rewrite detected. File shrank from 168 lines to 11 lines (93% reduction), indicating complete loss of existing functionality. The agent failed to perform the targeted bugfix and instead destroyed the entire file."
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: Critical destructive rewrite detected. File shrank from 168 lines to 11 lines (93% reduction), indicating complete loss of existing functionality. The agent failed to perform the targeted bugfix and instead destroyed the entire file."
+      }
+    ]
   }
 ]
