@@ -21,6 +21,7 @@ import taxRoutes from './routes/tax';
 import agentRoutes from './routes/agents';
 import sapRoutes from './routes/sap';
 import sapExecuteRoutes from './routes/sap-execute';
+import invoiceDownloadRoutes from './routes/invoice-download';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -51,6 +52,7 @@ app.use((req, _res, next) => {
 });
 
 app.use(healthRoutes);
+app.use(invoiceDownloadRoutes);
 app.use(invoiceStatsRoutes);
 app.use(invoiceExportRoutes);
 app.use(invoiceRoutes);
@@ -79,7 +81,13 @@ app.use((_req, res) => {
 app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('Unhandled error:', err.message);
   const statusCode = typeof (err as any).status === 'number' ? (err as any).status : 500;
-  res.status(statusCode).json({ success: false, error: { message: err.message, code: 'INTERNAL_ERROR' } });
+  res.status(statusCode).json({
+    success: false,
+    error: {
+      message: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+      code: 'INTERNAL_ERROR',
+    },
+  });
 });
 
-export { app };
+export default app;
