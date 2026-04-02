@@ -19,7 +19,7 @@
     "@godman-protocols/pact": "file:../../kognai/workspace/godman-protocols/pact",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@noble/ed25519": "^3.0.0",
-    "@oobe-protocol-labs/synapse-sap-sdk": "^0.4.1",
+    "@oobe-protocol-labs/synapse-sap-sdk": "^0.6.0",
     "@prisma/client": "^5.22.0",
     "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.98.0",
