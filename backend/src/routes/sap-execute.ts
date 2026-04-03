@@ -127,7 +127,7 @@ router.post('/execute', async (req: Request, res: Response) => {
     if (capability === 'payment:invoice') {
       const p = params as Record<string, unknown>;
       const amount = typeof p.amount === 'number' ? p.amount : requiredUsdc;
-      const invoiceNumber = `SAP-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+      const invoiceNumber = Math.floor(Date.now() / 1000);
       const { data: invoice, error } = await sb
         .from('Invoice')
         .insert({
