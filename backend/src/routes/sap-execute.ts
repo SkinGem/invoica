@@ -135,8 +135,7 @@ router.post('/execute', async (req: Request, res: Response) => {
           currency:    p.currency    || 'USDC',
           network,
           status:      'PENDING',
-          description: p.description || 'SAP-brokered invoice',
-          metadata:    { source: 'sap-execute', escrowPda, depositor },
+          metadata:    { source: 'sap-execute', escrowPda, depositor, description: p.description || 'SAP-brokered invoice' },
         })
         .select()
         .single();
