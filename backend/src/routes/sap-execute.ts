@@ -218,7 +218,7 @@ router.post('/execute', async (req: Request, res: Response) => {
     .digest('hex');
   const sapClient = getSapClient();
   if (sapClient && depositor) {
-    (sapClient.escrow.settle(depositor, 1, serviceHash) as Promise<string>)
+    (sapClient.escrow.settle(depositor as any, 1, serviceHash) as Promise<string>)
       .then((sig: string) =>
         console.info(`[sap-execute] escrow settled sig=${sig} escrow=${escrowPda} capability=${capability}`)
       )
