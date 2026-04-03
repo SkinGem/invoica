@@ -8,6 +8,7 @@ import { Router, Request, Response } from 'express';
 import { fetchHelixaCred } from '../lib/helixa';
 import { issueSessionJwt, verifySessionJwt } from '../lib/pact-session-jwt';
 import * as crypto from 'crypto';
+import { reportSessionOutcome } from '../lib/helixa-reporter';
 
 const router = Router();
 
@@ -83,6 +84,28 @@ router.post('/session/:id/cred-update', (req: Request, res: Response) => {
   session.updatedAt = new Date().toISOString();
   console.info(`[pact-session] ${id} cred-update ceiling=${ceiling} score=${score}`);
   res.json({ success: true, sessionId: id, ceiling, maxUsdc });
+});
+
+router.post('/session/:id/complete', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const session = sessions.get(id);
+  if (!session) {
+    res.status(404).json({ success: false, error: { message: 'Session not found', code: 'NOT_FOUND' } });
+    return;
+  }
+  const { outcome = 'success', jwt = '' } = req.body as { outcome?: string; jwt?: string };
+  const validOutcomes = ['success', 'partial', 'failed'];
+  if (!validOutcomes.includes(outcome)) {
+    res.status(400).json({ success: false, error: { message: `outcome must be one of ${validOutcomes.join(', ')}`, code: 'INVALID_OUTCOME' } });
+    return;
+  }
+  const deltaMap: Record<string, number> = { success: 2, partial: 0, failed: -2 };
+  const trustDelta = deltaMap[outcome];
+  session.status = 'complete'; session.updatedAt = new Date().toISOString();
+  reportSessionOutcome(id, outcome as 'success' | 'partial' | 'failed', trustDelta, jwt)
+    .catch((err) => console.error('[pact-session/complete] reporter error:', (err as Error).message));
+  console.info(`[pact-session] ${id} completed outcome=${outcome} delta=${trustDelta}`);
+  res.json({ success: true, sessionId: id, outcome, trustDelta });
 });
 
 router.get('/session/:id', (req: Request, res: Response) => {
