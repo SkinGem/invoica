@@ -273,7 +273,9 @@ class SupervisorAgent {
   private systemPrompt: string;
   constructor() {
     const promptPath = './agents/supervisor/prompt.md';
-    this.systemPrompt = existsSync(promptPath) ? readFileSync(promptPath, 'utf-8') : 'You are a code review supervisor.';
+    const preamblePath = './agents/CONSTITUTION_PREAMBLE.md';
+    const preamble = existsSync(preamblePath) ? readFileSync(preamblePath, 'utf-8') + '\n\n' : '';
+    this.systemPrompt = preamble + (existsSync(promptPath) ? readFileSync(promptPath, 'utf-8') : 'You are a code review supervisor.');
     log(c.magenta, '+ Loaded supervisor agent (Claude via Anthropic API)');
   }
 
@@ -321,7 +323,9 @@ class Supervisor2Agent {
   private systemPrompt: string;
   constructor() {
     const promptPath = './agents/supervisor/prompt.md';
-    this.systemPrompt = existsSync(promptPath) ? readFileSync(promptPath, 'utf-8') : 'You are a code review supervisor.';
+    const preamblePath = './agents/CONSTITUTION_PREAMBLE.md';
+    const preamble = existsSync(preamblePath) ? readFileSync(preamblePath, 'utf-8') + '\n\n' : '';
+    this.systemPrompt = preamble + (existsSync(promptPath) ? readFileSync(promptPath, 'utf-8') : 'You are a code review supervisor.');
     log(c.magenta, '+ Loaded supervisor 2 agent (OpenAI Codex)');
   }
 
@@ -457,7 +461,9 @@ class CEOAgent {
   private systemPrompt: string;
   constructor() {
     const promptPath = './agents/ceo/prompt.md';
-    this.systemPrompt = existsSync(promptPath) ? readFileSync(promptPath, 'utf-8') : 'You are the CEO of Countable.';
+    const preamblePath = './agents/CONSTITUTION_PREAMBLE.md';
+    const preamble = existsSync(preamblePath) ? readFileSync(preamblePath, 'utf-8') + '\n\n' : '';
+    this.systemPrompt = preamble + (existsSync(promptPath) ? readFileSync(promptPath, 'utf-8') : 'You are the CEO of Invoica.');
     log(c.magenta, '+ Loaded CEO agent (Claude via Anthropic API)');
   }
 
@@ -834,7 +840,9 @@ class CTOAgent {
 
   constructor() {
     const promptPath = './agents/cto/prompt.md';
-    this.systemPrompt = existsSync(promptPath) ? readFileSync(promptPath, 'utf-8') : 'You are the CTO of Invoica.';
+    const preamblePath = './agents/CONSTITUTION_PREAMBLE.md';
+    const preamble = existsSync(preamblePath) ? readFileSync(preamblePath, 'utf-8') + '\n\n' : '';
+    this.systemPrompt = preamble + (existsSync(promptPath) ? readFileSync(promptPath, 'utf-8') : 'You are the CTO of Invoica.');
     this.dataCollector = new CTODataCollector();
     log(c.cyan, '+ Loaded CTO agent (MiniMax M2.5 — data-driven)');
   }
@@ -1980,9 +1988,11 @@ class Orchestrator {
       if (skipAgents.includes(d)) return false;
       return existsSync(`./agents/${d}/prompt.md`);
     }) : [];
+    const preamblePath = './agents/CONSTITUTION_PREAMBLE.md';
+    const preamble = existsSync(preamblePath) ? readFileSync(preamblePath, 'utf-8') + '\n\n' : '';
     for (const name of agentDirs) {
       const promptPath = `./agents/${name}/prompt.md`;
-      const prompt = readFileSync(promptPath, 'utf-8');
+      const prompt = preamble + readFileSync(promptPath, 'utf-8');
       this.agents.set(name, new CodingAgent(name, prompt));
       log(c.cyan, `+ Loaded ${name} agent (MiniMax M2.5)`);
     }
