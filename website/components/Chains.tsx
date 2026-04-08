@@ -140,7 +140,7 @@ export default function Chains() {
         {/* CTA */}
         <p className="text-center text-sm text-invoica-gray-400">
           More chains on request —{' '}
-          <a href="mailto:hello@invoica.ai" className="text-invoica-purple hover:underline font-medium">
+          <a href="mailto:team@invoica.ai" className="text-invoica-purple hover:underline font-medium">
             contact us
           </a>
         </p>

@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Invoica — The Financial OS for AI Agents',
     description: 'Automated invoicing, tax compliance, and settlement detection for AI agents.',
-    creator: '@NexusCollectv',
+    creator: '@invoica_ai',
   },
 };
 

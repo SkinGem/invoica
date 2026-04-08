@@ -108,12 +108,12 @@ export default function LoginPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#635BFF] focus:border-transparent outline-none transition" placeholder="you@company.com" />
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-[#635BFF] focus:border-transparent outline-none transition" placeholder="you@company.com" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-[#635BFF] focus:border-transparent outline-none transition" placeholder="••••••••" />
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-[#635BFF] focus:border-transparent outline-none transition" placeholder="••••••••" />
             </div>
             {error && <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">{error}</div>}
             {message && <div className="p-3 rounded-lg bg-green-50 text-green-600 text-sm">{message}</div>}

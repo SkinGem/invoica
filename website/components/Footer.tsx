@@ -44,9 +44,9 @@ export default function Footer() {
           <div>
             <h4 className="text-xs font-semibold text-invoica-gray-300 uppercase tracking-wider mb-5">Company</h4>
             <ul className="space-y-3">
-              <li><a href="https://twitter.com/NexusCollectv" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Twitter / X</a></li>
+              <li><a href="https://x.com/invoica_ai" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Twitter / X</a></li>
               <li><a href="https://github.com/skingem1/Invoica" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Open Source</a></li>
-              <li><a href="mailto:hello@invoica.ai" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Contact</a></li>
+              <li><a href="mailto:team@invoica.ai" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Contact</a></li>
               <li><a href="mailto:support@invoica.ai" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Support</a></li>
               <li><a href="/terms" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Terms of Service</a></li>
               <li><a href="/privacy" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Privacy Policy</a></li>
@@ -58,7 +58,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-invoica-gray-500">
-            &copy; {new Date().getFullYear()} Invoica. Built by Nexus Collective.
+            &copy; {new Date().getFullYear()} Invoica. Built for the agent economy.
           </p>
           <div className="flex gap-6">
             <a href="/terms" className="text-sm text-invoica-gray-500 hover:text-invoica-gray-300 transition-colors">Terms</a>

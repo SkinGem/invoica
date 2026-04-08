@@ -62,7 +62,7 @@ export default function StatusPage() {
     const [api, auth, docs] = await Promise.all([
       checkService(`${API_URL}/v1/health`),
       checkService(`https://igspopoejhsxvwvxyhbh.supabase.co/auth/v1/health?apikey=${SUPABASE_ANON_KEY}`),
-      checkService('https://docs.invoica.ai'),
+      checkService('https://invoica.mintlify.app'),
     ]);
 
     setServices([

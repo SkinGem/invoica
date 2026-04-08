@@ -23,6 +23,7 @@ import sapRoutes from './routes/sap';
 import sapExecuteRoutes from './routes/sap-execute';
 import invoiceDownloadRoutes from './routes/invoice-download';
 import pactSessionRoutes from './routes/pact-session';
+import companyRoutes from './routes/company';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -53,6 +54,7 @@ app.use((req, _res, next) => {
 });
 
 app.use(healthRoutes);
+app.use(companyRoutes);
 app.use(invoiceDownloadRoutes);
 app.use('/v1/pact', pactSessionRoutes);
 app.use(invoiceStatsRoutes);

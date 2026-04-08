@@ -82,12 +82,14 @@ export default function Hero() {
               </a>
 
               <a
-                href="#demo"
+                href="https://invoica.mintlify.app/quickstart"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group inline-flex items-center px-8 py-4 text-sm font-semibold text-invoica-gray-600 bg-white border border-invoica-gray-200 rounded-full hover:border-invoica-purple/30 hover:text-invoica-purple transition-all duration-300 hover:-translate-y-0.5"
               >
-                Watch Demo
+                View Quickstart
                 <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m6-10V7a3 3 0 00-3-3H6a3 3 0 00-3 3v4a3 3 0 003 3h7m3-10l3 3m-3-3v6" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
               </a>
             </div>
