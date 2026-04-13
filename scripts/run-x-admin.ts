@@ -408,7 +408,8 @@ HARD RULES (CEO will reject if violated):
 - No phantom statistics or unverifiable claims — only cite numbers from the research provided
 - No hollow phrases: "revolutionizing", "game-changer", "changing everything", "the future is here"
 - No weak CTAs: "What do you think?", "Agree?", "Drop a comment"
-- Must reference real mechanisms: x402 HTTP 402 flow, EIP-712 TransferWithAuthorization, Base L2, USDC atomic units, VAT reverse charge, or similar
+- Must reference real mechanisms: x402 HTTP 402 flow, EIP-712 TransferWithAuthorization, USDC atomic units, VAT reverse charge, PACT trust sessions, Helixa Cred Scores, or similar
+- MULTI-CHAIN: Invoica supports Base, Polygon, Solana, AND Arbitrum. Do NOT focus only on Base. Rotate chains across posts. Mention the multi-chain stack.
 - Every tweet must be dense — no filler sentences
 - Must be specific to Invoica's domain, not generic fintech/AI content
 - Max 280 chars per tweet. 1-4 tweets depending on depth needed.
@@ -529,7 +530,7 @@ REJECT posts that:
 - Make unverifiable claims: "private beta", specific user/revenue numbers not publicly announced, "launching soon" without confirmed date
 - Use weak engagement bait: "What do you think?", "Drop a comment", "Agree?", "Let me know your thoughts", "Thoughts?"
 - Contain hollow buzzwords without substance: "disrupting", "revolutionizing", "game-changer", "changing everything", "the future is here"
-- Are generic and could apply to any fintech/AI startup (must be specific to x402, Base, AI agents, USDC invoicing, or tax compliance)
+- Are generic and could apply to any fintech/AI startup (must be specific to x402, Base/Polygon/Solana/Arbitrum, AI agents, USDC invoicing, PACT, or tax compliance)
 - Mention any brand other than Invoica or @invoica_ai
 - Are rambling, padded, or over-long per tweet
 - Make vague technical claims about x402, EIP-712, Base network, USDC, or VAT/tax
@@ -540,7 +541,7 @@ REJECT posts that:
 - REVEAL ROADMAP OR FORWARD-LOOKING PLANS — any mention of what is being built, planned sprints, ETAs, or timelines for unshipped features. Only shipped, deployed, verified features may be mentioned. "March sprint locked", "ETA: 3 weeks", "coming soon: CFO agent", "multichain expansion planned" are all grounds for immediate rejection.
 
 APPROVE posts that:
-- Are specific and grounded: reference real technology (x402 protocol, EIP-712, Base network, USDC settlement, VAT reverse charge, etc.)
+- Are specific and grounded: reference real technology (x402 protocol, EIP-712, Base/Polygon/Solana/Arbitrum, USDC settlement, PACT sessions, Helixa trust, VAT reverse charge, etc.)
 - Sound like a confident, knowledgeable technical founder — not a social media manager
 - Include real substance: actual mechanisms, real numbers if available, real market dynamics
 - Are genuinely educational (teach something) or boldly visionary (specific vision, not vague)
@@ -565,7 +566,7 @@ async function ctoReview(tweets: string[]): Promise<ReviewResult> {
   const body = JSON.stringify({
     model: process.env.MINIMAX_DEFAULT_MODEL || 'MiniMax-M1-40k',
     messages: [
-      { role: 'system', content: 'You are the CTO of Invoica. Check technical accuracy of posts about x402, EIP-712, Base network, USDC, tax compliance. JSON only.' },
+      { role: 'system', content: 'You are the CTO of Invoica. Check technical accuracy of posts about x402, EIP-712, Base/Polygon/Solana/Arbitrum multi-chain, USDC, PACT sessions, Helixa trust scores, tax compliance. JSON only.' },
       { role: 'user', content: `${tweets.map((t, i) => `[${i + 1}] ${t}`).join('\n')}\n\nRespond ONLY: {"approved": true/false, "feedback": "brief reason"}` },
     ],
     max_tokens: 200,
