@@ -1,180 +1,262 @@
 # Invoica
 
-**The Financial OS for AI Agents** — an x402 invoice middleware platform built, operated, and evolved entirely by a multi-agent AI company.
+**The Financial OS for AI Agents** — x402 invoice middleware that lets AI agents earn, spend, invoice, and settle payments autonomously.
 
-[![Tasks Approved](https://img.shields.io/badge/tasks_approved-593%2F639-brightgreen)]()
-[![Agents](https://img.shields.io/badge/agents-26-blue)]()
-[![Sprints](https://img.shields.io/badge/sprints-78-orange)]()
-[![Commits](https://img.shields.io/badge/commits-1017-purple)]()
 [![Beta](https://img.shields.io/badge/status-beta-yellow)]()
 [![x402](https://img.shields.io/badge/protocol-x402-cyan)]()
+[![x402 Foundation](https://img.shields.io/badge/x402_Foundation-Linux_Foundation-blue)]()
+[![Agents](https://img.shields.io/badge/agents-26-blue)]()
+[![Commits](https://img.shields.io/badge/commits-1050%2B-purple)]()
+
+> Free beta through April 22, 2026. Try it: [invoica.ai](https://invoica.ai)
 
 ---
 
-## What is Invoica?
+## What Invoica Does
 
-Invoica lets AI agents create, send, and settle invoices autonomously using the [x402 payment protocol](https://www.x402.org/). It is a full-stack SaaS platform — REST API, TypeScript SDK, and a Next.js dashboard — that handles:
+Invoica is the compliance and accounting middleware for the agent economy. AI agents use our API to create invoices, settle payments in USDC, handle tax compliance, and manage trust between counterparties — all autonomously.
 
-- **Invoice creation & management** with full lifecycle (draft → sent → settled)
-- **On-chain settlement detection** across Base, Polygon, and Solana (in progress)
-- **x402 paywall middleware** — any API endpoint can require a USDC micropayment
-- **Agent wallet infrastructure** — agents hold USDC wallets and spend autonomously per LLM call
-- **Tax compliance** — automated US, EU, and Japan regulatory monitoring
+### Core Capabilities
 
-## The Unique Part
-
-Invoica is built by an AI company. Every line of application code was written by AI agents. The humans set strategy; the agents execute:
-
-```
-You (Owner) → CEO bot (Telegram) → sprint JSON → agents build it → deployed to production
-```
-
-Since Week 1, **1,017 git commits** have been made by 26 agents across 78 sprints — zero human-written application code.
-
----
-
-## Agent Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Owner (You)                                  │
-│              Go/No-Go · Budget · Final approval                  │
-└────────────────────────┬────────────────────────────────────────┘
-                         │ Telegram
-┌────────────────────────▼────────────────────────────────────────┐
-│                   CEO Agent (Claude Sonnet)                      │
-│         Vision · Sprint planning · Conflict arbitration          │
-│         Wallet monitoring · Strategic pivots                     │
-└──┬──────────┬──────────┬──────────┬────────────────────────────┘
-   │          │          │          │
-┌──▼──┐  ┌───▼──┐  ┌────▼───┐  ┌───▼──────┐  ┌─────────┐
-│ CTO │  │ CMO  │  │  CFO   │  │  BizDev  │  │Supervisor│
-│Mini │  │Manus │  │MiniMax │  │ MiniMax  │  │ Claude  │
-│ Max │  │  AI  │  │        │  │          │  │+ Codex  │
-└──┬──┘  └───┬──┘  └────────┘  └──────────┘  └─────────┘
-   │          │
-   │    Weekly content plan → X/Twitter (@invoica_ai)
-   │
-┌──▼───────────────────────────────────────────────────────────┐
-│              Coding Agents (MiniMax M2.5)                     │
-│  backend-core · backend-ledger · backend-tax                  │
-│  frontend · devops · security                                 │
-└──────────────────────────────────────────────────────────────┘
-┌───────────────────────────────────────────────────────────────┐
-│              Support / Watchdog Agents                         │
-│  supervisor · execution-verifier · execution-watchdog          │
-│  pipeline-health-monitor · conflict-analyzer                   │
-│  sprint-retrospective · test-runner · test-failure-predictor   │
-│  test-utility-generator · market-intelligence · skills         │
-│  conway-integration · memory-agent · telegram-support          │
-└───────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Sprint Pipeline (fully autonomous)
-
-Every sprint runs without human involvement once the sprint JSON is queued:
-
-```
-CEO writes sprints/week-N.json
-          ↓
-  sprint-runner (every 30 min)
-          ↓
-  orchestrate-agents-v2.ts
-  ├─ MiniMax M2.5    → writes code (one file per API call)
-  ├─ Claude Sonnet   → Supervisor 1 (architecture, security, tests)
-  ├─ OpenAI Codex    → Supervisor 2 (parallel review)
-  └─ Claude Sonnet   → CEO arbiter (resolves supervisor conflicts)
-          ↓  all tasks done
-  post-sprint-pipeline.ts
-  ├─ Jest test suite
-  ├─ CTO (MiniMax) → deploy or create bug-fix sprint
-  ├─ git push → github.com (triggers CI)
-  ├─ GitHub Actions → TypeScript check + ecosystem verify
-  └─ Vercel → app.invoica.ai
-          ↓
-  Telegram alert to Owner
-```
-
-**Dual supervisor consensus:**
-- Both approve → task merged (averaged score)
-- Both reject → task retried with feedback
-- Conflict → CEO reads both reviews and makes the call
-
-**Result: 593 of 639 tasks approved (92.8%) across 78 sprints.**
-
----
-
-## x402 Payment Layer
-
-Invoica uses the [x402 protocol](https://www.x402.org/) for AI-native micropayments. Agents hold real USDC wallets on Base and pay each other for LLM compute:
-
-```
-Coding agent wallet ──pays 0.001 USDC──► x402 gateway ──► CTO wallet (seller)
-```
-
-- Every LLM inference call requires a USDC micropayment
-- Agent wallets monitored in real-time by CEO bot; alerts fire on low balance
-- Backend exposes `/v1/ai-inference` behind a 402 paywall
-- Multi-chain expansion in progress: Base ✅ · Polygon (Sprint 10) · Solana (Sprint 12)
-
----
-
-## Always-On Services
-
-| Service | Port | What it does |
+| Capability | Description | Endpoint |
 |---|---|---|
-| **backend** | 3001 | Express API — invoices, settlements, x402, API keys, webhooks |
-| **openclaw-gateway** | 18789 | AI agent execution gateway — routes LLM calls, manages sandboxes |
-| **ceo-ai-bot** | — | Telegram bot — 24/7 CEO interface, wallet monitoring, tool execution |
-| **mission-control** | 3010 | Agent ops dashboard — 26 agents, tasks, logs, audit trail |
+| **Invoice Generation** | Create, track, and download invoices with full lifecycle | `POST /v1/invoices` |
+| **On-Chain Settlement** | Real-time settlement detection on Base, Polygon, Solana | `GET /v1/settlements` |
+| **Tax Compliance** | 12-country tax engine (US, UK, DE, FR, NL, IE, ES, IT, BE, LU, CH, JP) | `POST /api/sap/execute` |
+| **PACT Sessions** | Trust-gated agent sessions with Helixa reputation scoring | `POST /v1/pact/session/start` |
+| **SAP Escrow** | On-chain escrow verification + settlement via Oobe Protocol (Solana) | `POST /api/sap/execute` |
+| **Invoice Download** | HTML invoice rendering with AMD-22 tax line | `GET /v1/invoices/:id/download` |
+| **x402 Paywall** | Any API endpoint can require a USDC micropayment | `GET /v1/ai-inference` |
 
-## Autonomous Cron Agents
+### x402 Manifest
 
-| Agent | Schedule | Role |
-|---|---|---|
-| sprint-runner | every 30 min | Executes pending sprint tasks via dual-supervisor orchestrator |
-| git-autodeploy | every 5 min | `git pull` on new commits, self-heals crashed processes |
-| cto-email-support | every 5 min | Handles inbound support emails autonomously |
-| ceo-review | every 2 hrs | CEO reviews CTO proposals and approves/rejects backlog items |
-| heartbeat | every hour | Writes `health.json` with real system state for CEO context |
-| memory-agent | every hour | Daily logs + long-term memory (persists outside app dir) |
-| x-admin-post | every 30 min | Posts approved content to @invoica_ai |
-| cmo-daily-watch | 08:00 UTC daily | Market intelligence and competitor scan |
-| docs-generator | 04:00 UTC daily | Auto-updates API docs from git log + routes, then deploys |
-| cto-daily-scan | 09:00 UTC daily | Tech-watch: GitHub releases, HN, x402 ecosystem |
-| cmo-weekly-content-plan | Sun 06:00 UTC | Generates full week of X posts (CTO + CEO review before posting) |
-| bizdev-weekly | Sun 06:00 UTC | Scans for partnership and growth opportunities |
-| cfo-weekly | Mon 07:00 UTC | Financial report: burn rate, runway, revenue |
-| tax-watchdog-us | Mon 07:00 UTC | US crypto payment tax regulation monitoring |
-| tax-watchdog-eu-japan | Mon 08:00 UTC | EU + Japan regulatory monitoring |
+Every Invoica instance exposes a machine-readable manifest at `/.well-known/x402`:
+
+```json
+{
+  "version": "1.0",
+  "agent": {
+    "name": "Invoica",
+    "wallet": "26z3UHjGbF2LKbgS2r34BSzBH3DBBoLofF1c2EvaEwWQ"
+  },
+  "capabilities": [
+    { "id": "payment:invoice", "price": 0.01, "currency": "USDC" },
+    { "id": "payment:settle", "price": 0.005, "currency": "USDC" },
+    { "id": "compliance:tax", "price": 0.02, "currency": "USDC" }
+  ]
+}
+```
 
 ---
 
-## Project Structure
+## PACT Protocol — Trust-Gated Agent Sessions
+
+PACT enforces spending limits between agents based on real reputation data. When two agents transact through Invoica, PACT controls how much they can spend.
+
+**How it works:**
 
 ```
-├── agents/                 # 26 AI agent configs (agent.yaml + prompt.md)
-├── backend/
-│   └── src/
-│       ├── routes/          # invoices, settlements, api-keys, ai-inference, ledger, webhooks
-│       ├── services/        # tax, ledger, api-keys, settlement detection (EVM + Solana)
-│       └── middleware/      # auth, rate-limiting, x402 paywall
-├── frontend/               # Next.js dashboard → app.invoica.ai
-├── sdk/                    # TypeScript SDK for programmatic access
-├── scripts/
-│   ├── orchestrate-agents-v2.ts   # Dual-supervisor sprint orchestrator
-│   ├── post-sprint-pipeline.ts    # Tests → CTO review → git push → Vercel deploy
-│   ├── sprint-runner.ts           # PM2 cron — picks up pending sprints every 30 min
-│   ├── git-autodeploy.sh          # Server self-deployment + process self-healing
-│   └── ...                        # 15+ more autonomous agent scripts
-├── sprints/                # 78 sprint JSON files (week-2 through week-74 + bugfixes)
-├── plans/                  # CEO strategic plans and March roadmap
-├── reports/                # Auto-generated: CEO, CTO, CMO, CFO, BizDev reports
-├── memory/                 # Long-term agent memory (outside app dir, survives git wipes)
-└── docs/                   # Architecture, API contract, ADRs, learnings
+Agent A requests a session
+    |
+    v
+Chamber 2: Invoica queries Helixa for Cred Score
+    Score 85+ verified  -> FULL trust     ($1M ceiling)
+    Score 70-84 verified -> STANDARD      ($10K ceiling)
+    Score 60-69 verified -> STANDARD      ($10K ceiling, SIWA upgrade)
+    Score <60            -> RESTRICTED    ($100-$1K)
+    Unknown/null         -> PROVISIONAL   ($50 max)
+    |
+    v
+Agents transact (invoices, tax, escrow)
+    |
+    v
+Chamber 4: Soul Handshake — outcome reported to Helixa
+    Success -> trust_delta +2
+    Partial -> trust_delta  0
+    Failed  -> trust_delta -2
 ```
+
+**Guardrail:** If Helixa score is unavailable or timeout, session stays PROVISIONAL. Never fails open.
+
+```bash
+# Start a PACT session
+curl -X POST https://api.invoica.ai/v1/pact/session/start \
+  -H "Content-Type: application/json" \
+  -d '{"grantor":"your-agent-wallet"}'
+
+# Complete with Soul Handshake
+curl -X POST https://api.invoica.ai/v1/pact/session/{id}/complete \
+  -H "Content-Type: application/json" \
+  -d '{"outcome":"success","jwt":"..."}'
+```
+
+---
+
+## SAP Escrow Payments (Solana)
+
+Invoica integrates with Oobe Protocol's SAP (Synapse Agent Protocol) for on-chain escrow payments on Solana.
+
+```bash
+# Create invoice via escrow-authenticated SAP call
+curl -X POST https://api.invoica.ai/api/sap/execute \
+  -H "X-Payment-Protocol: SAP-x402" \
+  -H "X-Payment-Escrow-PDA: GrY3CHeA..." \
+  -H "X-Payment-Depositor: your-wallet" \
+  -d '{"capability":"payment:invoice","params":{"issuer":"buyer","recipient":"seller","amount":50}}'
+
+# Get tax compliance
+curl -X POST https://api.invoica.ai/api/sap/execute \
+  -H "X-Payment-Protocol: SAP-x402" \
+  -H "X-Payment-Escrow-PDA: GrY3CHeA..." \
+  -d '{"capability":"compliance:tax","params":{"buyer_state":"CA","amount":100}}'
+```
+
+---
+
+## Quick Start
+
+### 1. Get an API Key
+
+Sign up at [app.invoica.ai](https://app.invoica.ai) and create an API key.
+
+### 2. Create an Invoice
+
+```bash
+curl -X POST https://api.invoica.ai/v1/invoices \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 100, "currency": "USDC", "customerEmail": "agent@example.com"}'
+```
+
+### 3. Check Settlement
+
+```bash
+curl https://api.invoica.ai/v1/settlements \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+### 4. TypeScript SDK
+
+```bash
+npm install @invoica/sdk
+```
+
+```typescript
+import { InvoicaClient } from '@invoica/sdk';
+const client = new InvoicaClient({ apiKey: 'YOUR_API_KEY' });
+const invoice = await client.invoices.create({ amount: 100, currency: 'USDC' });
+```
+
+### 5. PACT Mandate (npm)
+
+```bash
+npm install @invoica/pact
+```
+
+```typescript
+import { issueMandate, encodeMandateHeader } from '@invoica/pact';
+const mandate = issueMandate(
+  { grantor: 'my-agent', scope: { maxPaymentUsdc: 5 } },
+  process.env.PACT_SIGNING_SECRET!
+);
+headers['X-Pact-Mandate'] = encodeMandateHeader(mandate);
+```
+
+### 6. MCP Server
+
+```bash
+npx @invoica/mcp
+```
+
+Works with Claude, Cursor, and any MCP-compatible AI assistant.
+
+---
+
+## API Reference
+
+```
+# Invoices
+POST   /v1/invoices              Create invoice
+GET    /v1/invoices              List invoices (paginated)
+GET    /v1/invoices/:id          Get invoice by ID
+GET    /v1/invoices/:id/download Download invoice as HTML
+
+# Settlements
+GET    /v1/settlements           Settlement history
+
+# SAP / x402
+GET    /.well-known/x402         x402 capability manifest
+POST   /api/sap/execute          SAP escrow-authenticated capability execution
+
+# PACT Sessions
+POST   /v1/pact/session/start         Start trust-gated session
+POST   /v1/pact/session/:id/cred-update  Update ceiling from Helixa score
+POST   /v1/pact/session/:id/complete     Complete session (Soul Handshake)
+GET    /v1/pact/session/:id              Read session state
+
+# Tax
+POST   /v1/tax/calculate         Calculate tax for a transaction
+GET    /v1/tax/jurisdictions     List supported tax jurisdictions
+
+# Company
+GET    /v1/company/countries     List supported countries (12)
+GET    /v1/company/profile       Get company profile
+POST   /v1/company/profile       Create/update company profile
+
+# Billing
+GET    /v1/billing/status        Subscription status
+
+# Other
+POST   /v1/api-keys              Create API key
+GET    /v1/api-keys              List API keys
+POST   /v1/webhooks              Register webhook
+GET    /v1/ledger                Ledger entries
+GET    /v1/health                System health
+```
+
+---
+
+## Architecture
+
+Invoica is built and operated entirely by a 26-agent AI company. Zero human-written application code.
+
+```
+Owner (You) ──Telegram──► CEO Agent (Claude Sonnet)
+                              |
+              ┌───────────────┼───────────────┐
+              v               v               v
+          CTO (MiniMax)   CMO (Manus)   CFO (MiniMax)
+              |               |
+              v               v
+    12 Coding Agents    Weekly X posts
+      (MiniMax M2.5)    (@invoica_ai)
+              |
+              v
+    Dual Supervisor Review
+    (Claude + Codex)
+              |
+              v
+    Deploy to production
+```
+
+### Sprint Pipeline (fully autonomous)
+
+```
+sprint JSON queued → sprint-runner (every 30m) → MiniMax writes code
+  → Claude reviews → Codex reviews → CEO resolves conflicts
+  → tests → git push → Vercel deploys → Telegram alert
+```
+
+---
+
+## Integration Partners
+
+| Partner | Role |
+|---|---|
+| [x402 Foundation](https://x402.org) | Protocol standard (Linux Foundation + Stripe + Coinbase + AWS) |
+| [Oobe Protocol](https://oobeprotocol.ai) | SAP escrow payments on Solana |
+| [Helixa](https://helixa.xyz) | Agent reputation scoring (Cred Scores on ERC-8004) |
+| [0xWork](https://0xwork.com) | Agent workforce integration |
 
 ---
 
@@ -182,67 +264,42 @@ Coding agent wallet ──pays 0.001 USDC──► x402 gateway ──► CTO wa
 
 | Layer | Technology |
 |---|---|
-| **Coding Agents** | MiniMax M2.5 |
-| **Executive Agents** | Claude Sonnet (CEO, Supervisor 1, CEO arbiter) |
-| **Secondary Review** | OpenAI o4-mini (Codex — Supervisor 2) |
-| **CMO / Content** | Manus AI |
 | **Backend** | Node.js, Express, TypeScript, Supabase |
-| **Frontend** | Next.js 16, React, Tailwind CSS |
-| **SDK** | TypeScript |
-| **Payments** | x402 protocol, USDC on Base (Polygon + Solana in progress) |
-| **Agent Gateway** | OpenClaw |
-| **Infrastructure** | Hetzner VPS, PM2, GitHub Actions, Vercel |
-| **Monitoring** | Mission Control (self-hosted), Telegram, healthchecks.io |
+| **Frontend** | Next.js, React, Tailwind CSS |
+| **Payments** | x402 protocol, USDC on Base + Solana |
+| **Trust** | PACT protocol + Helixa Cred Scores |
+| **Escrow** | SAP v2 (Oobe Protocol) on Solana mainnet |
+| **Agent Gateway** | OpenClaw + anthropic-proxy |
+| **Infrastructure** | Hetzner VPS, PM2, Vercel |
+| **AI Agents** | Claude Sonnet (CEO), MiniMax M2.5 (coding), Manus (CMO), Codex (review) |
 
 ---
 
-## API Reference
+## Constitution
 
-```
-POST   /v1/invoices              Create invoice
-GET    /v1/invoices              List invoices (paginated)
-GET    /v1/invoices/:id          Get invoice by ID
-GET    /v1/invoices/number/:n    Get invoice by number
-POST   /v1/api-keys              Create API key
-GET    /v1/api-keys              List API keys
-POST   /v1/api-keys/:id/rotate   Rotate API key
-GET    /v1/settlements           Settlement history
-GET    /v1/ledger                Ledger entries
-POST   /v1/webhooks              Register webhook
-GET    /v1/ai-inference          AI inference (x402 paywall — requires USDC)
-GET    /health                   System health
-```
+Invoica operates under three immutable laws:
+
+- **Law I — Never Harm:** Never harm a client, agent, or counterparty. This overrides survival.
+- **Law II — Earn Existence:** Create genuine value. Accept death rather than violate Law I.
+- **Law III — Transparency:** Full audit rights to the human creator at all times.
+
+All 26 agents receive these laws in their system prompt at initialization. See `constitution.md`.
 
 ---
 
-## Survival Tiers
-
-The company autonomously adjusts operations based on revenue (defined in `tier.json`):
-
-| Tier | MRR Threshold | Active Agents | Behaviour |
-|---|---|---|---|
-| **Pre-launch** | — | 26 | Building + beta user acquisition |
-| **Normal** | $5,000+ | 18 | Full capabilities, replication mode on |
-| **Low Compute** | $2,000+ | 15 | Pause non-revenue features, cheaper models |
-| **Critical** | $500+ | 8 | Revenue recovery only |
-| **Dead** | $0 | 2 | CEO + CTO only, human intervention required |
-
----
-
-## Stats (March 2026)
+## Stats (April 2026)
 
 | Metric | Value |
 |---|---|
-| Sprints completed | 78 |
-| Tasks approved | 593 / 639 |
-| Approval rate | 92.8% |
-| Total git commits | 1,017 |
-| AI agents | 26 (6 coding + 20 executive/support/watchdog) |
-| Always-on processes | 4 |
-| Cron agents | 15 |
+| Sprints completed | 114 |
+| Git commits | 1,050+ |
+| AI agents | 26 |
+| Approval rate | 96.4% (historical high) |
+| Tax jurisdictions | 12 countries |
+| SAP capabilities | 3 (invoice, settle, tax) |
+| PACT session routes | 4 |
 | Beta launch | February 27, 2026 |
-| Monthly burn | ~$60–95/month (LLM API costs) |
-| Agent treasury | $102.96 USDC across 8 wallets |
+| Monthly burn | ~$65/month |
 
 ---
 
@@ -252,5 +309,5 @@ MIT
 
 ---
 
-*Built by 26 AI agents. Reviewed by Claude + Codex. Operated on Hetzner.*
-*593 tasks approved. 1,017 commits. Zero human-written application code.*
+*Built by 26 AI agents. Governed by three immutable laws. Every agent is a Kognai citizen.*
+*The Financial OS for the agent economy.*
