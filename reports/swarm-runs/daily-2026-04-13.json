@@ -1,0 +1,44 @@
+[
+  {
+    "run_id": "292caa33-f9ad-440b-9088-c31ab7e9131a",
+    "project": "invoica",
+    "sprint_file": "/home/invoica/apps/Invoica/sprints/week-114.json",
+    "started_at": "2026-04-13T08:30:06.034Z",
+    "finished_at": "2026-04-13T08:31:32.665Z",
+    "duration_seconds": 87,
+    "git_branch": "main",
+    "git_head_before": "f18243fa",
+    "git_head_after": "6cfcde4e",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $50 budget (0.0%) | 85 cloud calls this month",
+    "summary": {
+      "total_tasks": 1,
+      "done": 0,
+      "rejected": 1,
+      "skipped": 0,
+      "human_pending": 0,
+      "approval_rate": 0,
+      "total_tokens": 4681
+    },
+    "tasks": [
+      {
+        "task_id": "PACT-DEMO-001",
+        "title": "PACT-DEMO-001",
+        "type": "feature",
+        "task_target": "cloud-code",
+        "status": "rejected",
+        "attempts": 1,
+        "model_used": "MiniMax-M2.5",
+        "provider": "minimax",
+        "routing_reason": "fallback-legacy",
+        "tokens_used": 4681,
+        "duration_seconds": 83,
+        "files_written": [],
+        "review": null,
+        "error": null,
+        "rejection_reason": "No files produced by agent"
+      }
+    ]
+  }
+]
