@@ -211,15 +211,15 @@ router.post('/execute', async (req: Request, res: Response) => {
 
   // 5. Settle escrow via SAP SDK (v0.6: client.escrow.settle)
   // Fire-and-forget — response goes out immediately, Solana tx in background.
-  const serviceHash = crypto
-    .createHash('sha256')
-    .update(`${capability}:${JSON.stringify(result)}`)
-    .digest('hex');
+  // serviceHash must be number[] (byte array), not hex string — per skills.md hashToArray pattern
+  const serviceHashBytes = Array.from(
+    crypto.createHash('sha256').update(`${capability}:${JSON.stringify(result)}`).digest()
+  );
   const sapClient = getSapClient();
   if (sapClient && depositor) {
     try {
       const depositorKey = new PublicKey(depositor);
-      (sapClient.escrow.settle(depositorKey as any, 1, serviceHash) as Promise<string>)
+      (sapClient.escrow.settle(depositorKey as any, 1, serviceHashBytes) as Promise<string>)
         .then((sig: string) =>
           console.info(`[sap-execute] escrow settled sig=${sig} escrow=${escrowPda} capability=${capability}`)
         )
