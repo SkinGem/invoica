@@ -3,6 +3,7 @@
 // No auth middleware — escrow payment is the credential.
 import { Router, Request, Response } from 'express';
 import * as crypto from 'crypto';
+import { PublicKey } from '@solana/web3.js';
 import { getSapClient } from '../lib/sap-client';
 import { calculateAgentTax, resolveTransactionType } from '../services/tax/agenttax-client';
 import { createClient } from '@supabase/supabase-js';
@@ -216,13 +217,18 @@ router.post('/execute', async (req: Request, res: Response) => {
     .digest('hex');
   const sapClient = getSapClient();
   if (sapClient && depositor) {
-    (sapClient.escrow.settle(depositor as any, 1, serviceHash) as Promise<string>)
-      .then((sig: string) =>
-        console.info(`[sap-execute] escrow settled sig=${sig} escrow=${escrowPda} capability=${capability}`)
-      )
-      .catch((err: Error) =>
-        console.error(`[sap-execute] settle failed escrow=${escrowPda}: ${err.message}`)
-      );
+    try {
+      const depositorKey = new PublicKey(depositor);
+      (sapClient.escrow.settle(depositorKey as any, 1, serviceHash) as Promise<string>)
+        .then((sig: string) =>
+          console.info(`[sap-execute] escrow settled sig=${sig} escrow=${escrowPda} capability=${capability}`)
+        )
+        .catch((err: Error) =>
+          console.error(`[sap-execute] settle failed escrow=${escrowPda}: ${err.message}`)
+        );
+    } catch (err) {
+      console.warn(`[sap-execute] settle skipped — invalid depositor pubkey: ${depositor}`);
+    }
   } else {
     console.warn(`[sap-execute] settle skipped — sapClient=${!!sapClient} depositor=${depositor}`);
   }
