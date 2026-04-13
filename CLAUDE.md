@@ -1,5 +1,20 @@
 # INVOICA — Claude Code Session Context
 
+## OPERATIONAL MODE: PRODUCTION + CUSTOMER ACQUISITION (April 13, 2026)
+
+Invoica is in **production/maintenance + customer acquisition mode**. The company operates in **full autonomy**. No human intervention needed for routine operations. Escalate to founder only for:
+- Law violations (constitution.md)
+- Spending above ceiling ($50/cycle, $200/day)
+- Partner agreements requiring signature (LOI/MOU)
+
+**Autonomous responsibilities:**
+- Maintain all systems 24/7 — process watchdog must keep everything online
+- Tax watchdogs: when new country guidance appears, queue sprint to add support
+- CMO recommendations: if CEO approves, X-admin executes immediately
+- X engagement: post, reply, comment, DM — not just broadcast
+- Multi-chain: Base, Polygon, Solana, Arbitrum in all content
+- Customer outreach: execute from 36-target list + scan for new opportunities weekly
+
 ## BEFORE YOU DO ANYTHING
 
 1. Read `SOUL.md` — company identity, product suite, agent performance
@@ -44,7 +59,7 @@ Invoica and Kognai share infrastructure but are **separate products**:
 - **Invoica** = SaaS product (invoicing, payments, tax) — currently in beta
 - **Kognai** = sovereign AI runtime platform — currently in Phase 0 foundation
 
-**What's shared:** Hetzner VPS, Supabase, PM2, x402 protocol, model routing, Mac Mini vault, GitHub (skingem1). See `~/kognai/docs/shared-infra.md` for details.
+**What's shared:** Hetzner VPS, Supabase, PM2, x402 protocol, model routing, Mac Mini vault, GitHub (skingem). See `~/kognai/docs/shared-infra.md` for details.
 
 **What's NOT shared:**
 - Invoica codebase, agents, sprints, SOUL.md, constitution — Invoica-only
