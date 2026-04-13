@@ -6,18 +6,18 @@
 const HELIXA_API_URL = 'https://api.helixa.xyz';
 const TIMEOUT_MS = 5000;
 
-/** Resolve wallet → Helixa tokenId + agentAddress via search */
-async function resolveAgent(wallet: string): Promise<{ tokenId: string; agentAddress: string } | null> {
+/** Resolve wallet → Helixa tokenId + agentAddress + credScore via search */
+async function resolveAgent(wallet: string): Promise<{ tokenId: string; agentAddress: string; credScore: number | null } | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(`${HELIXA_API_URL}/api/v2/search?q=${encodeURIComponent(wallet)}`, { signal: controller.signal });
     if (!res.ok) return null;
-    const data = await res.json() as { results?: Array<{ tokenId?: string | number; agentAddress?: string }> };
-    const m = data.results?.[0];
+    const data = await res.json() as { agents?: Array<{ tokenId?: number; agentAddress?: string; name?: string }> };
+    const m = data.agents?.[0];
     if (!m?.tokenId) { console.log(`[helixa] search wallet=${wallet} no match`); return null; }
-    console.log(`[helixa] resolved wallet=${wallet} tokenId=${m.tokenId} agent=${m.agentAddress}`);
-    return { tokenId: String(m.tokenId), agentAddress: m.agentAddress || wallet };
+    console.log(`[helixa] resolved wallet=${wallet} → tokenId=${m.tokenId} agent=${m.agentAddress} name=${m.name}`);
+    return { tokenId: String(m.tokenId), agentAddress: m.agentAddress || wallet, credScore: (m as any).credScore ?? null };
   } catch { return null; }
   finally { clearTimeout(timer); }
 }
@@ -95,14 +95,21 @@ export async function fetchHelixaCred(walletAddress: string): Promise<HelixaCred
       { signal: controller.signal },
     );
     if (!res.ok) {
-      console.log(`[helixa] cred tokenId=${agent.tokenId} null (HTTP ${res.status})`);
+      console.log(`[helixa] cred tokenId=${agent.tokenId} HTTP ${res.status} — using search credScore fallback`);
+      // Fallback: use credScore from search if /cred endpoint is unavailable
+      if (agent.credScore !== null) {
+        return { score: agent.credScore, tier: 'SEARCH_FALLBACK', breakdown: {}, verification_status: 'unverified' };
+      }
       return null;
     }
     const data = await res.json() as HelixaCred;
     console.log(`[helixa] cred tokenId=${agent.tokenId} score=${data.score} tier=${data.tier}`);
     return data;
   } catch (err) {
-    console.log(`[helixa] cred tokenId=${agent.tokenId} null (${(err as Error).message})`);
+    console.log(`[helixa] cred tokenId=${agent.tokenId} error: ${(err as Error).message} — using search credScore fallback`);
+    if (agent.credScore !== null) {
+      return { score: agent.credScore, tier: 'SEARCH_FALLBACK', breakdown: {}, verification_status: 'unverified' };
+    }
     return null;
   } finally {
     clearTimeout(timer);
