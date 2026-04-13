@@ -29,7 +29,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/skingem1/Invoica.git"
+    "url": "git+https://github.com/SkinGem/invoica.git"
   },
   "peerDependencies": {},
   "devDependencies": {
