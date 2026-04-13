@@ -1,9 +1,36 @@
-// Helixa Cred Score API client
-// Uses /api/v2/reputation/8004/{walletAddress} endpoint for external agents
-// No Authorization header needed for reads.
+// Helixa Cred Score API client (corrected per Helixa dev 2026-04-13)
+// Cred: GET /api/v2/agent/:tokenId/cred (NOT wallet-based)
+// Resolve wallet → tokenId: GET /api/v2/search?q=<wallet>
+// Session outcome: POST /api/v2/agent/:agentAddress/session-outcome
 
 const HELIXA_API_URL = 'https://api.helixa.xyz';
 const TIMEOUT_MS = 5000;
+
+/** Resolve wallet → Helixa tokenId + agentAddress via search */
+async function resolveAgent(wallet: string): Promise<{ tokenId: string; agentAddress: string } | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  try {
+    const res = await fetch(`${HELIXA_API_URL}/api/v2/search?q=${encodeURIComponent(wallet)}`, { signal: controller.signal });
+    if (!res.ok) return null;
+    const data = await res.json() as { results?: Array<{ tokenId?: string | number; agentAddress?: string }> };
+    const m = data.results?.[0];
+    if (!m?.tokenId) { console.log(`[helixa] search wallet=${wallet} no match`); return null; }
+    console.log(`[helixa] resolved wallet=${wallet} tokenId=${m.tokenId} agent=${m.agentAddress}`);
+    return { tokenId: String(m.tokenId), agentAddress: m.agentAddress || wallet };
+  } catch { return null; }
+  finally { clearTimeout(timer); }
+}
+
+const agentCache = new Map<string, { tokenId: string; agentAddress: string }>();
+
+/** Public: resolve wallet → agent address (used by helixa-reporter for session-outcome) */
+export async function resolveAgentAddress(wallet: string): Promise<string | null> {
+  if (agentCache.has(wallet)) return agentCache.get(wallet)!.agentAddress;
+  const agent = await resolveAgent(wallet);
+  if (agent) agentCache.set(wallet, agent);
+  return agent?.agentAddress || null;
+}
 
 /**
  * Fetch Helixa Cred Score for an external agent by wallet address.
@@ -46,26 +73,36 @@ export interface HelixaCred {
 
 /**
  * Fetch structured Cred profile for a PACT-integrated agent.
- * Endpoint: GET /api/v2/agent/{address}/cred
+ * Flow: wallet → search → tokenId → GET /api/v2/agent/{tokenId}/cred
  * Returns null on API failure — callers must treat null as non-blocking.
  */
 export async function fetchHelixaCred(walletAddress: string): Promise<HelixaCred | null> {
+  // Step 1: resolve wallet → tokenId
+  let agent = agentCache.get(walletAddress);
+  if (!agent) {
+    const resolved = await resolveAgent(walletAddress);
+    if (!resolved) return null;
+    agent = resolved;
+    agentCache.set(walletAddress, agent);
+  }
+
+  // Step 2: fetch cred by tokenId
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
     const res = await fetch(
-      `${HELIXA_API_URL}/api/v2/agent/${walletAddress}/cred`,
+      `${HELIXA_API_URL}/api/v2/agent/${agent.tokenId}/cred`,
       { signal: controller.signal },
     );
     if (!res.ok) {
-      console.log(`[helixa] cred addr=${walletAddress} null (HTTP ${res.status})`);
+      console.log(`[helixa] cred tokenId=${agent.tokenId} null (HTTP ${res.status})`);
       return null;
     }
     const data = await res.json() as HelixaCred;
-    console.log(`[helixa] cred addr=${walletAddress} score=${data.score} tier=${data.tier}`);
+    console.log(`[helixa] cred tokenId=${agent.tokenId} score=${data.score} tier=${data.tier}`);
     return data;
   } catch (err) {
-    console.log(`[helixa] cred addr=${walletAddress} null (${(err as Error).message})`);
+    console.log(`[helixa] cred tokenId=${agent.tokenId} null (${(err as Error).message})`);
     return null;
   } finally {
     clearTimeout(timer);

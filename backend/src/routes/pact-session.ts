@@ -110,7 +110,7 @@ router.post('/session/:id/complete', async (req: Request, res: Response) => {
   const deltaMap: Record<string, number> = { success: 2, partial: 0, failed: -2 };
   const trustDelta = deltaMap[outcome];
   session.status = 'complete'; session.updatedAt = new Date().toISOString();
-  reportSessionOutcome(id, outcome as 'success' | 'partial' | 'failed', trustDelta, jwt)
+  reportSessionOutcome(id, outcome as 'success' | 'partial' | 'failed', trustDelta, jwt, session.grantor)
     .catch((err) => console.error('[pact-session/complete] reporter error:', (err as Error).message));
   console.info(`[pact-session] ${id} completed outcome=${outcome} delta=${trustDelta}`);
   res.json({ success: true, sessionId: id, outcome, trustDelta });
