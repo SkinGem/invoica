@@ -27,7 +27,7 @@ gh milestone create \
   --title "Sprint Week-N" \
   --description "Theme: <sprint theme>. Tasks: <comma-separated task IDs>" \
   --due-date YYYY-MM-DD \
-  --repo skingem1/Invoica
+  --repo skingem/Invoica
 ```
 
 Use the next week number after the last sprint file in `sprints/`. The due date is 7 days from sprint start.
@@ -37,7 +37,7 @@ Use the next week number after the last sprint file in `sprints/`. The due date 
 For every GitHub issue that maps to a sprint task, assign it to the milestone:
 
 ```bash
-gh issue edit <issue-number> --milestone "Sprint Week-N" --repo skingem1/Invoica
+gh issue edit <issue-number> --milestone "Sprint Week-N" --repo skingem/Invoica
 ```
 
 If no GitHub issue exists yet for a task, create one first:
@@ -48,7 +48,7 @@ gh issue create \
   --body "<task context and deliverables>" \
   --label "<relevant labels>" \
   --milestone "Sprint Week-N" \
-  --repo skingem1/Invoica
+  --repo skingem/Invoica
 ```
 
 ### Step 3 — Write the Sprint JSON as usual
@@ -60,7 +60,7 @@ Continue writing `sprints/week-N.json` with the full task spec for agents. This 
 When all sprint tasks are `"status": "done"`:
 
 ```bash
-gh api repos/skingem1/Invoica/milestones/<milestone-number> \
+gh api repos/skingem/Invoica/milestones/<milestone-number> \
   --method PATCH \
   --field state=closed
 ```

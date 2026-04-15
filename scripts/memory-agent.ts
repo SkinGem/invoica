@@ -40,7 +40,7 @@ const ANTHROPIC_KEY  = process.env.ANTHROPIC_API_KEY || '';
 const SUPABASE_URL   = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace('https://', '');
 const SUPABASE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const GITHUB_TOKEN   = process.env.GITHUB_TOKEN || '';
-const GITHUB_REPO    = process.env.GITHUB_REPO || 'skingem1/Invoica';
+const GITHUB_REPO    = process.env.GITHUB_REPO || 'skingem/Invoica';
 const VERCEL_TOKEN   = process.env.VERCEL_TOKEN || '';
 const VERCEL_PROJECT = 'prj_AFOWCmQoEJzrsxOVyPOoFXE81nXR';
 

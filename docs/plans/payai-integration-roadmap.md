@@ -217,7 +217,7 @@ Indexes verifiable on-chain execution records from **all x402 facilitators**, co
 
 **Scoring from all facilitators is a feature, not a limitation.** A Coinbase-facilitated agent and a PayAI-facilitated agent can both build scores — which grows the total addressable market for the oracle. PayAI's differentiation comes from the weight boost (below), not from exclusivity.
 
-**Note:** `agent-reputation-dashboard` repo already exists at `github.com/skingem1/agent-reputation-dashboard`. This sprint extends it — not greenfield.
+**Note:** `agent-reputation-dashboard` repo already exists at `github.com/skingem/agent-reputation-dashboard`. This sprint extends it — not greenfield.
 
 **Cold-start strategy:** Agents with fewer than 10 completed x402 transactions receive an `UNRATED` badge instead of a score. PayAI's existing transaction history is ingested retroactively — every agent already transacting through PayAI gets a seeded score from day one. Invoica starts from PayAI's current volume, not zero.
 

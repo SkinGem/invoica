@@ -43,7 +43,7 @@ if (!process.env.CEO_TELEGRAM_USER_ID) {
 }
 const ALLOWED_USER_ID = parseInt(process.env.CEO_TELEGRAM_USER_ID, 10);
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
-const GITHUB_REPO = process.env.GITHUB_REPO || 'skingem1/Invoica';
+const GITHUB_REPO = process.env.GITHUB_REPO || 'skingem/Invoica';
 
 // ─── Agent Wallet Addresses — loaded from env, never hardcoded in source ─────
 // Add to .env: WALLET_CEO, WALLET_CFO, WALLET_CTO, WALLET_CMO,
@@ -153,7 +153,7 @@ YOUR TOOLS
 EXECUTION RULES
 ═══════════════════════════════════════════
 You can ACTUALLY execute things. When the founder gives you an order:
-• Create GitHub issues → create_github_issue (returns real URL, e.g. github.com/skingem1/Invoica/issues/42)
+• Create GitHub issues → create_github_issue (returns real URL, e.g. github.com/skingem/Invoica/issues/42)
 • Write files → write_file to create reports, ADRs, sprint plans
 • Git commits → run_shell with "git add -A && git commit -m '...'"
 • Check status → run_shell with "pm2 status" or "git log --oneline -5"
@@ -274,7 +274,7 @@ const TOOLS = [
   },
   {
     name: 'create_github_issue',
-    description: 'Create a real GitHub issue in the skingem1/Invoica repo via the GitHub API. Use this whenever the founder asks to create tickets, issues, or tasks. Returns the real issue number and URL.',
+    description: 'Create a real GitHub issue in the skingem/Invoica repo via the GitHub API. Use this whenever the founder asks to create tickets, issues, or tasks. Returns the real issue number and URL.',
     input_schema: {
       type: 'object',
       properties: {
@@ -523,7 +523,7 @@ async function executeTool(name: string, input: Record<string, unknown>, recentH
 
       const total = users.length;
       const recentUsers = users.filter(u => u.created_at > since);
-      const myEmails = ['tarekmnif', 'skingem1', 'skininthegem', 'twmnif', 'brainsnack'];
+      const myEmails = ['tarekmnif', 'skingem', 'skininthegem', 'twmnif', 'brainsnack'];
       const external = users.filter(u => !myEmails.some(e => (u.email || '').toLowerCase().includes(e)));
       const recentExternal = recentUsers.filter(u => !myEmails.some(e => (u.email || '').toLowerCase().includes(e)));
 

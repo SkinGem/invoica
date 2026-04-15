@@ -82,9 +82,9 @@ These rules are non-negotiable. Violating them causes silent outages that users 
 
 | Domain | Served By | How to deploy |
 |--------|-----------|---------------|
-| `www.invoica.ai` | **Vercel** (pulls from GitHub) | Commit to `skingem1/Invoica` main → auto-deploys |
-| `app.invoica.ai` | **Vercel** (pulls from GitHub) | Commit to `skingem1/Invoica` main → auto-deploys |
-| `docs.invoica.ai` | **Mintlify** (pulls from GitHub) | Commit to `skingem1/Invoica` main → auto-deploys |
+| `www.invoica.ai` | **Vercel** (pulls from GitHub) | Commit to `skingem/Invoica` main → auto-deploys |
+| `app.invoica.ai` | **Vercel** (pulls from GitHub) | Commit to `skingem/Invoica` main → auto-deploys |
+| `docs.invoica.ai` | **Mintlify** (pulls from GitHub) | Commit to `skingem/Invoica` main → auto-deploys |
 | Supabase Edge Functions | **Supabase** | `supabase functions deploy` or MCP tool |
 | Hetzner `65.108.90.178` | Nginx | SSH only — backend API + Telegram bots |
 
@@ -94,7 +94,7 @@ These rules are non-negotiable. Violating them causes silent outages that users 
 
 If you edited a file, it is not deployed. If you built locally, it is not deployed. If you restarted PM2, it is not deployed (for website/dashboard).
 
-**Done = committed to `skingem1/Invoica` main branch = Vercel auto-deploy triggered.**
+**Done = committed to `skingem/Invoica` main branch = Vercel auto-deploy triggered.**
 
 ### Rule 2 — If you cannot push to GitHub, STOP and report the blocker
 

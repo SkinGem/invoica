@@ -553,7 +553,7 @@ const tax = await client.tax.calculate({
 • x402 protocol helpers
 
 📖 [SDK documentation](${DOCS_URL}/sdk)
-🐙 [GitHub repository](https://github.com/skingem1/Invoica)`;
+🐙 [GitHub repository](https://github.com/skingem/Invoica)`;
 
   return sendMessage(chatId, text);
 }

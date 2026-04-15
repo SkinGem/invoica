@@ -288,7 +288,7 @@ function pushToGitHub(): { success: boolean; output: string } {
   const githubToken = process.env.GITHUB_TOKEN;
   const remoteUrl = process.env.GITHUB_REMOTE_URL ||
     execSyncSafe('git remote get-url origin') ||
-    'https://github.com/skingem1/Invoica.git';
+    'https://github.com/skingem/Invoica.git';
 
   log('Pushing approved commits to GitHub...');
 
