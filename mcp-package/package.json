@@ -1,12 +1,28 @@
 {
   "name": "invoica-mcp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Invoica MCP Server — create invoices, list payments, and check on-chain settlements from Claude, Cursor & Windsurf",
-  "bin": { "invoica-mcp": "./index.js" },
-  "files": ["index.js", "README.md"],
-  "engines": { "node": ">=18.0.0" },
-  "dependencies": { "@modelcontextprotocol/sdk": "^1.0.0" },
-  "keywords": ["mcp", "invoica", "x402", "ai-agents", "payments", "invoicing"],
+  "bin": {
+    "invoica-mcp": "./index.js"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "invoica",
+    "x402",
+    "ai-agents",
+    "payments",
+    "invoicing"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

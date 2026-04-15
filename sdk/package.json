@@ -1,6 +1,6 @@
 {
   "name": "@invoica/sdk",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Official TypeScript SDK for Invoica — Financial OS for AI Agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -29,7 +29,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SkinGem/invoica.git"
+    "url": "git+https://github.com/skingem/Invoica.git"
   },
   "peerDependencies": {},
   "devDependencies": {
