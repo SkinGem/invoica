@@ -213,6 +213,23 @@ function collectReports(state: ReviewState): ReportSet {
   return { hasNew, content: sections.join('\n\n---\n\n'), mtimes: newMtimes };
 }
 
+// ─── Owner directives (P0 — override priority) ──────────────────────────────
+// Reads ALL .md files from reports/owner/. Owner directives (DIR-NNN, INC-NNN)
+// are mandatory context and take precedence over CMO/CTO/CFO reports.
+function collectOwnerDirectives(): string {
+  const ownerDir = path.join(ROOT, 'reports', 'owner');
+  if (!fs.existsSync(ownerDir)) return '(no owner directives)';
+  const files = fs.readdirSync(ownerDir)
+    .filter(f => f.endsWith('.md'))
+    .sort();
+  if (!files.length) return '(no owner directives)';
+  const sections = files.map(f => {
+    const content = fs.readFileSync(path.join(ownerDir, f), 'utf-8').slice(0, 4000);
+    return `### ${f}\n${content}`;
+  });
+  return sections.join('\n\n---\n\n');
+}
+
 // ─── Completed features registry ─────────────────────────────────────────────
 // Scans all sprint JSON files and aggregates tasks with status "done"/"approved".
 // Injected into CEO context so it never re-sprints already-shipped work.
@@ -544,8 +561,13 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
       ? `\n\n⚠️ NOTE: A sprint was triggered ${Math.round((Date.now() - state.lastSprintAt) / 60000)}m ago. Only trigger again for CRITICAL issues.`
       : '';
 
+    const ownerDirectives = collectOwnerDirectives();
+
     const user = [
-      `## Company Foundation`,
+      `## ⚠️ OWNER DIRECTIVES (OVERRIDE PRIORITY — read before anything else)`,
+      `Owner directives are the authoritative source. If they contradict CMO/CTO/CFO reports or prior priorities, the directive wins. DIR-* are strategic; INC-* are active incidents and are P0 regardless of cooldown.`,
+      ownerDirectives,
+      `\n## Company Foundation`,
       soul,
       `\n## Constitution`,
       constitution,
@@ -558,7 +580,7 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
       `\n## Incoming Reports (review all of these)`,
       reports.content,
       cooldownNote,
-      `\nReview all reports. Check the Completed Features Registry above before raising priorities. Identify remaining gaps. Decide if a sprint is needed. Return JSON only.`,
+      `\nReview all reports. Owner directives take precedence — any active INC-* must be addressed in priorities and may trigger a sprint even under cooldown. Check the Completed Features Registry above before raising priorities. Identify remaining gaps. Decide if a sprint is needed. Return JSON only.`,
     ].join('\n\n');
 
     console.log('[ceo-review] Calling CEO (Claude)...');
