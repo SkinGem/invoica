@@ -1,0 +1,85 @@
+{
+  "week": 117,
+  "created": "2026-04-17",
+  "notes": "M1 gate verification sprint. Closes M1 (2026-04-24) per plan §1 exit criteria: all WS-1 + WS-2 tasks closed, replay test passes, external pentest dry-run, zero unauth data routes. All M1-GATE-* tasks depend on week-115 and week-116 being closed. CEO agent produces GO/NO-GO memo for founder. No M2 work starts until founder signs off.",
+  "tasks": [
+    {
+      "id": "M1-GATE-01",
+      "agent": "test-runner",
+      "type": "test",
+      "priority": "critical",
+      "dependencies": ["M1-MONEY-02"],
+      "status": "pending",
+      "description": "Replay test end-to-end — proves duplicate-settlement immunity",
+      "context": "Build integration test that creates invoice, settles via mock tx, replays the same txHash, asserts second settlement returns DUPLICATE_TX per M1-MONEY-02 acceptance.\n\nFile: backend/src/__integration__/replay-prevention.test.ts\n\nAcceptance: test fails BEFORE M1-MONEY-02 lands (prove it catches the bug) and passes AFTER. This is the canonical proof-of-immunity test cited in the M1 gate exit criteria. Document in test comments: 'Regression test for plan §1 M1 exit criterion: Replay test passes.'",
+      "deliverables": {
+        "code": [],
+        "tests": ["backend/src/__integration__/replay-prevention.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-GATE-02",
+      "agent": "security",
+      "type": "test",
+      "priority": "critical",
+      "dependencies": ["M1-SEC-01"],
+      "status": "pending",
+      "description": "Unauth route table test — zero unauth sensitive routes",
+      "context": "Per M1-SEC-01 acceptance in plan §3.\n\nFile: backend/src/__tests__/app.unauth.test.ts\n\nBuild a table test that curls every route module without auth header and asserts 401 for all routes except the explicit allowlist: healthRoutes and /.well-known/*. The test lists every mounted route from backend/src/app.ts:57-82 and iterates. Acceptance: test enumerates every route and passes — if a new route is added without auth, this test must fail.",
+      "deliverables": {
+        "code": [],
+        "tests": ["backend/src/__tests__/app.unauth.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-GATE-03",
+      "agent": "security",
+      "type": "test",
+      "priority": "critical",
+      "dependencies": ["M1-SEC-01", "M1-SEC-02", "M1-SEC-03", "M1-SEC-04", "M1-SEC-08"],
+      "status": "pending",
+      "description": "External pentest dry-run via OWASP ZAP",
+      "context": "Run OWASP ZAP (or equivalent automated scan) against staging (or local backend if staging not up). Target: 0 Critical, 0 High findings. Medium findings get a ticket in the backlog with a dated remediation plan.\n\nDeliverable: reports/security/pentest-dry-run-2026-04-24.md with findings, severity, remediation status, and raw ZAP output attached.\n\nAcceptance: report file exists and is signed by security agent; all Critical + High findings are either fixed in-sprint or explicitly blocked on a listed M2 task.",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": ["reports/security/pentest-dry-run-2026-04-24.md"]
+      }
+    },
+    {
+      "id": "M1-GATE-04",
+      "agent": "devops",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": ["M1-SEC-09"],
+      "status": "pending",
+      "description": "CI secret scan (pulled forward from M3-INF-05 per founder decision)",
+      "context": "Add trufflehog or gitleaks job to .github/workflows/ci.yml. Fail build on any secret match. Also wire scripts/verify-clean-repo.sh from M1-SEC-09 as a CI step.\n\nFounder decision 2026-04-17: pulling this check forward from M3-INF-05 to M1 because a leaking secret is a gate-breaking risk for investor diligence.\n\nAcceptance: CI run on a PR that adds a test .env with a dummy key fails. CI run on current main passes.",
+      "deliverables": {
+        "code": [
+          ".github/workflows/ci.yml",
+          "scripts/verify-clean-repo.sh"
+        ],
+        "tests": [],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-GATE-05",
+      "agent": "ceo",
+      "type": "docs",
+      "priority": "critical",
+      "dependencies": ["M1-GATE-01", "M1-GATE-02", "M1-GATE-03", "M1-GATE-04"],
+      "status": "pending",
+      "description": "M1 status memo and GO/NO-GO recommendation for founder",
+      "context": "Produce reports/milestones/m1-status-2026-04-24.md.\n\nContents:\n  1. Per-task completion status for all 16 WS-1 + WS-2 tasks (M1-MONEY-01..07, M1-SEC-01..09).\n  2. Acceptance-test evidence: test file paths, pass/fail, last green run timestamp.\n  3. Any open gaps with named owner and ETA.\n  4. Recommended GO/NO-GO for M1 gate close.\n  5. Signed by CEO agent and reviewed by CTO agent before delivery to founder.\n\nAcceptance: founder reads, approves, and signs off. If NO-GO, memo must name the blocking tasks and their ETA. Per plan §0.5, founder is sole approver of gate close.",
+      "deliverables": {
+        "code": [],
+        "tests": [],
+        "docs": ["reports/milestones/m1-status-2026-04-24.md"]
+      }
+    }
+  ]
+}

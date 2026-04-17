@@ -1,0 +1,133 @@
+{
+  "week": 115,
+  "created": "2026-04-17",
+  "notes": "M1 gate WS-1 — Money-Safety Hardening (plan §2 of a-plus-investability-plan.md). Blocks all downstream work per plan §0.1. Sprint 114 (PACT demo) paused by founder decision 2026-04-17. Founder approved ship-Arbitrum Option A for M1-MONEY-04. M1 gate date: 2026-04-24.",
+  "tasks": [
+    {
+      "id": "M1-MONEY-01",
+      "agent": "backend-core",
+      "type": "fix",
+      "priority": "critical",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Make SETTLED and COMPLETED terminal in invoice state machine",
+      "context": "File: backend/src/routes/invoices.ts:864-869 (VALID_TRANSITIONS map)\n\nChange: Remove PROCESSING → PENDING and SETTLED → PROCESSING. The only permitted transitions become:\n  PENDING → {PROCESSING, SETTLED, CANCELLED}\n  PROCESSING → {SETTLED, CANCELLED}\n  SETTLED → {COMPLETED, REFUNDED}\n  COMPLETED → {REFUNDED}\n  CANCELLED → {}\n  REFUNDED → {}\n\nAcceptance: New test backend/src/routes/__tests__/invoice-state-machine-terminal.test.ts enumerates every from/to pair and asserts forbidden ones return 400 INVALID_TRANSITION. Integration test (tracked under WS-7) exercises full real-DB flow.",
+      "deliverables": {
+        "code": ["backend/src/routes/invoices.ts"],
+        "tests": ["backend/src/routes/__tests__/invoice-state-machine-terminal.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-MONEY-02",
+      "agent": "backend-ledger",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Create PaymentEvents table with UNIQUE(chain, txHash) and wire every settlement path",
+      "context": "File: new Supabase migration supabase/migrations/004_payment_events.sql\n\nSchema: id uuid PK, invoiceId uuid FK, chain text, txHash text, amountUsdc numeric, observedAt timestamptz, source text ('evm-detector' | 'solana-detector' | 'sap-escrow' | 'manual'), raw jsonb, UNIQUE (chain, txHash).\n\nWire-up: Every settlement path (settlement-router.ts, sap-escrow-bridge.ts, evm-detector.ts, solana-detector.ts) inserts into PaymentEvents BEFORE updating the Invoice row; insertion conflict → abort settlement and log DUPLICATE_TX.\n\nAcceptance: New test replays the same tx twice and asserts the second call returns a documented DUPLICATE_TX error and does not touch Invoice. This is the core duplicate-settlement immunity test and is also the basis for M1-GATE-01 in sprint 117.",
+      "deliverables": {
+        "code": [
+          "supabase/migrations/004_payment_events.sql",
+          "backend/src/services/settlement/settlement-router.ts",
+          "backend/src/services/settlement/sap-escrow-bridge.ts",
+          "backend/src/services/settlement/evm-detector.ts",
+          "backend/src/services/settlement/solana-detector.ts"
+        ],
+        "tests": ["backend/src/services/settlement/__tests__/payment-events-uniqueness.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-MONEY-03",
+      "agent": "backend-ledger",
+      "type": "fix",
+      "priority": "critical",
+      "dependencies": ["M1-MONEY-02"],
+      "status": "pending",
+      "description": "Remove loose fallback matcher from SAP escrow bridge",
+      "context": "File: backend/src/services/settlement/sap-escrow-bridge.ts:230-334 (detectViaFallback)\n\nChange: Delete detectViaFallback. Keep only discriminator-based detection. If discriminator fails, return null and log. No heuristic matches on 'any USDC into agent wallet'. Remove the '(fallback match)' log line.\n\nAcceptance: Existing sap-escrow-bridge.test.ts updated so the non-discriminator path returns null.",
+      "deliverables": {
+        "code": ["backend/src/services/settlement/sap-escrow-bridge.ts"],
+        "tests": ["backend/src/services/settlement/__tests__/sap-escrow-bridge.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-MONEY-04",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Ship Arbitrum detector (founder decision: Option A)",
+      "context": "Files: backend/src/services/settlement/evm-detector.ts, backend/src/services/settlement/chain-registry.ts, backend/src/services/settlement/settlement-router.ts, backend/src/config/chains.ts\n\nFounder decision 2026-04-17: SHIP the Arbitrum detector (Option A). Option B (remove the claim) is rejected.\n\nChange: Extend EVM detector to handle Arbitrum RPC + USDC contract (0xaf88d065e77c8cC2239327C5EDb3A432268e5831). Add fixture tx and unit test.\n\nAcceptance: Real Arbitrum tx settles in test using captured fixture. Arbitrum remains in SUPPORTED_CHAINS and all marketing surfaces.",
+      "deliverables": {
+        "code": [
+          "backend/src/services/settlement/evm-detector.ts",
+          "backend/src/services/settlement/chain-registry.ts",
+          "backend/src/services/settlement/settlement-router.ts",
+          "backend/src/config/chains.ts"
+        ],
+        "tests": ["backend/src/services/settlement/__tests__/arbitrum-detector.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-MONEY-05",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Make paymentDetails merge audit-traceable via InvoiceAudit table",
+      "context": "File: backend/src/routes/invoices.ts:951-983 (PATCH /:id/metadata)\n\nChange: On every metadata write, append to a new InvoiceAudit table (invoiceId, actor apiKeyId, beforeJson, afterJson, changedAt). Reject keys that start with 'tax', 'settlement', 'txHash', 'paidBy' — those are system-owned.\n\nAcceptance: Test confirms protected keys return 400; every accepted PATCH produces exactly one InvoiceAudit row.",
+      "deliverables": {
+        "code": [
+          "supabase/migrations/005_invoice_audit.sql",
+          "backend/src/routes/invoices.ts"
+        ],
+        "tests": ["backend/src/routes/__tests__/invoice-metadata-audit.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-MONEY-06",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Idempotency-Key on POST /v1/invoices",
+      "context": "File: backend/src/routes/invoices.ts:596 (POST /v1/invoices)\n\nChange: Require Idempotency-Key header. First write stores {key, apiKeyId, invoiceId, responseBody} in a new IdempotencyKey table (24-hour TTL). Second write with same key returns the stored response.\n\nAcceptance: Test: same key + same body returns identical response; same key + different body returns 409 IDEMPOTENCY_CONFLICT.",
+      "deliverables": {
+        "code": [
+          "supabase/migrations/006_idempotency_keys.sql",
+          "backend/src/routes/invoices.ts"
+        ],
+        "tests": ["backend/src/routes/__tests__/invoice-idempotency.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-MONEY-07",
+      "agent": "security",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Helixa failure policy becomes explicit env-flag choice (default fail-closed in prod)",
+      "context": "Files: backend/src/lib/helixa.ts, backend/src/middleware/trust-gate.ts, backend/src/routes/invoices.ts:896-916\n\nChange: Introduce env flag HELIXA_POLICY=fail-closed|fail-open (default fail-closed in prod). Document in CLAUDE.md and runbook (docs/runbooks/helixa-policy.md). Observability counter for helixa-unavailable events.\n\nAcceptance: Test covers both policies; prod config verifies fail-closed is set.",
+      "deliverables": {
+        "code": [
+          "backend/src/lib/helixa.ts",
+          "backend/src/middleware/trust-gate.ts",
+          "backend/src/routes/invoices.ts"
+        ],
+        "tests": ["backend/src/lib/__tests__/helixa-policy.test.ts"],
+        "docs": ["docs/runbooks/helixa-policy.md", "CLAUDE.md"]
+      }
+    }
+  ]
+}
