@@ -1533,9 +1533,20 @@ class CodingAgent {
     let taskTokens = 0; // per-task token counter (returned to orchestrator for TaskRun)
 
     // Pre-flight: validate all deliverable files exist for non-feature tasks
-    // If a file doesn't exist and we're asked to modify it, skip rather than hallucinate
-    if (task.type !== 'feature' && (task as any).type !== 'docs') {
-      const missing = deliverables.filter(f => !existsSync(f) && !f.startsWith('reports/') && !f.startsWith('docs/'));
+    // If a file doesn't exist and we're asked to modify it, skip rather than hallucinate.
+    // Exemptions below are for file categories that are *expected* to not exist yet
+    // (the agent is supposed to create them): new test files, migrations, report/doc
+    // deliverables. The separate VALID_PATH_PREFIXES check still catches hallucinated paths.
+    const NEW_FILE_EXEMPT_PATTERNS: RegExp[] = [
+      /^reports\//,
+      /^docs\//,
+      /^supabase\/migrations\//,
+      /\/__tests__\//,
+      /\/__integration__\//,
+      /\.test\.[tj]sx?$/,
+    ];
+    if (task.type !== 'feature' && (task as any).type !== 'docs' && (task as any).type !== 'test') {
+      const missing = deliverables.filter(f => !existsSync(f) && !NEW_FILE_EXEMPT_PATTERNS.some(p => p.test(f)));
       if (missing.length > 0) {
         log(c.red, `  ✗ Pre-flight FAILED: File(s) not found: ${missing.join(', ')}`);
         log(c.red, `  ✗ Skipping task ${task.id} — deliverable files do not exist in repo`);

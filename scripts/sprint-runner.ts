@@ -108,10 +108,16 @@ function findPendingSprint(): SprintInfo | null {
   const files = readdirSync(SPRINTS)
     .filter(f => f.endsWith('.json') && f !== 'test-v2.json')
     .sort((a, b) => {
-      // Sort week-N.json descending (newest sprint first)
+      // Sort week-N.json ascending (oldest-pending sprint first)
+      // Reason: plans are sequenced by week number (115 → 116 → 117).
+      // Running newest-first meant the M1 gate sprint ran before the
+      // work it was meant to verify. Natural string sort puts suffixes
+      // like "week-115a.json" after "week-115.json" which is correct
+      // for hotfixes (run after base sprint's pending tasks clear).
       const na = parseInt(a.match(/\d+/)?.[0] || '0', 10);
       const nb = parseInt(b.match(/\d+/)?.[0] || '0', 10);
-      return nb - na;
+      if (na !== nb) return na - nb;
+      return a.localeCompare(b);
     });
 
   for (const fname of files) {
