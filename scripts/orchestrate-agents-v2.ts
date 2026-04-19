@@ -1742,6 +1742,21 @@ Continue from where it left off and output ONLY the remaining code (no duplicate
       }
     }
 
+    // Abort if ANY file failed generation or integrity check.
+    // Prevents overwriting production files with error stubs and committing
+    // destructive rewrites. The outer retry loop will attempt the task again
+    // with a clean slate on next attempt.
+    const failedFiles = createdFiles.filter(f =>
+      f.content.startsWith('// ERROR: Generation failed') ||
+      f.content.startsWith('// INTEGRITY CHECK FAILED')
+    );
+    if (failedFiles.length > 0) {
+      log(c.red, `  ✗ ABORTING task ${task.id} — ${failedFiles.length}/${createdFiles.length} file(s) failed generation or integrity check`);
+      log(c.red, `    Failed files: ${failedFiles.map(f => f.path).join(', ')}`);
+      log(c.red, `    No files written, no commit made. Task will be retried with fresh context.`);
+      throw new Error(`TASK_GENERATION_FAILED: ${failedFiles.length}/${createdFiles.length} file(s) failed — aborting before write to preserve originals`);
+    }
+
     // Write all files to disk
     const writtenFiles: string[] = [];
     for (const file of createdFiles) {
