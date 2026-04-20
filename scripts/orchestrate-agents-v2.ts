@@ -1798,11 +1798,15 @@ Continue from where it left off and output ONLY the remaining code (no duplicate
   }
 
   // CTO-005: Aggressive fence sanitization — strips ANY remaining fences from content
-  // Applied BEFORE file is written to disk (CEO condition)
+  // Applied BEFORE file is written to disk (CEO condition).
+  // Nuclear-strip: ``` is never valid in any target source language (SQL, TS, JS,
+  // Python, YAML, etc.), so removing every occurrence is safe and handles the
+  // case where MiniMax puts the fence inline without a newline separator
+  // (e.g. "```typescript-- comment\n..." landing unstripped in a .sql file).
   private stripResidualFences(content: string): string {
     let cleaned = content;
-    // Remove lines that are ONLY a fence marker (with optional language tag)
-    cleaned = cleaned.replace(/^\s*```[\w.+-]*\s*$/gm, '');
+    // Strip every fence marker globally, with or without a language tag.
+    cleaned = cleaned.replace(/```[\w.+-]*/g, '');
     // Remove markdown headers that appear before the first line of actual code
     // (MiniMax sometimes prepends "## filename.ts" or "Here's the code:")
     const lines = cleaned.split('\n');
@@ -1819,8 +1823,6 @@ Continue from where it left off and output ONLY the remaining code (no duplicate
     if (firstCodeLine > 0) {
       cleaned = lines.slice(firstCodeLine).join('\n');
     }
-    // Remove trailing fence if present at end
-    cleaned = cleaned.replace(/\n\s*```\s*$/, '');
     return cleaned.trim();
   }
 
@@ -2758,13 +2760,27 @@ ONLY output the JSON array. No markdown, no explanation.`;
       return groups;
     }
 
-    // Fan-out independent tasks in parallel (within each conflict-free group)
+    // Fan-out independent tasks in parallel (within each conflict-free group).
+    // Isolate task failures — one task crash must not abort the whole sprint.
+    // executeTask normally sets task.status internally; if it throws before that
+    // happens (e.g. TASK_GENERATION_FAILED from the defensive abort), mark the
+    // task as rejected here so state is persisted on the sprint file.
     const conflictGroups = detectFileConflicts(independent);
     for (const group of conflictGroups) {
       if (group.length > 1) {
         log(c.cyan, `  [Parallel] Fanning out ${group.length} independent tasks: ${group.map(t => t.id).join(', ')}`);
       }
-      await Promise.all(group.map((t: AgentTask) => this.executeTask(t)));
+      await Promise.all(group.map(async (t: AgentTask) => {
+        try {
+          await this.executeTask(t);
+        } catch (err: any) {
+          log(c.red, `  ✗ Task ${t.id} crashed: ${err?.message || err}`);
+          if (t.status === 'pending' || t.status === 'in_progress') {
+            t.status = 'rejected';
+            (t as any)._crashReason = err?.message || String(err);
+          }
+        }
+      }));
       cascadeRejected();
     }
 
