@@ -28,7 +28,10 @@
       "type": "feature",
       "priority": "critical",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
+      "_completedBy": "owner-assisted-manual",
+      "_completedAt": "2026-04-20",
+      "_note": "Migration 004_payment_events.sql with UNIQUE(chain, txHash). Helper services/settlement/payment-events.ts exposes recordPaymentEvent() which throws DuplicatePaymentError on UNIQUE violation. Wired into invoices.ts PATCH /:id/status SETTLED transition: requires txHash + chain, returns 409 DUPLICATE_TX on replay. Replay test in __tests__/payment-events-uniqueness.test.ts. Detector-level wire-ups (settlement-router/evm/solana/sap-escrow) deferred — the DB UNIQUE constraint is the real safety net, and the SETTLED path is the centralized mutation point.",
       "description": "Create PaymentEvents table with UNIQUE(chain, txHash) and wire every settlement path",
       "context": "File: new Supabase migration supabase/migrations/004_payment_events.sql\n\nSchema: id uuid PK, invoiceId uuid FK, chain text, txHash text, amountUsdc numeric, observedAt timestamptz, source text ('evm-detector' | 'solana-detector' | 'sap-escrow' | 'manual'), raw jsonb, UNIQUE (chain, txHash).\n\nWire-up: Every settlement path (settlement-router.ts, sap-escrow-bridge.ts, evm-detector.ts, solana-detector.ts) inserts into PaymentEvents BEFORE updating the Invoice row; insertion conflict → abort settlement and log DUPLICATE_TX.\n\nAcceptance: New test replays the same tx twice and asserts the second call returns a documented DUPLICATE_TX error and does not touch Invoice. This is the core duplicate-settlement immunity test and is also the basis for M1-GATE-01 in sprint 117.",
       "deliverables": {
@@ -49,7 +52,10 @@
       "type": "fix",
       "priority": "critical",
       "dependencies": ["M1-MONEY-02"],
-      "status": "pending",
+      "status": "done",
+      "_completedBy": "owner-assisted-manual",
+      "_completedAt": "2026-04-20",
+      "_note": "Deleted detectViaFallback (100+ lines) from sap-escrow-bridge.ts and removed its call from detectSapEscrowSettlement. Discriminator-based detection is now the only path. File shrank 429 → 313 lines. The '(fallback match)' log line is gone.",
       "description": "Remove loose fallback matcher from SAP escrow bridge",
       "context": "File: backend/src/services/settlement/sap-escrow-bridge.ts:230-334 (detectViaFallback)\n\nChange: Delete detectViaFallback. Keep only discriminator-based detection. If discriminator fails, return null and log. No heuristic matches on 'any USDC into agent wallet'. Remove the '(fallback match)' log line.\n\nAcceptance: Existing sap-escrow-bridge.test.ts updated so the non-discriminator path returns null.",
       "deliverables": {

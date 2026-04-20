@@ -5,6 +5,7 @@ import { calculateAgentTax, resolveTransactionType } from '../services/tax/agent
 import { checkTrustGate } from '../middleware/trust-gate';
 import { verifyPactMandate } from '../lib/pact-verify';
 import { fetchHelixaCred, getHelixaTrustCeiling } from '../lib/helixa';
+import { recordPaymentEvent, DuplicatePaymentError } from '../services/settlement/payment-events';
 
 const router = Router();
 
@@ -852,7 +853,7 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
     const { id } = req.params;
     const { status } = req.body;
 
-    const VALID_STATUSES = ['PENDING', 'SETTLED', 'PROCESSING', 'COMPLETED'];
+    const VALID_STATUSES = ['PENDING', 'SETTLED', 'PROCESSING', 'COMPLETED', 'CANCELLED', 'REFUNDED'];
     if (!status || !VALID_STATUSES.includes(status)) {
       res.status(400).json({
         success: false,
@@ -937,6 +938,40 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
         error: { message: `Invalid transition: ${existing.status} → ${status}`, code: 'INVALID_TRANSITION' },
       });
       return;
+    }
+
+    // M1-MONEY-02: Record PaymentEvent BEFORE mutating Invoice on SETTLED transition.
+    // UNIQUE(chain, txHash) enforces that the same on-chain tx cannot settle two invoices.
+    if (status === 'SETTLED') {
+      const { txHash, chain, amountUsdc, source } = req.body as {
+        txHash?: string; chain?: string; amountUsdc?: number | string; source?: string;
+      };
+      if (!txHash || !chain) {
+        res.status(400).json({
+          success: false,
+          error: { message: 'txHash and chain are required when transitioning to SETTLED', code: 'MISSING_SETTLEMENT_DATA' },
+        });
+        return;
+      }
+      try {
+        await recordPaymentEvent({
+          invoiceId: id,
+          chain,
+          txHash,
+          amountUsdc: Number(amountUsdc ?? existing.amount ?? 0),
+          source: (source === 'evm-detector' || source === 'solana-detector' || source === 'sap-escrow') ? source : 'manual',
+          raw: req.body,
+        });
+      } catch (err: unknown) {
+        if (err instanceof DuplicatePaymentError) {
+          res.status(409).json({
+            success: false,
+            error: { message: `Duplicate payment event: ${chain}:${txHash} already recorded`, code: 'DUPLICATE_TX' },
+          });
+          return;
+        }
+        throw err;
+      }
     }
 
     const now = new Date().toISOString();

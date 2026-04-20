@@ -221,117 +221,12 @@ function detectViaDiscriminator(
   return null;
 }
 
-/**
- * Fallback detection: detects any transaction from SAP program involving
- * the Invoica agent wallet with USDC mint transfer.
- * 
- * This is a conservative fallback if discriminator detection fails or is inconclusive.
- */
-function detectViaFallback(
-  txData: Record<string, unknown>,
-  txSignature: string
-): SapEscrowMatch | null {
-  const meta = txData.meta as Record<string, unknown> | undefined;
-  const transaction = txData.transaction as Record<string, unknown> | undefined;
-  
-  if (!meta || !transaction) {
-    return null;
-  }
-
-  const message = transaction.message as Record<string, unknown> | undefined;
-  if (!message) {
-    return null;
-  }
-
-  // Check if SAP program is involved
-  const accountKeys = message.accountKeys as Array<{ pubkey: string; signer: boolean }>;
-  if (!Array.isArray(accountKeys)) {
-    return null;
-  }
-
-  const accountKeyStrings = accountKeys.map((ak) => ak.pubkey);
-  
-  // Check for SAP program involvement
-  const hasSapProgram = accountKeyStrings.includes(SAP_PROGRAM_ID);
-  const hasInvoicaAgent = accountKeyStrings.includes(INVOICA_AGENT_WALLET);
-  
-  if (!hasSapProgram || !hasInvoicaAgent) {
-    return null;
-  }
-
-  // Check for USDC transfer to agent
-  const preTokenBalances = (meta.preTokenBalances ?? []) as Array<{ mint: string; owner: string; uiTokenAmount: string }>;
-  const postTokenBalances = (meta.postTokenBalances ?? []) as Array<{ mint: string; owner: string; uiTokenAmount: string }>;
-  
-  let amount = '0';
-  let depositor = '';
-  
-  // Find USDC increase for agent wallet
-  for (const post of postTokenBalances) {
-    if (post.mint === USDC_MINT && post.owner === INVOICA_AGENT_WALLET) {
-      const pre = preTokenBalances.find(
-        (b) => b.mint === USDC_MINT && b.owner === post.owner
-      );
-      const preAmount = pre ? parseFloat(pre.uiTokenAmount || '0') : 0;
-      const postAmount = parseFloat(post.uiTokenAmount || '0');
-      const delta = postAmount - preAmount;
-      
-      if (delta > 0) {
-        amount = delta.toString();
-        
-        // Find the depositor (account that sent USDC)
-        for (const pre of preTokenBalances) {
-          if (pre.mint === USDC_MINT) {
-            const postEntry = postTokenBalances.find(
-              (pb) => pb.mint === USDC_MINT && pb.owner === pre.owner
-            );
-            if (postEntry) {
-              const postAmt = parseFloat(postEntry.uiTokenAmount || '0');
-              const preAmt = parseFloat(pre.uiTokenAmount || '0');
-              if (preAmt > postAmt) {
-                depositor = pre.owner;
-                break;
-              }
-            }
-          }
-        }
-        break;
-      }
-    }
-  }
-
-  if (parseFloat(amount) <= 0) {
-    return null;
-  }
-
-  // Try to find escrow PDA from accounts
-  let escrowPda = '';
-  const instructions = message.instructions as Array<Record<string, unknown>>;
-  
-  for (const instruction of instructions) {
-    const programId = instruction.programId as string;
-    if (programId === SAP_PROGRAM_ID) {
-      const accounts = instruction.accounts as string[] | undefined;
-      if (accounts && accounts.length > 0) {
-        escrowPda = accounts[0]; // Typically first account is the escrow
-        break;
-      }
-    }
-  }
-
-  const timestamp = typeof meta.blockTime === 'number' 
-    ? meta.blockTime 
-    : Math.floor(Date.now() / 1000);
-
-  return {
-    txSignature,
-    escrowPda: escrowPda || 'unknown',
-    depositor: depositor || 'unknown',
-    agentPda: INVOICA_AGENT_WALLET,
-    amount,
-    timestamp,
-  };
-}
+// M1-MONEY-03: detectViaFallback removed per plan §2.3.
+// The heuristic "any SAP tx + USDC transfer to agent wallet" was too loose —
+// it could match transactions that aren't actually settlement calls and
+// potentially attribute external USDC transfers as settlements against the
+// wrong invoice. Discriminator-based detection is now the only path; if the
+// discriminator doesn't match, we return null and log, no silent fallback.
 
 // =============================================================================
 // MAIN EXPORT
@@ -389,14 +284,15 @@ export async function detectSapEscrowSettlement(
 
     // Check if transaction was successful
     const meta = tx.meta as Record<string, unknown> | undefined;
-    if (!meta || meta.err !== null) {
+    if (!meta || (meta.err !== null && meta.err !== undefined)) {
       console.log(`[sap-escrow] txSig=${txSignature} failed or had error`);
       return null;
     }
 
-    // Strategy 1: Try discriminator-based detection (preferred)
+    // Discriminator-based detection is the only path (M1-MONEY-03).
+    // No heuristic fallback — if this fails to match, the tx is not a settleCall.
     const discriminatorMatch = detectViaDiscriminator(tx, txSignature);
-    
+
     if (discriminatorMatch) {
       console.log(
         `[sap-escrow] txSig=${txSignature} depositor=${discriminatorMatch.depositor} amount=${discriminatorMatch.amount} USDC ` +
@@ -405,19 +301,8 @@ export async function detectSapEscrowSettlement(
       return discriminatorMatch;
     }
 
-    // Strategy 2: Fallback - detect any SAP transaction with USDC to agent
-    const fallbackMatch = detectViaFallback(tx, txSignature);
-    
-    if (fallbackMatch) {
-      console.log(
-        `[sap-escrow] txSig=${txSignature} depositor=${fallbackMatch.depositor} amount=${fallbackMatch.amount} USDC ` +
-        `(fallback match)`
-      );
-      return fallbackMatch;
-    }
-
-    // No SAP escrow settlement found
-    console.log(`[sap-escrow] txSig=${txSignature} no SAP escrow settlement detected`);
+    // No SAP escrow settlement found (discriminator did not match)
+    console.log(`[sap-escrow] txSig=${txSignature} no SAP escrow settlement detected (discriminator miss)`);
     return null;
 
   } catch (error) {
