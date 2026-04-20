@@ -1559,8 +1559,8 @@ class CodingAgent {
     // which don't exist. Catch these before generating anything.
     const VALID_PATH_PREFIXES = [
       'backend/', 'frontend/', 'agents/', 'scripts/', 'shared/',
-      'website/', 'docs-site/', 'apps/', 'sdk/', 'x402-base/', 'x402-evm/', 'x402-test/',
-      'supabase/', 'infrastructure/', 'reports/', 'pact/', 'package.json', 'ecosystem.config.js', 'tsconfig.json',
+      'website/', 'docs-site/', 'docs/', 'apps/', 'sdk/', 'x402-base/', 'x402-evm/', 'x402-test/',
+      'supabase/', 'infrastructure/', 'reports/', 'pact/', 'plans/', 'package.json', 'ecosystem.config.js', 'tsconfig.json',
     ];
     // Invalid patterns: paths that look like monorepo sub-dirs that don't exist
     const INVALID_PATH_PATTERNS = [
