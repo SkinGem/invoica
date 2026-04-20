@@ -5,9 +5,10 @@
 -- triggered it. Callers INSERT into this table BEFORE mutating the Invoice
 -- row; a UNIQUE violation means "duplicate tx" and aborts the settlement.
 
+-- NOTE: Invoice.id is TEXT in this schema (not UUID), so the FK column must match.
 CREATE TABLE IF NOT EXISTS "PaymentEvents" (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  "invoiceId" UUID NOT NULL,
+  "invoiceId" TEXT NOT NULL,
   chain TEXT NOT NULL,
   "txHash" TEXT NOT NULL,
   "amountUsdc" NUMERIC(18, 6) NOT NULL,
