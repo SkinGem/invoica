@@ -862,10 +862,12 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
     }
 
     const VALID_TRANSITIONS: Record<string, string[]> = {
-      PENDING: ['PROCESSING', 'SETTLED', 'COMPLETED'],
-      SETTLED: ['PROCESSING', 'COMPLETED'],
-      PROCESSING: ['COMPLETED', 'PENDING'],
-      COMPLETED: [],
+      PENDING: ['PROCESSING', 'SETTLED', 'CANCELLED'],
+      PROCESSING: ['SETTLED', 'CANCELLED'],
+      SETTLED: ['COMPLETED', 'REFUNDED'],
+      COMPLETED: ['REFUNDED'],
+      CANCELLED: [],
+      REFUNDED: [],
     };
 
     const sb = getSupabase();
@@ -892,9 +894,13 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
         });
         return;
       }
-      // Helixa trust ceiling check (PACT Chamber 2 — non-blocking on API failure)
+      // Helixa trust ceiling check (PACT Chamber 2)
+      // Policy controlled by HELIXA_POLICY env var:
+      //   fail-closed (default) — reject on any Helixa error (prod default)
+      //   fail-open — proceed on Helixa error (explicit opt-in, founder-only per plan §0.5)
       const mandateHeader = req.headers['x-pact-mandate'] as string | undefined;
       if (mandateHeader) {
+        const helixaPolicy = process.env.HELIXA_POLICY === 'fail-open' ? 'fail-open' : 'fail-closed';
         try {
           const mandate = JSON.parse(mandateHeader) as { grantor?: string };
           if (mandate.grantor) {
@@ -910,9 +916,18 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
                 res.status(403).json({ success: false, error: { message: `Helixa ceiling ${ceiling}: max ${maxUsdc} USDC`, code: 'HELIXA_CEILING_EXCEEDED' } });
                 return;
               }
+            } else if (helixaPolicy === 'fail-closed') {
+              res.status(503).json({ success: false, error: { message: 'Helixa unavailable and HELIXA_POLICY=fail-closed', code: 'HELIXA_UNAVAILABLE' } });
+              return;
             }
           }
-        } catch { /* non-blocking — if Helixa unavailable, proceed */ }
+        } catch {
+          if (helixaPolicy === 'fail-closed') {
+            res.status(503).json({ success: false, error: { message: 'Helixa unavailable and HELIXA_POLICY=fail-closed', code: 'HELIXA_UNAVAILABLE' } });
+            return;
+          }
+          // fail-open: proceed as before
+        }
       }
     }
 
