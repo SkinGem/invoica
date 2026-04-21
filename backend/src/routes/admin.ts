@@ -1,10 +1,17 @@
 import { Router } from 'express';
 import { execSync } from 'child_process';
 import { createClient } from '@supabase/supabase-js';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const ADMIN_EMAILS = ['skininthegem@gmail.com', 'twmnif@gmail.com'];
+// M1-SEC-02 (plan §3.2): server-side email allowlist from env, hardcoded fallback
+// kept only for bootstrap — prod should always have ADMIN_EMAILS set.
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || 'skininthegem@gmail.com,twmnif@gmail.com')
+  .split(',')
+  .map(e => e.trim().toLowerCase())
+  .filter(Boolean);
+const SUPABASE_JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
 const REPO_DIR = '/home/invoica/apps/Invoica';
 const router = Router();
 
@@ -15,14 +22,50 @@ function getSupabase() {
   );
 }
 
+// M1-SEC-02: hardened admin auth — cryptographic JWT verify (sig + exp + aud + iss)
+// with local HS256 verification when SUPABASE_JWT_SECRET is configured, else falls
+// back to Supabase network verify. Email allowlist enforced in both paths.
 async function requireAdmin(req: any, res: any): Promise<boolean> {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   if (!token) {
     res.status(401).json({ success: false, error: 'No token' });
     return false;
   }
-  const { data: { user }, error } = await getSupabase().auth.getUser(token);
-  if (error || !user?.email || !ADMIN_EMAILS.includes(user.email)) {
+
+  let email: string | undefined;
+
+  if (SUPABASE_JWT_SECRET) {
+    // Preferred path: local HS256 verify — no network round-trip, fails fast on
+    // forged/tampered/expired tokens.
+    let payload: JwtPayload;
+    try {
+      payload = jwt.verify(token, SUPABASE_JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
+    } catch {
+      res.status(401).json({ success: false, error: 'Invalid token' });
+      return false;
+    }
+    if (payload.aud !== 'authenticated') {
+      res.status(401).json({ success: false, error: 'Invalid audience' });
+      return false;
+    }
+    if (typeof payload.iss === 'string' && !payload.iss.endsWith('/auth/v1')) {
+      res.status(401).json({ success: false, error: 'Invalid issuer' });
+      return false;
+    }
+    email = String((payload as { email?: string }).email || '').toLowerCase();
+  } else {
+    // Fallback: Supabase auth.getUser validates token server-to-server.
+    // Slower and depends on Supabase availability. Enable local verify by
+    // setting SUPABASE_JWT_SECRET in .env.
+    const { data: { user }, error } = await getSupabase().auth.getUser(token);
+    if (error || !user?.email) {
+      res.status(401).json({ success: false, error: 'Invalid token' });
+      return false;
+    }
+    email = user.email.toLowerCase();
+  }
+
+  if (!email || !ADMIN_EMAILS.includes(email)) {
     res.status(403).json({ success: false, error: 'Forbidden' });
     return false;
   }
