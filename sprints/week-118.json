@@ -1,0 +1,117 @@
+{
+  "week": 118,
+  "created": "2026-04-21",
+  "notes": "Post-M1 sprint. Starts 2026-04-25 (after M1 gate close on 04-24). Two-front focus: (1) refactor invoices.ts to unblock the deferred money-safety tasks M1-MONEY-05/06 that the swarm couldn't touch because of file size, (2) ship the deferred WS-2 security tasks that don't touch invoices.ts. Pre-requisite for M2 WS-3 Stripe billing wire-up. Scope matches plan §2 and §3 deferred work per DIR-005.",
+  "tasks": [
+    {
+      "id": "M3-CQ-03-A",
+      "agent": "backend-core",
+      "type": "refactor",
+      "priority": "critical",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Split backend/src/routes/invoices.ts into focused modules (pulled forward from plan §7)",
+      "context": "File: backend/src/routes/invoices.ts (1173 lines, plan §M3-CQ-03 target ≤300)\n\nThis refactor is a PREREQUISITE for M1-MONEY-05 and M1-MONEY-06, both of which need surgical edits to invoices.ts that MiniMax cannot produce reliably on a file this size (confirmed: 3 destructive-rewrite attempts across sessions).\n\nExtract to:\n  - services/invoice-query.ts  (list/search/stats endpoint handlers)\n  - services/invoice-mapper.ts  (mapInvoice helper + SELECT_FIELDS constant)\n  - services/invoice-validator.ts  (paymentDetails schema, chain validation)\n  - services/invoice-state-machine.ts  (VALID_TRANSITIONS map + transition-handler with PaymentEvent recording from M1-MONEY-02)\n  - routes/invoices.ts  (wire-up only, ≤300 lines)\n\nBehavior must be identical — supervisor rejects any endpoint shape change. Existing tests must pass unchanged.\n\nAcceptance: backend/src/routes/invoices.ts ≤ 300 lines. All existing tests PASS. One new test file services/__tests__/invoice-state-machine-unit.test.ts exercises the extracted state-machine in isolation.",
+      "deliverables": {
+        "code": [
+          "backend/src/routes/invoices.ts",
+          "backend/src/services/invoice-query.ts",
+          "backend/src/services/invoice-mapper.ts",
+          "backend/src/services/invoice-validator.ts",
+          "backend/src/services/invoice-state-machine.ts"
+        ],
+        "tests": ["backend/src/services/__tests__/invoice-state-machine-unit.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-MONEY-05",
+      "agent": "backend-ledger",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": ["M3-CQ-03-A"],
+      "status": "pending",
+      "description": "InvoiceAudit table — make paymentDetails merge audit-traceable (resumed from week-115)",
+      "context": "DEFERRED from week-115 per DIR-005 because invoices.ts was too big for agents to surgically edit. Unblocked by M3-CQ-03-A above.\n\nFile: backend/src/services/invoice-state-machine.ts (post-refactor) + supabase/migrations/005_invoice_audit.sql\n\nChange: On every metadata write (PATCH /:id/metadata), append to a new InvoiceAudit table (invoiceId, actor apiKeyId, beforeJson, afterJson, changedAt). Reject keys that start with 'tax', 'settlement', 'txHash', 'paidBy' — those are system-owned.\n\nAcceptance: Test confirms protected keys return 400; every accepted PATCH produces exactly one InvoiceAudit row.",
+      "deliverables": {
+        "code": [
+          "supabase/migrations/005_invoice_audit.sql",
+          "backend/src/services/invoice-state-machine.ts"
+        ],
+        "tests": ["backend/src/services/__tests__/invoice-metadata-audit.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-MONEY-06",
+      "agent": "backend-ledger",
+      "type": "feature",
+      "priority": "critical",
+      "dependencies": ["M3-CQ-03-A"],
+      "status": "pending",
+      "description": "Idempotency-Key on POST /v1/invoices (resumed from week-115)",
+      "context": "DEFERRED from week-115 per DIR-005. Unblocked by M3-CQ-03-A above.\n\nFiles: backend/src/services/invoice-validator.ts (post-refactor) + supabase/migrations/006_idempotency_keys.sql + backend/src/routes/invoices.ts wire-up\n\nChange: Require Idempotency-Key header on POST /v1/invoices. First write stores {key, apiKeyId, invoiceId, responseBody} in a new IdempotencyKey table (24-hour TTL). Second write with same key returns the stored response.\n\nAcceptance: Test: same key + same body returns identical response; same key + different body returns 409 IDEMPOTENCY_CONFLICT.",
+      "deliverables": {
+        "code": [
+          "supabase/migrations/006_idempotency_keys.sql",
+          "backend/src/services/invoice-validator.ts",
+          "backend/src/routes/invoices.ts"
+        ],
+        "tests": ["backend/src/routes/__tests__/invoice-idempotency.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M1-SEC-03",
+      "agent": "security",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Webhook HMAC verification on delivery (resumed from week-116)",
+      "context": "DEFERRED from week-116 per DIR-005. New-file task, agent-tractable.\n\nFiles: backend/src/routes/webhooks.ts, backend/src/services/webhook-dispatcher.ts (new)\n\nChange: On outbound delivery, compute HMAC-SHA256(secret, body) and send as X-Invoica-Signature: t=<ts>,v1=<hex>. On POST /v1/webhooks/:id/test receive-path, verify signature using crypto.timingSafeEqual. Document in docs-site/webhook-signatures.md.\n\nAcceptance: Tampered body fails verification; replayed timestamp older than 5 min fails.",
+      "deliverables": {
+        "code": [
+          "backend/src/routes/webhooks.ts",
+          "backend/src/services/webhook-dispatcher.ts"
+        ],
+        "tests": ["backend/src/services/__tests__/webhook-hmac.test.ts"],
+        "docs": ["docs-site/webhook-signatures.md"]
+      }
+    },
+    {
+      "id": "M1-SEC-05",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Log redactor — introduce backend/src/lib/logger.ts, replace raw console.* (resumed from week-116)",
+      "context": "DEFERRED from week-116. New-file task, agent-tractable but large (touches many backend files).\n\nChange: Introduce backend/src/lib/logger.ts that redacts email, apiKey (4-char prefix only), paymentAddress, txHash (4-char prefix only), Authorization header. Replace all raw console.log/error/warn/debug in backend/src/ with the logger.\n\nAcceptance: Grep for 'console\\.' in backend/src/ returns 0 hits. Log-redactor test asserts redaction on every field.",
+      "deliverables": {
+        "code": ["backend/src/lib/logger.ts"],
+        "tests": ["backend/src/lib/__tests__/logger-redactor.test.ts"],
+        "docs": []
+      }
+    },
+    {
+      "id": "M2-CUST-01",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Split metrics into internal/external — public surface shows only real customers",
+      "context": "Plan §6.1. Critical prerequisite for any public-facing metrics display: today's dashboard/website number would leak self-dealing if exposed. Invoice triage 2026-04-21 confirmed all 13 existing invoices are internal test data.\n\nApproach: use the isTest flag added by the invoice-cleanup migration (migration 007, applied 2026-04-25). Update backend/src/routes/metrics.ts, invoice-stats.ts, settlement-summary.ts to accept an ?includeTest=true query param (default false). Public dashboard calls with default; internal 'system health' admin panel calls with includeTest=true.\n\nAcceptance: GET /v1/metrics returns only external customer data by default. GET /v1/metrics?includeTest=true returns everything. Test covers both branches.",
+      "deliverables": {
+        "code": [
+          "backend/src/routes/metrics.ts",
+          "backend/src/routes/invoice-stats.ts",
+          "backend/src/routes/settlement-summary.ts"
+        ],
+        "tests": ["backend/src/routes/__tests__/metrics-external-only.test.ts"],
+        "docs": []
+      }
+    }
+  ]
+}
