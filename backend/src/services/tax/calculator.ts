@@ -53,8 +53,8 @@ const EU_VAT_RATES: Record<string, number> = {
   CY: 0.19,  // Cyprus
   CZ: 0.21,  // Czech Republic
   DK: 0.25,  // Denmark
-  EE: 0.22,  // Estonia
-  FI: 0.24,  // Finland
+  EE: 0.24,  // Estonia
+  FI: 0.255,  // Finland
   FR: 0.20,  // France
   DE: 0.19,  // Germany
   GR: 0.24,  // Greece
@@ -68,8 +68,8 @@ const EU_VAT_RATES: Record<string, number> = {
   NL: 0.21,  // Netherlands
   PL: 0.23,  // Poland
   PT: 0.23,  // Portugal
-  RO: 0.19,  // Romania
-  SK: 0.20,  // Slovakia
+  RO: 0.21,  // Romania
+  SK: 0.23,  // Slovakia
   SI: 0.22,  // Slovenia
   ES: 0.21,  // Spain
   SE: 0.25,  // Sweden
