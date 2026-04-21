@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import invoiceStatsRoutes from './routes/invoice-stats';
 import invoiceExportRoutes from './routes/invoices-export';
 import invoiceRoutes from './routes/invoices';
@@ -28,6 +29,25 @@ import billingRoutes from './routes/billing';
 import { authenticate } from './middleware/auth';
 
 const app = express();
+
+// M1-SEC-08 (plan §3.8): security headers. API-only service — CSP locks
+// everything down to 'none' since we never serve HTML/JS from this origin.
+// HSTS 1 year per plan; X-Content-Type-Options nosniff via helmet defaults.
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: {
+      defaultSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+  },
+  frameguard: { action: 'deny' },
+  referrerPolicy: { policy: 'no-referrer' },
+}));
 
 // BUG-006 fix: explicit CORS origins — no wildcard on main API
 const allowedOrigins = process.env.CORS_ORIGINS
