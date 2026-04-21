@@ -54,10 +54,14 @@ app.use((req, _res, next) => {
   next();
 });
 
+// Public routes (explicit allowlist — all other data routes require auth).
 app.use(healthRoutes);
+app.use('/.well-known', wellKnownRoutes);
+
+// M1-SEC-01 (plan §3.1): authenticate all read-side routes that expose platform data.
 app.use(companyRoutes);
 app.use(billingRoutes);
-app.use(invoiceDownloadRoutes);
+app.use(authenticate, invoiceDownloadRoutes);
 app.use('/v1/pact', pactSessionRoutes);
 app.use(authenticate, invoiceStatsRoutes);
 app.use(authenticate, invoiceExportRoutes);
@@ -66,17 +70,16 @@ app.use(apiKeyRoutes);
 app.use(webhookRoutes);
 app.use(authenticate, settlementSummaryRoutes);
 app.use(authenticate, settlementRoutes);
-app.use(aiInferenceRoutes);
-app.use(ledgerRoutes);
-app.use(adminRoutes);
+app.use(authenticate, aiInferenceRoutes);
+app.use(authenticate, ledgerRoutes);
+app.use(authenticate, adminRoutes);
 app.use(gasBackstopRouter);
-app.use(reputationLeaderboardRoutes);
-app.use(reputationRoutes);
-app.use(reputationHistoryRoutes);
-app.use(metricsRoutes);
-app.use(taxRoutes);
-app.use(agentRoutes);
-app.use('/.well-known', wellKnownRoutes);
+app.use(authenticate, reputationLeaderboardRoutes);
+app.use(authenticate, reputationRoutes);
+app.use(authenticate, reputationHistoryRoutes);
+app.use(authenticate, metricsRoutes);
+app.use(authenticate, taxRoutes);
+app.use(authenticate, agentRoutes);
 app.use('/api/sap', sapExecuteRoutes);
 app.use('/v1/sap', authenticate, sapRoutes);
 
