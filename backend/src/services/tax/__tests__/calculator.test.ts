@@ -99,7 +99,7 @@ describe('calculateUSTax()', () => {
   it.each([
     ['CA', 0.0725],
     ['TX', 0.0625],
-    ['NY', 0.08],
+    ['NY', 0.04],
     ['FL', 0.06],
     ['WA', 0.065],
   ])('returns correct rate for %s', (stateCode, expectedRate) => {
@@ -132,8 +132,29 @@ describe('calculateEUVAT()', () => {
     expect(calculateEUVAT({ countryCode: 'HR' })).toBe(0.25);
   });
 
+  it('returns 0.24 for EE', () => {
+    expect(calculateEUVAT({ countryCode: 'EE' })).toBe(0.24);
+  });
+
+  it('returns 0.255 for FI', () => {
+    expect(calculateEUVAT({ countryCode: 'FI' })).toBe(0.255);
+  });
+
+  it('returns 0.21 for RO', () => {
+    expect(calculateEUVAT({ countryCode: 'RO' })).toBe(0.21);
+  });
+
+  it('returns 0.23 for SK', () => {
+    expect(calculateEUVAT({ countryCode: 'SK' })).toBe(0.23);
+  });
+
   it('returns 0 for non-EU country', () => {
     expect(calculateEUVAT({ countryCode: 'US' })).toBe(0);
+  });
+
+  it('returns 0 for GB because UK VAT is not part of EU VAT handling', () => {
+    expect(calculateEUVAT({ countryCode: 'GB' })).toBe(0);
+    expect(calculateEUVAT({ countryCode: 'UK' })).toBe(0);
   });
 
   it('is case insensitive', () => {

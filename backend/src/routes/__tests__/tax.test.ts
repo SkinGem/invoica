@@ -1,5 +1,10 @@
+import express from 'express';
 import request from 'supertest';
-import { app } from '../../app';
+import taxRouter from '../tax';
+
+const app = express();
+app.use(express.json());
+app.use(taxRouter);
 
 describe('Tax Routes', () => {
   describe('POST /v1/tax/calculate', () => {
@@ -100,6 +105,19 @@ describe('Tax Routes', () => {
       const de = res.body.data.eu.rates.find((r: any) => r.countryCode === 'DE');
       expect(de).toBeDefined();
       expect(de.rate).toBe(0.19);
+    });
+
+    it('returns updated Finland VAT rate', async () => {
+      const res = await request(app).get('/v1/tax/jurisdictions');
+      const fi = res.body.data.eu.rates.find((r: any) => r.countryCode === 'FI');
+      expect(fi).toBeDefined();
+      expect(fi.rate).toBe(0.255);
+    });
+
+    it('does not include GB in EU VAT rates', async () => {
+      const res = await request(app).get('/v1/tax/jurisdictions');
+      const gb = res.body.data.eu.rates.find((r: any) => r.countryCode === 'GB');
+      expect(gb).toBeUndefined();
     });
   });
 });

@@ -1,6 +1,6 @@
 // Nexus Threshold Monitor — TICKET-017-AGENTTAX-03
 // Runs via PM2 or cron. Checks cumulative revenue per US state.
-// Alert: Harvey morning briefing if any state exceeds $100K threshold (typical nexus trigger).
+// Alert: Harvey morning briefing if any configured state approaches its 2026 economic nexus rule.
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -9,12 +9,27 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY ?? process.env.SUPABASE_ANON_KEY!
 );
 
-const NEXUS_THRESHOLD_USD = 100_000;
+interface NexusRule {
+  amountUsd: number;
+  transactionCount?: number;
+}
+
+const STATE_NEXUS_RULES: Record<string, NexusRule> = {
+  CA: { amountUsd: 500_000 },
+  TX: { amountUsd: 500_000 },
+  NY: { amountUsd: 500_000, transactionCount: 100 },
+  FL: { amountUsd: 100_000 },
+  WA: { amountUsd: 100_000 },
+};
 
 interface StateRevenue {
   state: string;
   total_usd: number;
   invoice_count: number;
+  threshold_usd: number;
+  threshold_transactions?: number;
+  percent_of_amount_threshold: number;
+  percent_of_transaction_threshold?: number;
 }
 
 export async function checkNexusThresholds(): Promise<StateRevenue[]> {
@@ -37,16 +52,46 @@ export async function checkNexusThresholds(): Promise<StateRevenue[]> {
   }
 
   const approaching: StateRevenue[] = Object.entries(stateTotals)
-    .filter(([, v]) => v.total >= NEXUS_THRESHOLD_USD * 0.8)  // 80% = warning zone
-    .map(([state, v]) => ({ state, total_usd: v.total, invoice_count: v.count }))
-    .sort((a, b) => b.total_usd - a.total_usd);
+    .filter(([state]) => state in STATE_NEXUS_RULES)
+    .map(([state, v]) => {
+      const rule = STATE_NEXUS_RULES[state];
+      const percentOfAmountThreshold = (v.total / rule.amountUsd) * 100;
+      const percentOfTransactionThreshold = rule.transactionCount
+        ? (v.count / rule.transactionCount) * 100
+        : undefined;
+
+      return {
+        state,
+        total_usd: v.total,
+        invoice_count: v.count,
+        threshold_usd: rule.amountUsd,
+        threshold_transactions: rule.transactionCount,
+        percent_of_amount_threshold: percentOfAmountThreshold,
+        percent_of_transaction_threshold: percentOfTransactionThreshold,
+      };
+    })
+    .filter((stateRevenue) => {
+      const amountWarning = stateRevenue.percent_of_amount_threshold >= 80;
+      const transactionWarning = (stateRevenue.percent_of_transaction_threshold ?? 0) >= 80;
+      return amountWarning || transactionWarning;
+    })
+    .sort((a, b) => b.percent_of_amount_threshold - a.percent_of_amount_threshold);
 
   if (approaching.length > 0) {
     console.log('[NexusMonitor] States approaching nexus threshold:');
     for (const s of approaching) {
-      const pct = ((s.total_usd / NEXUS_THRESHOLD_USD) * 100).toFixed(1);
-      const flag = s.total_usd >= NEXUS_THRESHOLD_USD ? 'NEXUS' : 'WARNING';
-      console.log(`  [${flag}] ${s.state}: $${s.total_usd.toLocaleString()} (${pct}% of $100K threshold)`);
+      const amountPct = s.percent_of_amount_threshold.toFixed(1);
+      const amountTriggered = s.total_usd >= s.threshold_usd;
+      const txnTriggered = s.threshold_transactions !== undefined && s.invoice_count >= s.threshold_transactions;
+      const flag = amountTriggered || txnTriggered ? 'NEXUS' : 'WARNING';
+      const txnSummary = s.threshold_transactions !== undefined
+        ? `; ${s.invoice_count} txns (${(s.percent_of_transaction_threshold ?? 0).toFixed(1)}% of ${s.threshold_transactions})`
+        : '';
+
+      console.log(
+        `  [${flag}] ${s.state}: $${s.total_usd.toLocaleString()} ` +
+        `(${amountPct}% of $${s.threshold_usd.toLocaleString()} threshold${txnSummary})`
+      );
     }
     // TODO: wire into Harvey morning briefing via Telegram notification
     // For now: log output is captured by PM2 and surfaced in daily health check

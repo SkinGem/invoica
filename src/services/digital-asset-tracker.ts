@@ -1,5 +1,6 @@
 // 1099-DA Digital Asset Tracking — TICKET-017-AGENTTAX-05
-// IRS Form 1099-DA applies to digital asset transactions from 2025 onwards.
+// IRS Form 1099-DA is used for 2025-and-later digital asset broker transactions,
+// with the first filing cycle landing in calendar year 2026.
 // USDC payments via x402 and direct Base transfers are digital assets.
 // This module tracks the fields needed for 1099-DA compliance.
 
@@ -55,6 +56,5 @@ export function buildDigitalAssetRecord(
   };
 }
 
-// Note: Full 1099-DA filing integration with IRS reporting service is deferred to
-// Phase 2B (threshold: >$10K gross proceeds or >200 transactions in tax year).
-// For now: log records for auditor review. Threshold monitoring in nexus-monitor.ts.
+// Note: Full 1099-DA filing/transmission integration is still deferred.
+// For now: persist/report-ready records for auditor review and downstream 2025+ tax-year filing workflows.

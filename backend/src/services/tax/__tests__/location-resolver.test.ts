@@ -41,8 +41,8 @@ describe('getJurisdiction', () => {
       expect(getJurisdiction({ countryCode: 'DE', vatNumber: 'DE123456789' })).toBe(TaxJurisdiction.EU);
     });
 
-    it('returns EU for GB (included in EU_COUNTRIES set)', () => {
-      expect(getJurisdiction({ countryCode: 'GB' })).toBe(TaxJurisdiction.EU);
+    it('returns NONE for GB because UK VAT is not handled as EU VAT', () => {
+      expect(getJurisdiction({ countryCode: 'GB' })).toBe(TaxJurisdiction.NONE);
     });
   });
 
@@ -68,6 +68,11 @@ describe('isEUCountry', () => {
 
   it('returns false for a non-EU country (US)', () => {
     expect(isEUCountry('US')).toBe(false);
+  });
+
+  it('returns false for GB after Brexit', () => {
+    expect(isEUCountry('GB')).toBe(false);
+    expect(isEUCountry('UK')).toBe(false);
   });
 
   it('is case-insensitive', () => {

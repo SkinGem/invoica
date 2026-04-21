@@ -23,29 +23,33 @@ interface TaxCalculationResult {
 /**
  * US Nexus Tax Rates
  * 
- * Maps US state codes to their sales tax rates.
- * These represent states where the business has economic nexus and must collect sales tax.
+ * Maps US state codes to state-level sales tax rates.
+ * These are state rates only and do not include city, county, or special district add-ons.
+ * Use them only for jurisdictions where Invoica currently tracks nexus.
  * 
- * Rates as of 2024:
+ * Rates verified for 2026:
  * - CA (California): 7.25%
  * - TX (Texas): 6.25%
- * - NY (New York): 8%
+ * - NY (New York): 4.00% state rate + local surtaxes (local not included here)
  * - FL (Florida): 6%
  * - WA (Washington): 6.5%
  */
 export const US_NEXUS_RATES: Record<string, number> = {
   CA: 0.0725,
   TX: 0.0625,
-  NY: 0.08,
+  NY: 0.04,
   FL: 0.06,
   WA: 0.065
 };
 
 /**
  * EU VAT Rates by country code
- * Standard VAT rates for B2C transactions within EU
+ * Standard VAT rates for B2C transactions within the EU.
+ * Verified against current EU member-state standard rates used in 2026.
+ *
+ * Note: The United Kingdom is intentionally excluded because it is no longer an EU VAT jurisdiction.
  */
-const EU_VAT_RATES: Record<string, number> = {
+export const EU_VAT_RATES: Record<string, number> = {
   AT: 0.20,  // Austria
   BE: 0.21,  // Belgium
   BG: 0.20,  // Bulgaria
@@ -72,9 +76,7 @@ const EU_VAT_RATES: Record<string, number> = {
   SK: 0.23,  // Slovakia
   SI: 0.22,  // Slovenia
   ES: 0.21,  // Spain
-  SE: 0.25,  // Sweden
-  GB: 0.20,  // United Kingdom
-  UK: 0.20   // United Kingdom (alternative code)
+  SE: 0.25   // Sweden
 };
 
 /**

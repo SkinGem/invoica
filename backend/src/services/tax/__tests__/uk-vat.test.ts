@@ -1,7 +1,8 @@
 /**
- * UK VAT Test Suite
+ * UK VAT Guardrail Test Suite
  *
- * Tests for UK VAT handling using the actual calculator and location-resolver implementations.
+ * The current tax engine only supports US sales tax and EU VAT.
+ * These tests ensure UK traffic is not incorrectly treated as EU VAT traffic.
  */
 
 import {
@@ -16,9 +17,9 @@ import { TaxJurisdiction } from '../types';
 
 describe('UK VAT - Country Code Recognition', () => {
   describe('isEUCountry', () => {
-    it('should return true for GB (Great Britain)', () => {
-      expect(isEUCountry('GB')).toBe(true);
-      expect(isEUCountry('gb')).toBe(true);
+    it('should return false for GB (Great Britain)', () => {
+      expect(isEUCountry('GB')).toBe(false);
+      expect(isEUCountry('gb')).toBe(false);
     });
 
     it('should return false for non-EU countries', () => {
@@ -35,14 +36,14 @@ describe('UK VAT - Country Code Recognition', () => {
 
 describe('UK VAT - Tax Rate Configuration', () => {
   describe('calculateEUVAT', () => {
-    it('should return 20% VAT rate for GB', () => {
+    it('should return 0 for GB', () => {
       const rate = calculateEUVAT({ countryCode: 'GB' });
-      expect(rate).toBe(0.20);
+      expect(rate).toBe(0);
     });
 
-    it('should return 20% VAT rate for UK (alternative code)', () => {
+    it('should return 0 for UK (alternative code)', () => {
       const rate = calculateEUVAT({ countryCode: 'UK' });
-      expect(rate).toBe(0.20);
+      expect(rate).toBe(0);
     });
 
     it('should return 0 for non-EU countries', () => {
@@ -51,29 +52,29 @@ describe('UK VAT - Tax Rate Configuration', () => {
     });
 
     it('should be case insensitive', () => {
-      expect(calculateEUVAT({ countryCode: 'gb' })).toBe(0.20);
-      expect(calculateEUVAT({ countryCode: 'Gb' })).toBe(0.20);
+      expect(calculateEUVAT({ countryCode: 'gb' })).toBe(0);
+      expect(calculateEUVAT({ countryCode: 'Gb' })).toBe(0);
     });
   });
 });
 
 describe('UK VAT - B2C Calculations', () => {
-  it('should charge 20% VAT for GB B2C customer (EU jurisdiction)', () => {
+  it('should not charge EU VAT for GB customer', () => {
     const result = calculateTax({
       amount: 100,
       buyerLocation: { countryCode: 'GB' },
     });
 
-    expect(result.jurisdiction).toBe(TaxJurisdiction.EU);
-    expect(result.taxRate).toBe(0.20);
-    expect(result.taxAmount).toBe(20);
+    expect(result.jurisdiction).toBe(TaxJurisdiction.NONE);
+    expect(result.taxRate).toBe(0);
+    expect(result.taxAmount).toBe(0);
   });
 
-  it('should calculate correct VAT for various amounts', () => {
+  it('should keep tax at 0 for various amounts', () => {
     const testCases = [
-      { amount: 50, expectedTax: 10 },
-      { amount: 250, expectedTax: 50 },
-      { amount: 1000, expectedTax: 200 },
+      { amount: 50, expectedTax: 0 },
+      { amount: 250, expectedTax: 0 },
+      { amount: 1000, expectedTax: 0 },
     ];
 
     for (const { amount, expectedTax } of testCases) {
@@ -88,32 +89,33 @@ describe('UK VAT - B2C Calculations', () => {
 });
 
 describe('UK VAT - B2B Calculations (VAT number triggers reverse charge)', () => {
-  it('should apply reverse charge (0%) for B2B with VAT number', () => {
+  it('should remain unsupported even if a UK VAT number is provided', () => {
     const result = calculateTax({
       amount: 100,
       buyerLocation: { countryCode: 'GB', vatNumber: 'GB123456789' },
     });
 
+    expect(result.jurisdiction).toBe(TaxJurisdiction.NONE);
     expect(result.taxRate).toBe(0);
     expect(result.taxAmount).toBe(0);
-    expect(result.invoiceNote).toBe('Reverse charge - Art. 196 Council Directive 2006/112/EC');
+    expect(result.invoiceNote).toContain('No applicable tax jurisdiction');
   });
 
-  it('should apply 20% VAT for GB customer without VAT number', () => {
+  it('should not apply EU VAT for GB customer without VAT number', () => {
     const result = calculateTax({
       amount: 100,
       buyerLocation: { countryCode: 'GB' },
     });
 
-    expect(result.taxRate).toBe(0.20);
-    expect(result.taxAmount).toBe(20);
+    expect(result.taxRate).toBe(0);
+    expect(result.taxAmount).toBe(0);
   });
 });
 
 describe('UK VAT - Jurisdiction Resolution', () => {
-  it('should resolve EU jurisdiction for GB country code', () => {
+  it('should resolve NONE for GB country code', () => {
     const jurisdiction = getJurisdiction({ countryCode: 'GB' });
-    expect(jurisdiction).toBe(TaxJurisdiction.EU);
+    expect(jurisdiction).toBe(TaxJurisdiction.NONE);
   });
 
   it('should return NONE for non-EU/non-US countries', () => {
@@ -142,33 +144,32 @@ describe('UK VAT - Edge Cases', () => {
 });
 
 describe('UK VAT - Comparison with Other EU Countries', () => {
-  it('should have same rate as other 20% EU countries', () => {
+  it('should no longer match EU VAT countries', () => {
     const gbRate = calculateEUVAT({ countryCode: 'GB' });
     const atRate = calculateEUVAT({ countryCode: 'AT' });
     const bgRate = calculateEUVAT({ countryCode: 'BG' });
 
-    expect(gbRate).toBe(0.20);
+    expect(gbRate).toBe(0);
     expect(atRate).toBe(0.20);
     expect(bgRate).toBe(0.20);
   });
 
-  it('should have different rate than high-VAT Nordic countries', () => {
+  it('should remain below high-VAT Nordic countries', () => {
     const gbRate = calculateEUVAT({ countryCode: 'GB' });
     const seRate = calculateEUVAT({ countryCode: 'SE' });
     const fiRate = calculateEUVAT({ countryCode: 'FI' });
 
-    // Sweden (25%) and Finland (24%) have higher rates
+    // Sweden (25%) and Finland (25.5%) have higher rates
     expect(gbRate).toBeLessThan(seRate);
     expect(gbRate).toBeLessThan(fiRate);
   });
 
-  it('should have higher rate than low-VAT countries', () => {
+  it('should remain below low-VAT EU countries because UK is unsupported here', () => {
     const gbRate = calculateEUVAT({ countryCode: 'GB' });
     const luRate = calculateEUVAT({ countryCode: 'LU' });
     const mtRate = calculateEUVAT({ countryCode: 'MT' });
 
-    // Luxembourg (17%) and Malta (18%) have lower rates
-    expect(gbRate).toBeGreaterThan(luRate);
-    expect(gbRate).toBeGreaterThan(mtRate);
+    expect(gbRate).toBeLessThan(luRate);
+    expect(gbRate).toBeLessThan(mtRate);
   });
 });
