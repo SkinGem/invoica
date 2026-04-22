@@ -17,9 +17,9 @@ router.get('/x402', (_req: Request, res: Response) => {
     capabilities: [
       { id: 'payment:invoice', price: 0.01, currency: 'USDC', description: 'Create an x402 invoice for a completed agent service' },
       { id: 'payment:settle', price: 0.005, currency: 'USDC', description: 'Check on-chain settlement status for an invoice' },
-      { id: 'compliance:tax', price: 0.02, currency: 'USDC', description: '12-country tax classification and compliance report' }
+      { id: 'compliance:tax', price: 0.02, currency: 'USDC', description: 'Tax classification and compliance report — 27 EU countries + UK + 5 US states (CA, TX, NY, FL, WA)' }
     ],
-    networks: ['solana-mainnet'],
+    networks: ['base-mainnet', 'polygon-mainnet', 'arbitrum-mainnet', 'skale-europa-mainnet', 'solana-mainnet'],
     programId: 'SAPpUhsWLJG1FfkGRcXagEDMrMsWGjbky7AyhGpFETZ'
   });
 });
