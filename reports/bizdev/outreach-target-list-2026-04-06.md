@@ -1,7 +1,9 @@
-# Invoica Outreach Target List — April 6, 2026
+# Invoica Outreach Target List — April 6, 2026 *(updated 2026-04-22)*
 
-*36 targets across 7 categories. Generated from codebase analysis + ecosystem research.*
+*37 targets across 7 categories. Generated from codebase analysis + ecosystem research.*
 *Priority: P0 = this week, P1 = next 2 weeks, P2 = April, P3 = backlog*
+
+**2026-04-22 UPDATE:** Coinbase launched **Agentic.Market** on 2026-04-20 — the x402-native app-store/directory for AI-agent services. This is the new top-of-funnel for M2 customer acquisition (plan §M2-CUST). Agentic.Market listing moves to P0 line 1. Launch-partner outreach (Bloomberg, CoinGecko, AWS Lambda, OpenAI/Venice) added as P0. See `reports/owner/DIR-008-agentic-market-priority-2026-04-22.md` for rationale and actions.
 
 ---
 
@@ -9,6 +11,11 @@
 
 | Pri | Target | Action | Owner | Status |
 |-----|--------|--------|-------|--------|
+| **P0 NEW** | **Agentic.Market (Coinbase CDP)** | **Submit Invoica listing — draft at `docs/bizdev/agentic-market-listing.md`** | **Tarek** | **Submit by 2026-04-24** |
+| P0 NEW | Bloomberg (Agentic.Market data partner) | Outreach: invoicing/tax for agent customers | Tarek | New |
+| P0 NEW | CoinGecko (Agentic.Market data partner) | Outreach: invoicing/tax for agent customers | Tarek | New |
+| P0 NEW | AWS Lambda (Agentic.Market infra partner) | Outreach: invoicing/tax for pay-per-call infra | Tarek | New |
+| P0 NEW | OpenAI / Venice (Agentic.Market inference) | Outreach: receipts for agent token purchases | Tarek | New |
 | P0 | x402 Foundation | Apply for membership | Tarek | New |
 | P0 | PayAI | Register 3 services via partner portal | Tarek | Pipeline |
 | P0 | Messari | Final follow-up by Apr 10 | BizDev | Follow-up sent |
