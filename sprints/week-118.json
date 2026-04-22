@@ -112,6 +112,21 @@
         "tests": ["backend/src/routes/__tests__/metrics-external-only.test.ts"],
         "docs": []
       }
+    },
+    {
+      "id": "CHAIN-SKALE-ONCHAIN-TEST",
+      "agent": "test-runner",
+      "type": "test",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Live on-chain Skale Base integration test (Scope 2 follow-up to 2026-04-22 API-layer smoke test)",
+      "context": "Scope 1 (API-layer smoke test) passed 2026-04-22: invoice creation with chain='skale', DE VAT 19% applied, PaymentEvents UNIQUE gate blocks replay. Mock txHash only.\n\nScope 2 (this task): real USDC transfer on Skale Base (mainnet 1187947933 or testnet-Sepolia 324705682), scanned by the EVM settlement detector, invoice auto-transitions to SETTLED via the real on-chain event.\n\nFiles to create:\n  - scripts/test-skale-onchain.ts — test harness that:\n      * reads 2 wallet private keys from .env (TEST_WALLET_A_PK, TEST_WALLET_B_PK) — owner funds these before running\n      * creates an invoice via API with Wallet B's address as paymentAddress\n      * signs and submits a USDC transfer from Wallet A to Wallet B on Skale Base\n      * calls the settlement detector programmatically (or waits for PM2 settlement-poller) to confirm detection\n      * verifies PaymentEvents row is written with the REAL on-chain txHash (not mock)\n      * verifies Invoice.status transitions to SETTLED\n  - docs/engineering/skale-onchain-test-setup.md — owner-facing runbook:\n      * how to generate 2 fresh wallets (viem or ethers)\n      * how to fund them with gasless compute credits on Skale Base (pre-paid compute credits per Skale docs)\n      * how to acquire USDC on Skale Base (bridge from Base via Skale portal, or use Skale Base Sepolia testnet USDC faucet for first run)\n      * how to run the harness and interpret output\n\nAcceptance: one clean run (testnet OR mainnet) where a real on-chain USDC transfer on Skale Base is detected by Invoica's settlement detector and auto-marks an invoice SETTLED. Attach the txHash + block explorer link to the task note on completion.\n\nDependencies: none (chain config for Skale Base already live in main per commit 8c3ea35). Ideal to run BEFORE any marketing with Skale (for truth-in-capability).",
+      "deliverables": {
+        "code": ["scripts/test-skale-onchain.ts"],
+        "tests": [],
+        "docs": ["docs/engineering/skale-onchain-test-setup.md"]
+      }
     }
   ]
 }
