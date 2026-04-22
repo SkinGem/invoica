@@ -81,15 +81,17 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     usdcDecimals: 6,
   },
   {
-    // SKALE Europa Hub mainnet — gasless x402 payments.
-    // Chain ID 2046399126 (0x79F99296). USDC is the bridged "Origin USDC".
-    // Partnership: Skale BD outreach 2026-04-22.
-    // Cookbook: https://docs.skale.space/cookbook/x402/accepting-payments
+    // SKALE Base mainnet — gasless x402 payments, Skale team's recommended
+    // chain for agent payment integrations (per Manuel, Developer Success,
+    // 2026-04-22). Zero gas, pre-paid compute credits, EVM-compatible,
+    // Permit2 at canonical addresses.
+    // Chain ID 1187947933 (0x46CEA59D).
+    // Quickstart: https://docs.skale.space/get-started/quick-start/skale-on-base
     id: 'skale',
-    name: 'SKALE Europa Hub',
-    rpcUrl: process.env.SKALE_RPC_URL || 'https://mainnet.skalenodes.com/v1/elated-tan-skat',
-    usdcAddress: '0x5F795bb52dAC3085f578f4877D450e2929D2F13d',
-    explorerUrl: 'https://elated-tan-skat.explorer.mainnet.skalenodes.com',
+    name: 'SKALE Base',
+    rpcUrl: process.env.SKALE_RPC_URL || 'https://skale-base.skalenodes.com/v1/base',
+    usdcAddress: '0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20',
+    explorerUrl: 'https://skale-base-explorer.skalenodes.com',
     isTestnet: false,
     type: 'evm',
     usdcDecimals: 6,

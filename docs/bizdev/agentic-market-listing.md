@@ -33,7 +33,7 @@
 - Polygon mainnet (USDC)
 - Solana mainnet (USDC SPL via native x402 adapter)
 - Arbitrum mainnet (USDC, added 2026-04-20)
-- **SKALE Europa Hub mainnet (USDC, gasless — partnership with Skale Network, added 2026-04-22)**
+- **SKALE Base mainnet (USDC, gasless — partnership with Skale Network, added 2026-04-22)**
 - Ethereum Sepolia (testnet)
 
 ## Jurisdictional tax coverage (live, verified 2026-04-22)
