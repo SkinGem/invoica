@@ -29,7 +29,7 @@ const SOLANA_TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const SOLANA_USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
 /** Supported chains for invoice payment */
-const SUPPORTED_CHAINS = ['base', 'polygon', 'arbitrum', 'solana'] as const;
+const SUPPORTED_CHAINS = ['base', 'polygon', 'arbitrum', 'skale', 'solana'] as const;
 type SupportedChain = typeof SUPPORTED_CHAINS[number];
 
 export const createInvoiceSchema = z.object({

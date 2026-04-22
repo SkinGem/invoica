@@ -15,7 +15,7 @@ const EVM_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 const SOLANA_ADDRESS_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const SOLANA_TOKEN_PROGRAM = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const SOLANA_USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
-const SUPPORTED_CHAINS = ['base', 'polygon', 'arbitrum', 'solana'] as const;
+const SUPPORTED_CHAINS = ['base', 'polygon', 'arbitrum', 'skale', 'solana'] as const;
 type SupportedChain = typeof SUPPORTED_CHAINS[number];
 
 function getSupabase() {
