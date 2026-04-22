@@ -7,6 +7,7 @@
 
 import { TaxJurisdiction } from './types';
 import { getJurisdiction, LocationInput } from './location-resolver';
+import { calculateUKVATResult, UKVATInput } from './uk-vat';
 
 interface TaxCalculationInput {
   amount: number;
@@ -190,6 +191,9 @@ export function calculateTax(input: TaxCalculationInput): TaxCalculationResult {
     case TaxJurisdiction.EU:
       return calculateEUVATResult(amount, buyerLocation);
 
+    case TaxJurisdiction.UK:
+      return calculateUKVATResult(amount, buyerLocation as UKVATInput);
+
     case TaxJurisdiction.NONE:
     default:
       return {
@@ -273,5 +277,6 @@ export default {
   calculateNoTax,
   hasUSNexus,
   getUSNexusRate,
+  calculateUKVATResult,
   US_NEXUS_RATES
 };

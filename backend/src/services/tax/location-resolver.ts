@@ -65,6 +65,11 @@ export function getJurisdiction(location: LocationInput): TaxJurisdiction {
 
   const normalizedCountry = countryCode.toUpperCase();
 
+  // UK is its own post-Brexit VAT jurisdiction — must be checked before EU
+  if (normalizedCountry === 'GB' || normalizedCountry === 'UK') {
+    return TaxJurisdiction.UK;
+  }
+
   // BUG-009 FIX: Check for US country code before checking US states
   // The country code 'US' was not matching the usStates set (which contains 2-letter state codes)
   // This caused all US transactions to fall through to TaxJurisdiction.NONE
@@ -102,6 +107,18 @@ export function isEUCountry(countryCode: string): boolean {
 }
 
 /**
+ * Validates if a country code maps to the UK VAT jurisdiction (post-Brexit).
+ * Accepts both 'GB' (ISO 3166-1 alpha-2) and the legacy 'UK' alias.
+ *
+ * @param countryCode - The country code to validate
+ * @returns true if the country is in the UK VAT zone
+ */
+export function isUKCountry(countryCode: string): boolean {
+  const c = countryCode.toUpperCase();
+  return c === 'GB' || c === 'UK';
+}
+
+/**
  * Validates if a state code is a valid US state
  * 
  * @param stateCode - The state code to validate
@@ -114,5 +131,6 @@ export function isUSState(stateCode: string): boolean {
 export default {
   getJurisdiction,
   isEUCountry,
+  isUKCountry,
   isUSState
 };

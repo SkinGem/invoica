@@ -9,6 +9,7 @@
  */
 export enum TaxJurisdiction {
   EU = 'EU',
+  UK = 'UK',
   US = 'US',
   NONE = 'NONE'
 }
