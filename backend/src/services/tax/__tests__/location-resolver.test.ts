@@ -41,8 +41,8 @@ describe('getJurisdiction', () => {
       expect(getJurisdiction({ countryCode: 'DE', vatNumber: 'DE123456789' })).toBe(TaxJurisdiction.EU);
     });
 
-    it('returns NONE for GB because UK VAT is not handled as EU VAT', () => {
-      expect(getJurisdiction({ countryCode: 'GB' })).toBe(TaxJurisdiction.NONE);
+    it('returns UK for GB — post-Brexit dedicated UK VAT jurisdiction', () => {
+      expect(getJurisdiction({ countryCode: 'GB' })).toBe(TaxJurisdiction.UK);
     });
   });
 
