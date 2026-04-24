@@ -12,12 +12,20 @@ function getSb() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
 
-/** Extract user ID from Supabase JWT in Authorization header */
+/**
+ * Extract user ID from Supabase JWT in Authorization header.
+ * SUPABASE_ANON_KEY is required for auth.getUser() to validate a user JWT;
+ * the anon key does NOT grant any DB access here — it's just the auth
+ * context for the token-validation call. All real DB queries below use
+ * getSb() with the service-role key.
+ */
 async function getUserId(req: Request): Promise<string | null> {
   const auth = req.headers.authorization;
   if (!auth?.startsWith('Bearer ')) return null;
   const token = auth.slice(7);
-  const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+  const anonKey = process.env.SUPABASE_ANON_KEY;
+  if (!anonKey) return null;
+  const sb = createClient(process.env.SUPABASE_URL!, anonKey);
   const { data } = await sb.auth.getUser(token);
   return data.user?.id || null;
 }
@@ -102,7 +110,12 @@ router.post('/v1/company/profile', async (req: Request, res: Response) => {
   res.json({ success: true, data });
 });
 
-router.post('/v1/company/verify', async (_req: Request, res: Response) => {
+router.post('/v1/company/verify', async (req: Request, res: Response) => {
+  const userId = await getUserId(req);
+  if (!userId) {
+    res.status(401).json({ success: false, error: { message: 'Authentication required', code: 'UNAUTHORIZED' } });
+    return;
+  }
   res.json({
     success: true,
     data: {

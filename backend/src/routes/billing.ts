@@ -14,21 +14,43 @@ function getSb() {
   return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 }
 
+// Session-token auth — dashboard calls this with a Supabase JWT.
+// Returns the authenticated user id, or null if the token is missing/invalid.
+async function getUserId(req: Request): Promise<string | null> {
+  const auth = req.headers.authorization;
+  if (!auth?.startsWith('Bearer ')) return null;
+  const token = auth.slice(7);
+  const anonKey = process.env.SUPABASE_ANON_KEY;
+  if (!anonKey) return null;
+  const sb = createClient(process.env.SUPABASE_URL!, anonKey);
+  const { data } = await sb.auth.getUser(token);
+  return data.user?.id || null;
+}
+
 function isBetaActive(): boolean {
   return Date.now() < new Date(CONWAY_ACTIVATION_DATE).getTime();
 }
 
-router.get('/v1/billing/status', async (_req: Request, res: Response) => {
-  const sb = getSb();
+router.get('/v1/billing/status', async (req: Request, res: Response) => {
+  // Auth + user scoping — previously this endpoint was unauth'd and
+  // returned platform-wide invoice counts. External audit flagged this
+  // 2026-04-24 as a data leak before M1 gate close.
+  const userId = await getUserId(req);
+  if (!userId) {
+    res.status(401).json({ success: false, error: { message: 'Authentication required', code: 'UNAUTHORIZED' } });
+    return;
+  }
 
-  // Count invoices this month
+  const sb = getSb();
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
 
+  // Scope the count to the authenticated user's invoices only.
   const { count: invoiceCount } = await sb
     .from('Invoice')
     .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId)
     .gte('createdAt', startOfMonth.toISOString());
 
   res.json({

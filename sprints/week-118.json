@@ -114,6 +114,24 @@
       }
     },
     {
+      "id": "TAX-VAT-EVIDENCE-PERSIST",
+      "agent": "backend-tax",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Persist VAT validation evidence to Supabase — EU 7-year retention compliance",
+      "context": "External audit 2026-04-24 flagged: backend/src/services/tax/vat-validator.ts stores validation evidence in an in-memory Map (line 46, `private evidenceStore: Map<string, TaxEvidence>`). Evidence is wiped on every PM2 restart. The store method has a commented-out line 162: `// await this.saveEvidenceToDatabase(evidence);`.\n\nEU VAT legal retention is typically 7 years. For any real EU customer this is a compliance blocker. Not acute today (zero EU customers per invoice triage) but required before M2 gate.\n\nChange: create Supabase migration 008_vat_evidence.sql with a VatEvidence table (id uuid PK, invoiceId text FK, vatNumber text, countryCode text, isValid bool, validatedAt timestamptz, evidenceJson jsonb, createdAt timestamptz DEFAULT now()). Wire the existing `storeEvidence()` method to INSERT into it. Keep the in-memory Map as an L1 cache if desired, but the source of truth must be Supabase.\n\nAcceptance: backend restart does not lose any evidence row. Test covers: store → restart simulation (new VatValidator instance) → retrieve evidence → present.",
+      "deliverables": {
+        "code": [
+          "supabase/migrations/008_vat_evidence.sql",
+          "backend/src/services/tax/vat-validator.ts"
+        ],
+        "tests": ["backend/src/services/tax/__tests__/vat-evidence-persistence.test.ts"],
+        "docs": []
+      }
+    },
+    {
       "id": "CHAIN-SKALE-ONCHAIN-TEST",
       "agent": "test-runner",
       "type": "test",
