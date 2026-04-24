@@ -70,7 +70,11 @@
       "type": "feature",
       "priority": "critical",
       "dependencies": [],
-      "status": "pending",
+      "status": "done",
+      "_completedBy": "swarm-shipped",
+      "_completedCommit": "94bfd50",
+      "_completedAt": "2026-04-21",
+      "_note": "Only task shipped via the MiniMax swarm with real supervisor review (score 85/100, attempt 2/5). 5 files generated: evm-detector, chain-registry, settlement-router, config/chains, arbitrum-detector.test.ts. Pushed to main via swarm commit.",
       "description": "Ship Arbitrum detector (founder decision: Option A)",
       "context": "Files: backend/src/services/settlement/evm-detector.ts, backend/src/services/settlement/chain-registry.ts, backend/src/services/settlement/settlement-router.ts, backend/src/config/chains.ts\n\nFounder decision 2026-04-17: SHIP the Arbitrum detector (Option A). Option B (remove the claim) is rejected.\n\nChange: Extend EVM detector to handle Arbitrum RPC + USDC contract (0xaf88d065e77c8cC2239327C5EDb3A432268e5831). Add fixture tx and unit test.\n\nAcceptance: Real Arbitrum tx settles in test using captured fixture. Arbitrum remains in SUPPORTED_CHAINS and all marketing surfaces.",
       "deliverables": {
