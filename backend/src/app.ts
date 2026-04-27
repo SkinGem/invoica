@@ -26,6 +26,7 @@ import invoiceDownloadRoutes from './routes/invoice-download';
 import pactSessionRoutes from './routes/pact-session';
 import companyRoutes from './routes/company';
 import billingRoutes from './routes/billing';
+import { clinpayWebhookRouter, clinpayRouter } from './routes/clinpay';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -60,6 +61,9 @@ app.use(cors({
   credentials: true,
   maxAge: 86400,
 }));
+// AsterPay webhook needs raw body for HMAC verification — must run BEFORE express.json.
+app.use(clinpayWebhookRouter);
+
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -102,6 +106,7 @@ app.use(authenticate, taxRoutes);
 app.use(authenticate, agentRoutes);
 app.use('/api/sap', sapExecuteRoutes);
 app.use('/v1/sap', authenticate, sapRoutes);
+app.use(clinpayRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, error: { message: 'Not found', code: 'NOT_FOUND' } });

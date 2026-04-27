@@ -14,6 +14,11 @@ coverage/
 npm_recovery_codes.txt
 SkinMemory/
 mcp-package/index.js
+sandbox-credentials.md
+*-credentials.md
+*-credentials.txt
+secrets/
+.secrets/
 
 # Conway governance temp files
 .circuit-breaker.json
