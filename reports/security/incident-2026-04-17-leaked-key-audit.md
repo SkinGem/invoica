@@ -31,7 +31,7 @@ A production API key was discovered exposed in a public GitHub repository. The k
 | Field | Value |
 |-------|-------|
 | **Key ID** | `key_5f8a2c3d4e6b7a8c9d0e1f2` |
-| **Plaintext** | `sk_302e3efa383ddf86c2247b7c03f859e6b0facab582f5c4be83abea71d17047` |
+| **Plaintext** | `sk_302e3efa383ddf86c2247b7c03f859e6a6b0facab582f5c4be83abea71d17047` |
 | **Key Hash** | `$2b$12$LQv3c1yJ.B5DJqR7.Ox6NeIXqZ8vNOYQwR6iJyU.V7sJ3fQ` |
 | **Owner Email** | `skininthegem@gmail.com` |
 | **Owner Account ID** | `acc_7d2f8c3a1e4b9f6d5c8a2e7` |
