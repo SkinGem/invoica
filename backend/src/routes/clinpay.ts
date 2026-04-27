@@ -115,7 +115,7 @@ async function handleSessionSubmitted(
     return;
   }
 
-  const pact = verifyPactMandate(JSON.stringify(session.mandate_json), session.amount_usdc);
+  const pact = verifyPactMandate(session.mandate_json, session.amount_usdc);
   if (!pact.allowed) {
     console.error(`[clinpay] PACT mandate denied for asterpay=${asterpaySessionId}: ${pact.reason}`);
     await updateSessionStatus(session.id, 'failed', { last_event: { event: 'session.submitted', error: pact.reason } });

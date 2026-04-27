@@ -17,7 +17,9 @@ export interface ClinPaySessionRow {
   amount_usdc: number;
   recipient_country: string;
   payout_method: 'sepa' | 'wallet';
-  mandate_json: SyntheticMandate;
+  // Signed mandate stored as JSON string (TEXT column) — byte-exact, since
+  // JSONB normalizes nested key order and would break HMAC verification.
+  mandate_json: string;
   mandate_hash: string;
   invoice_id: string | null;
   status: 'created' | 'submitted' | 'settled' | 'failed' | 'expired';
@@ -38,6 +40,7 @@ export interface CreateClinPaySessionInput {
 }
 
 export async function createClinPaySession(input: CreateClinPaySessionInput): Promise<ClinPaySessionRow> {
+  const mandateJson = JSON.stringify(input.mandate);
   const { data, error } = await sb()
     .from('ClinPaySession')
     .insert({
@@ -49,7 +52,7 @@ export async function createClinPaySession(input: CreateClinPaySessionInput): Pr
       amount_usdc: input.amount_usdc,
       recipient_country: input.recipient_country,
       payout_method: input.payout_method,
-      mandate_json: input.mandate,
+      mandate_json: mandateJson,
       mandate_hash: input.mandate.signature.slice(0, 16),
       status: 'created',
     })
