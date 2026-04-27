@@ -102,11 +102,20 @@ export interface ClinPayInvoiceInput {
  * are synthetic placeholders derived from anonymous trial identifiers.
  */
 export async function createClinPayInvoice(input: ClinPayInvoiceInput): Promise<{ id: string; invoiceNumber: number }> {
+  const { data: maxData } = await sb()
+    .from('Invoice')
+    .select('invoiceNumber')
+    .order('invoiceNumber', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextNumber = ((maxData?.invoiceNumber as number) || 0) + 1;
+
   const synthEmail = `clinpay+${input.asterpay_session_id.slice(0, 8)}@invoica.internal`;
   const synthName = `ClinPay visit ${input.visit_id}`;
   const { data, error } = await sb()
     .from('Invoice')
     .insert({
+      invoiceNumber: nextNumber,
       status: 'PENDING',
       amount: input.amount_usdc,
       currency: 'USDC',
