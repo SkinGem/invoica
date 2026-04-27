@@ -19,7 +19,7 @@ export interface CreateSessionRequest {
 export interface CreateSessionResponse {
   session_id: string;
   hosted_page_url: string;
-  token: string;
+  token?: string;
   expires_at: string;
 }
 
