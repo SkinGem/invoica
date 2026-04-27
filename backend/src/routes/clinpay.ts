@@ -131,18 +131,34 @@ async function handleSessionSubmitted(
   });
   console.log(`[clinpay] invoice issued #${invoice.invoiceNumber} (${invoice.id}) for asterpay=${asterpaySessionId}`);
 
-  const settle = await settleCollectSession({
-    session_id: asterpaySessionId,
-    amount_usdc: session.amount_usdc,
-    mandate_hash: session.mandate_hash,
-    reference: session.visit_id,
-  });
-  console.log(`[clinpay] settle response status=${settle.status} ref=${settle.provider_ref}`);
-
+  // Persist session state immediately so a settle failure doesn't orphan the invoice.
   await updateSessionStatus(session.id, 'submitted', {
     invoice_id: invoice.id,
-    last_event: { event: 'session.submitted', settle_status: settle.status, provider_ref: settle.provider_ref, ...payload },
+    last_event: { event: 'session.submitted', invoice_number: invoice.invoiceNumber, ...payload },
   });
+
+  // Best-effort settle. /v1/collect/settle is x402-paywalled ($0.10 USDC sandbox);
+  // x402 client integration is Sprint 2 scope. For now, attempt and capture the
+  // outcome without bubbling up failure.
+  try {
+    const settle = await settleCollectSession({
+      session_id: asterpaySessionId,
+      amount_usdc: session.amount_usdc,
+      mandate_hash: session.mandate_hash,
+      reference: session.visit_id,
+    });
+    console.log(`[clinpay] settle response status=${settle.status} ref=${settle.provider_ref}`);
+    await updateSessionStatus(session.id, 'submitted', {
+      last_event: { event: 'settle_ok', settle_status: settle.status, provider_ref: settle.provider_ref },
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    const x402Gated = msg.includes('402');
+    console.warn(`[clinpay] settle ${x402Gated ? '402-gated (x402 client TBD Sprint 2)' : 'failed'}: ${msg.slice(0, 200)}`);
+    await updateSessionStatus(session.id, 'submitted', {
+      last_event: { event: 'settle_deferred', x402_gated: x402Gated, error: msg.slice(0, 500) },
+    });
+  }
 }
 
 async function handleSessionSettled(
