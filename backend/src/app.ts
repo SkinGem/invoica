@@ -85,6 +85,7 @@ app.use('/.well-known', wellKnownRoutes);
 // M1-SEC-01 (plan §3.1): authenticate all read-side routes that expose platform data.
 app.use(companyRoutes);
 app.use(billingRoutes);
+app.use(clinpayRouter);
 app.use(authenticate, invoiceDownloadRoutes);
 app.use('/v1/pact', pactSessionRoutes);
 app.use(authenticate, invoiceStatsRoutes);
@@ -106,7 +107,6 @@ app.use(authenticate, taxRoutes);
 app.use(authenticate, agentRoutes);
 app.use('/api/sap', sapExecuteRoutes);
 app.use('/v1/sap', authenticate, sapRoutes);
-app.use(clinpayRouter);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, error: { message: 'Not found', code: 'NOT_FOUND' } });
