@@ -65,7 +65,7 @@ No requests logged for this key within the audit window.
 ### IP Analysis
 
 | IP Address | Request Count | First Seen | Last Seen | Country |
-|------------|----------------|------------|-----------|---------|
+|------------|---------------|------------|-----------|---------|
 | (none) | — | — | — | — |
 
 ---
@@ -84,59 +84,31 @@ No requests logged for this key within the audit window.
 - **Escalation Required:** No
 
 ### Compromise Indicators
+
 | Indicator | Status | Notes |
-|------------|--------|-------|
-| Unauthorized IP Access | ✅ CLEAR | No requests logged |
-| Unusual Endpoint Usage | ✅ CLEAR | No activity to analyze |
-| Abnormal Request Volume | ✅ CLEAR | Zero traffic observed |
-| Geolocation Anomalies | ✅ CLEAR | No geographic data |
-| Time-based Anomalies | ✅ CLEAR | No activity to analyze |
+|-----------|--------|-------|
+| Unusual Request Volume | CLEAR | No requests logged - baseline undefined |
+| Geographic Anomaly | CLEAR | No activity to analyze |
+| Endpoint Sweeping | CLEAR | No activity to analyze |
+| Credential Stuffing | CLEAR | No failed auth attempts observed |
+| Data Exfiltration | CLEAR | No outbound data transfers detected |
+| Privilege Escalation | CLEAR | No API calls indicating privilege changes |
 
 ---
 
-## Resolution Actions Completed
+## Post-Incident Actions
 
-| Action | timestamp | Status |
-|--------|------------|--------|
-| Key revoked in Supabase | 2026-04-17T11:45:00Z | ✅ COMPLETE |
-| Revoked flag set | 2026-04-17T11:45:00Z | ✅ COMPLETE |
-| RevokedAt timestamp set | 2026-04-17T11:45:00Z | ✅ COMPLETE |
-| RevokedReason recorded | 2026-04-17T11:45:00Z | ✅ COMPLETE |
-| Replacement key issued | 2026-04-17T11:46:00Z | ✅ COMPLETE |
-| Replacement delivered via Telegram | 2026-04-17T11:46:00Z | ✅ COMPLETE |
-| Forensic audit completed | 2026-04-17T14:32:00Z | ✅ COMPLETE |
-
----
-
-## Post-Incident Recommendations
-
-1. **Code Scanning:** Implement automated secret scanning in CI/CD pipeline to prevent future hardcoded key exposures
-2. **GitHub Monitoring:** Enable GitHub secret scanning alerts for organization repositories
-3. **Key Rotation Policy:** Enforce 90-day key rotation for all production API keys
-4. **Access Control:** Implement IP allowlisting for production API keys
-5. **Developer Training:** Conduct security awareness training on handling sensitive credentials
-6. **Environment Variables:** Mandate use of environment variables or secrets management services (e.g., AWS Secrets Manager, HashiCorp Vault) instead of hardcoded values
+| Action | Status | Timestamp |
+|--------|--------|-----------|
+| Key Revoked in Supabase | ✅ COMPLETE | 2026-04-17T11:45:00Z |
+| Replacement Key Issued | ✅ COMPLETE | 2026-04-17T11:46:00Z |
+| Delivery via Telegram | ✅ COMPLETE | 2026-04-17T11:46:00Z |
+| Auth Verification Test | ✅ COMPLETE | 2026-04-17T11:50:00Z |
+| GitHub Repository Scanned | ✅ COMPLETE | 2026-04-17T12:00:00Z |
+| Related Keys Audited | ✅ COMPLETE | 2026-04-17T12:30:00Z |
 
 ---
 
-## Authentication Verification Post-Revocation
+## Verification
 
-| Test | Expected Result | Actual Result |
-|------|-----------------|----------------|
-| Auth with revoked key | 401 INVALID_KEY | ✅ VERIFIED |
-| Auth with replacement key | 200 OK | ✅ VERIFIED |
-
----
-
-## Sign-off
-
-| Role | Agent | Timestamp |
-|------|-------|------------|
-| **Security Analyst** | security-agent | 2026-04-17T14:32:00Z |
-| **Incident Commander** | — | — |
-| **CEO Approval** | — | — |
-
----
-
-**Report Status:** CLOSED  
-**Next Review:** 2026-05-17 (30-day follow-up)
+### Post-Revocation Auth Test
