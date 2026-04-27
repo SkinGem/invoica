@@ -1,7 +1,11 @@
 /**
  * pact-verify.ts — Inline PACT v0.2 mandate verification
- * Does NOT import @godman-protocols/pact (not on npm — server cannot install it).
  * Inlines the minimal HMAC-SHA256 subset needed for invoice payment gating.
+ *
+ * Hardened per TICKET-044 (AsterPay smoke audit, Apr 14 2026):
+ *   Fix 1 (P0) — fail-closed on missing PACT_SIGNING_SECRET when a mandate is present
+ *   Fix 4 (P0) — require maxPaymentUsdc + expiresAt in mandate (no blank cheques)
+ *   Fix 5 (P2) — crypto.timingSafeEqual for HMAC comparison
  *
  * Usage: verifyPactMandate(header, amountUsdc) → { allowed: boolean; reason?: string }
  * Env:   PACT_SIGNING_SECRET — shared secret between grantor agent and Invoica
@@ -13,7 +17,7 @@ const PACT_SIGNING_SECRET = process.env.PACT_SIGNING_SECRET || '';
 interface MandateScope {
   actions?: string[];
   resources?: string[];
-  maxPaymentUsdc?: number;
+  maxPaymentUsdc: number;
   description?: string;
 }
 
@@ -22,13 +26,18 @@ interface PactMandate {
   grantor: string;
   grantee: string;
   scope: MandateScope;
-  expiresAt?: string;
+  expiresAt: string;
   issuedAt: string;
   signature: string;
 }
 
 function hmacSha256(data: string, secret: string): string {
   return crypto.createHmac('sha256', secret).update(data).digest('hex');
+}
+
+function timingSafeStringEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 }
 
 function mandateSignature(m: PactMandate): string {
@@ -45,34 +54,47 @@ function mandateSignature(m: PactMandate): string {
 
 /**
  * Verify a PACT mandate from an X-Pact-Mandate request header.
- * Returns { allowed: true } if no header (mandate is optional — backward compatible).
- * Returns { allowed: false, reason } if mandate is present but invalid.
+ *
+ * - No mandate header → allowed (mandates remain optional on this endpoint)
+ * - Mandate present + secret unset → denied (fail-closed on misconfig)
+ * - Mandate present + secret set → verify schema, expiry, signature, cap
  */
 export function verifyPactMandate(
   mandateHeader: string | undefined,
   amountUsdc: number
 ): { allowed: boolean; reason?: string } {
   if (!mandateHeader) return { allowed: true };
+
   if (!PACT_SIGNING_SECRET) {
-    console.warn('[pact-verify] PACT_SIGNING_SECRET not set — skipping check');
-    return { allowed: true };
+    return { allowed: false, reason: 'PACT_SIGNING_SECRET not configured' };
   }
+
   let mandate: PactMandate;
   try {
     mandate = JSON.parse(mandateHeader) as PactMandate;
   } catch {
     return { allowed: false, reason: 'Invalid mandate JSON' };
   }
-  if (mandate.expiresAt && new Date(mandate.expiresAt) < new Date()) {
+
+  if (!mandate.expiresAt) {
+    return { allowed: false, reason: 'Mandate missing expiresAt' };
+  }
+  if (typeof mandate.scope?.maxPaymentUsdc !== 'number' || !(mandate.scope.maxPaymentUsdc > 0)) {
+    return { allowed: false, reason: 'Mandate missing or non-positive maxPaymentUsdc' };
+  }
+
+  if (new Date(mandate.expiresAt) < new Date()) {
     return { allowed: false, reason: 'Mandate expired' };
   }
+
   const expected = mandateSignature(mandate);
-  if (expected !== mandate.signature) {
+  if (!timingSafeStringEqual(expected, mandate.signature)) {
     return { allowed: false, reason: 'Invalid mandate signature' };
   }
-  const cap = mandate.scope?.maxPaymentUsdc;
-  if (cap !== undefined && cap < amountUsdc) {
-    return { allowed: false, reason: `Mandate cap ${cap} USDC < invoice ${amountUsdc} USDC` };
+
+  if (mandate.scope.maxPaymentUsdc < amountUsdc) {
+    return { allowed: false, reason: `Mandate cap ${mandate.scope.maxPaymentUsdc} USDC < invoice ${amountUsdc} USDC` };
   }
+
   return { allowed: true };
 }
