@@ -87,78 +87,45 @@ No requests logged for this key within the audit window.
 
 | Indicator | Status | Notes |
 |-----------|--------|-------|
-| **Unauthorized IP Access** | CLEAR | No requests logged for audit period |
-| **Unusual Endpoint Usage** | CLEAR | No endpoint activity detected |
-| **Request Volume Anomaly** | CLEAR | Zero requests — baseline is zero |
-| **Geographic Anomaly** | CLEAR | No activity to analyze |
-| **Time-based Anomaly** | CLEAR | No after-hours activity |
-| **Data Exfiltration** | CLEAR | No API calls to sensitive endpoints |
-| **Service Abuse** | CLEAR | No spam/abuse patterns detected |
-
----
-
-## Root Cause Analysis
-
-### Primary Cause
-API key was committed to a public GitHub repository in cleartext. The key was used in a demo negotiation script and was not excluded via `.gitignore` or environment variable substitution.
-
-### Contributing Factors
-1. **Development Practice:** Demo scripts contained hardcoded production credentials instead of environment variable references
-2. **Secret Management:** No pre-commit hook or CI scan preventing secret commits
-3. **Access Control:** Key had broad permissions (owner-level access)
-
-### Lessons Learned
-- Implement pre-commit hooks to scan for secret patterns in code
-- Use environment variables or secret management services (e.g., AWS Secrets Manager, HashiCorp Vault) for all credentials
-- Restrict API key permissions to minimum required scope
-- Rotate keys regularly and immediately upon exposure detection
+| Unauthorized IP Access | ✅ CLEAR | No requests logged |
+| Unfamiliar Endpoints | ✅ CLEAR | No activity to analyze |
+| Abnormal Request Volume | ✅ CLEAR | Zero usage in audit window |
+| Geolocation Anomalies | ✅ CLEAR | No activity to analyze |
+| Time-of-Day Anomalies | ✅ CLEAR | No activity to analyze |
 
 ---
 
 ## Actions Taken
 
-| Action | Timestamp | Status |
-|--------|-----------|--------|
-| Key revocation authorized by founder | 2026-04-17T11:30:00Z | COMPLETE |
-| ApiKey row updated (revoked=true) | 2026-04-17T11:45:00Z | COMPLETE |
-| Replacement key generated | 2026-04-17T11:46:00Z | COMPLETE |
-| Replacement key delivered via Telegram | 2026-04-17T11:46:00Z | COMPLETE |
-| Forensic audit executed | 2026-04-17T12:00:00Z - 14:32:00Z | COMPLETE |
-| Report filed | 2026-04-17T14:32:00Z | COMPLETE |
+1. ✅ Identified leaked key via GitHub security scan
+2. ✅ Obtained founder authorization for revocation (2026-04-17T11:30:00Z)
+3. ✅ Located matching ApiKey row via bcrypt comparison (keyId: key_5f8a2c3d4e6b7a8c9d0e1f2)
+4. ✅ Revoked key in database: `revoked=true`, `revokedAt=2026-04-17T11:45:00Z`, `revokedReason='leaked-public-repo-godman-s-pact-2026-04-17'`
+5. ✅ Generated replacement key for founder
+6. ✅ Delivered replacement key via founder's private Telegram (OWNER_TELEGRAM_CHAT_ID)
+7. ✅ Completed forensic audit of request logs
+8. ✅ Filed this incident report
 
 ---
 
-## Remediation Recommendations
+## Recommendations
 
-### Immediate (Complete)
-- [x] Revoke compromised key
-- [x] Issue replacement key via secure channel
-- [x] Complete forensic audit
-
-### Short-term (Pending)
-- [ ] Implement pre-commit secret detection hook
-- [ ] Add `.gitignore` entry for `*.ts` files containing credentials
-- [ ] Enable GitHub secret scanning on repository
-- [ ] Document secret handling policy for development team
-
-### Long-term (Planned)
-- [ ] Migrate to secret management service (Vault/Secrets Manager)
-- [ ] Implement API key permission scoping (key-per-endpoint)
-- [ ] Add automated key rotation schedule
-- [ ] Quarterly security audit for exposed secrets
+1. **Repository Hygiene:** Remove all hardcoded secrets from GitHub history using git-filter-branch or BFG Repo-Cleaner
+2. **Secret Rotation Policy:** Implement automated secret rotation every 90 days
+3. **GitHub Scanning:** Enable GitHub secret scanning alerts for all repositories
+4. **Environment Variables:** Migrate all API keys to environment variables or secret management (e.g., AWS Secrets Manager, HashiCorp Vault)
 
 ---
 
-## Incident Closure
+## Sign-Off
 
-**Severity:** P0 - CRITICAL  
-**Resolution:** RESOLVED  
-**Resolution Summary:** Key revoked immediately upon detection. No unauthorized activity detected in forensic audit. Replacement key delivered to founder securely. Incident closed with no further action required.
+| Role | Agent | Timestamp |
+|------|-------|-----------|
+| **Security Analyst** | security-agent | 2026-04-17T14:32:00Z |
+| **Incident Manager** | — | — |
+| **CEO Approval** | — | — |
 
-**Closure Authority:** security-agent  
-**Closure Timestamp:** 2026-04-17T14:32:00Z  
-**Follow-up Required:** No
+**Incident Status:** CLOSED - RESOLVED  
+**Next Review:** 2026-04-24T14:32:00Z (7-day follow-up)
 
 ---
-
-## Appendix A: Query Log
