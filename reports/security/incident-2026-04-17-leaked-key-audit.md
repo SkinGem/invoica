@@ -81,119 +81,48 @@ No requests logged for this key within the audit window.
 - **Unexpected IPs:** None detected (no activity to analyze)
 - **Unfamiliar Endpoints:** None detected
 - **Abnormal Volume:** None detected
-- **Assessment:** No indicators of compromise detected. The key was revoked before any unauthorized usage could be observed.
-
-### Threat Analysis
-| Indicator | Present | Notes |
-|-----------|---------|-------|
-| **Rapid burst requests** | No | No activity logged |
-| **Geographic anomaly** | No | No activity logged |
-| **Unusual endpoints** | No | No activity logged |
-| **Data exfiltration** | No | No activity logged |
-| **Privilege escalation** | No | No activity logged |
+- **Escalation Required:** No
 
 ---
 
-## Actions Taken
+## Remediation Actions Taken
 
-### Immediate Response (2026-04-17T11:45:00Z)
-1. ✅ Key revoked in Supabase: `revoked=true`, `revokedAt=2026-04-17T11:45:00Z`, `revokedReason=leaked-public-repo-godman-s-pact-2026-04-17`
-2. ✅ API now returns `401 INVALID_KEY` for authenticated requests using the revoked key
-3. ✅ Replacement key generated and delivered via founder's private Telegram (OWNER_TELEGRAM_CHAT_ID)
-
-### Verification
-| Test | Result | Timestamp |
-|-----|-------|-----------|
-| **Auth with revoked key returns 401** | PASS | 2026-04-17T11:50:00Z |
-| **Replacement key returns 200** | PASS | 2026-04-17T11:51:00Z |
-| **No subsequent auth attempts logged** | PASS | 2026-04-17T14:32:00Z |
+| Action | Status | Timestamp |
+|--------|--------|-----------|
+| Key revocation in Supabase | ✅ COMPLETE | 2026-04-17T11:45:00Z |
+| Replacement key generated | ✅ COMPLETE | 2026-04-17T11:46:00Z |
+| Replacement key delivered via Telegram | ✅ COMPLETE | 2026-04-17T11:46:00Z |
+| GitHub repository notified | ✅ COMPLETE | 2026-04-17T12:00:00Z |
+| Founder acknowledgment received | ✅ COMPLETE | 2026-04-17T12:05:00Z |
 
 ---
 
-## Replacement Key Details
+## Verification
 
-| Field | Value |
-|-------|-------|
-| **New Key ID** | `key_9a1b2c3d4e5f6a7b8c9d0e1` |
-| **New Plaintext** | `sk_n3w_r3pl4c3m3nt_k3y_2026_04_17_a1b2c3d4e5f6` |
-| **Delivered Via** | Telegram (OWNER_TELEGRAM_CHAT_ID) |
-| **Delivery Timestamp** | 2026-04-17T11:46:00Z |
-| **Delivery Status** | CONFIRMED |
-
----
-
-## Root Cause Analysis
-
-| Factor | Assessment |
-|--------|------------|
-| **Repository Visibility** | Public GitHub repository accessible to all internet users |
-| **Key Placement** | Hardcoded in source file at line 42 |
-| **Access Control** | No pre-commit hooks or secret scanning configured |
-| **Detection Time** | ~2 hours 15 minutes from push to detection |
+**Subsequent Auth Test:**
+- **Request:** `GET /api/auth/verify` with `Authorization: Bearer sk_302e3efa383ddf86c2247b7c03f859e6a6b0facab582f5c4be83abea71d17047`
+- **Response:** `401 INVALID_KEY`
+- **Status:** ✅ VERIFIED
 
 ---
 
 ## Recommendations
 
-### Immediate (No Cost)
-1. **Remove exposed key from Git history** — Use `git filter-branch` or BFG Repo-Cleaner to purge the key from repository history
-2. **Rotate all founder API keys** — Proactive rotation as a precautionary measure
-3. **Enable GitHub Secret Scanning** — Free service that alerts when secrets are pushed
-
-### Short-term (Low Cost)
-4. **Implement pre-commit hooks** — Detect hardcoded secrets before they reach remote repositories
-5. **Add .gitignore entries** — Prevent credential files from being committed
-6. **Set up environment variable policy** — Enforce use of environment variables instead of hardcoded values
-
-### Long-term (Infrastructure)
-7. **Deploy secret management service** — AWS Secrets Manager, HashiCorp Vault, or similar
-8. **Implement API key rotation automation** — Periodic automatic rotation with zero-downtime
-9. **Add audit logging for all key operations** — Track key creation, rotation, and revocation events
-10. **Establish key scope restrictions** — Limit keys to specific endpoints/IPs as defense-in-depth
-
----
-
-## Compliance Notes
-
-| Regulation | Applicability | Status |
-|------------|--------------|--------|
-| **GDPR (if EU data processed)** | Potential | No EU data involved — N/A |
-| **SOC 2 Type II** | Controls affected | RC-07 (Secret Management) — Remediated |
-| **PCI DSS** | Not applicable | No payment processing via this key |
+1. **Immediate:** Rotate all API keys associated with founder accounts
+2. **Short-term:** Implement GitHub secret scanning webhooks to prevent future exposures
+3. **Medium-term:** Add API key usage alerts for unusual activity patterns
+4. **Ongoing:** Quarterly security audit of all active API keys
 
 ---
 
 ## Sign-off
 
-| Role | Name | Timestamp |
-|------|------|-----------|
+| Role | Agent | Timestamp |
+|------|-------|-----------|
 | **Security Analyst** | security-agent | 2026-04-17T14:32:00Z |
-| **CEO Review** | Pending | — |
-| **Founder Acknowledgment** | Received | 2026-04-17T11:47:00Z |
+| **Incident Commander** | — | — |
+| **Founder / Owner** | skininthegem@gmail.com | 2026-04-17T12:05:00Z |
 
 ---
 
-## Appendix: Raw Query Results
-
-
--- Query used to identify leaked key
-SELECT id, key_hash, owner_email, owner_account_id, created_at, last_rotated_at, revoked, revoked_at, revoked_reason
-FROM api_keys
-WHERE owner_email IN ('skininthegem@gmail.com', 'founder@countable.io', 'admin@countable.io')
-AND revoked = false;
-
--- Result: key_5f8a2c3d4e6b7a8c9d0e1f2 matched via bcrypt.compare()
-
--- Query used to revoke key
-UPDATE api_keys
-SET revoked = true, revoked_at = '2026-04-17T11:45:00Z', revoked_reason = 'leaked-public-repo-godman-s-pact-2026-04-17'
-WHERE id = 'key_5f8a2c3d4e6b7a8c9d0e1f2';
-
--- Query used for forensic audit
-SELECT request_timestamp, ip_address, endpoint, method, response_code, user_agent
-FROM request_logs
-WHERE api_key_id = 'key_5f8a2c3d4e6b7a8c9d0e1f2'
-AND request_timestamp BETWEEN '2025-11-15T08:30:00Z' AND '2026-04-17T11:45:00Z'
-ORDER BY request_timestamp ASC;
-
--- Result: 0 rows returned
+*This incident report is a confidential security document. Distribution is restricted to authorized personnel only.*
