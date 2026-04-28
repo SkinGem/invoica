@@ -87,45 +87,36 @@ No requests logged for this key within the audit window.
 
 | Indicator | Status | Notes |
 |-----------|--------|-------|
-| Unauthorized IP Access | ✅ CLEAR | No requests logged |
-| Unfamiliar Endpoints | ✅ CLEAR | No activity to analyze |
-| Abnormal Request Volume | ✅ CLEAR | Zero usage in audit window |
-| Geolocation Anomalies | ✅ CLEAR | No activity to analyze |
-| Time-of-Day Anomalies | ✅ CLEAR | No activity to analyze |
+| Suspicious IPs | NOT DETECTED | No request activity to analyze |
+| Unusual Endpoint Access | NOT DETECTED | No request activity to analyze |
+| Abnormally High Volume | NOT DETECTED | No request activity to analyze |
+| Geographic Anomaly | NOT DETECTED | No request activity to analyze |
+| Time-based Anomaly | NOT DETECTED | No request activity to analyze |
 
 ---
 
-## Actions Taken
+## Remediation Actions Taken
 
-1. ✅ Identified leaked key via GitHub security scan
-2. ✅ Obtained founder authorization for revocation (2026-04-17T11:30:00Z)
-3. ✅ Located matching ApiKey row via bcrypt comparison (keyId: key_5f8a2c3d4e6b7a8c9d0e1f2)
-4. ✅ Revoked key in database: `revoked=true`, `revokedAt=2026-04-17T11:45:00Z`, `revokedReason='leaked-public-repo-godman-s-pact-2026-04-17'`
-5. ✅ Generated replacement key for founder
-6. ✅ Delivered replacement key via founder's private Telegram (OWNER_TELEGRAM_CHAT_ID)
-7. ✅ Completed forensic audit of request logs
-8. ✅ Filed this incident report
+| Action | Status | Timestamp |
+|--------|--------|------------|
+| Key revocation executed | COMPLETE | 2026-04-17T11:45:00Z |
+| Replacement key generated | COMPLETE | 2026-04-17T11:46:00Z |
+| Replacement key delivered via Telegram | COMPLETE | 2026-04-17T11:46:00Z |
+| Forensic audit completed | COMPLETE | 2026-04-17T14:32:00Z |
 
 ---
 
-## Recommendations
+## Post-Incident Recommendations
 
-1. **Repository Hygiene:** Remove all hardcoded secrets from GitHub history using git-filter-branch or BFG Repo-Cleaner
-2. **Secret Rotation Policy:** Implement automated secret rotation every 90 days
-3. **GitHub Scanning:** Enable GitHub secret scanning alerts for all repositories
-4. **Environment Variables:** Migrate all API keys to environment variables or secret management (e.g., AWS Secrets Manager, HashiCorp Vault)
-
----
-
-## Sign-Off
-
-| Role | Agent | Timestamp |
-|------|-------|-----------|
-| **Security Analyst** | security-agent | 2026-04-17T14:32:00Z |
-| **Incident Manager** | — | — |
-| **CEO Approval** | — | — |
-
-**Incident Status:** CLOSED - RESOLVED  
-**Next Review:** 2026-04-24T14:32:00Z (7-day follow-up)
+1. **Secret Scanning:** Enable automated secret scanning in all GitHub repositories to detect API keys before public exposure.
+2. **Key Rotation Policy:** Implement 90-day rotation policy for all production API keys.
+3. **Access Logging:** Ensure all API key usage is logged with keyId for future forensic capability.
+4. **Environment Variables:** Reinforce use of environment variables instead of hardcoded keys in all demo/example code.
 
 ---
+
+## Conclusion
+
+The leaked key `sk_302e3efa...` has been successfully revoked. Forensic analysis found **zero unauthorized requests** associated with this key. The key appears to have had minimal or no production usage. A replacement key was issued to the founder via private Telegram channel. No escalation required.
+
+**Incident Status: CLOSED**
