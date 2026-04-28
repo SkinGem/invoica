@@ -14,6 +14,7 @@ export interface SyntheticMandate {
     resources: string[];
     maxPaymentUsdc: number;
     description: string;
+    sponsorJurisdiction?: string;
   };
   expiresAt: string;
   issuedAt: string;
@@ -36,21 +37,24 @@ export function synthesizeSponsorMandate(
   studyId: string,
   amountUsdc: number,
   expiresAtIso: string,
+  sponsorJurisdiction?: string,
 ): SyntheticMandate {
   const secret = process.env.PACT_SIGNING_SECRET || '';
   if (!secret) {
     throw new Error('PACT_SIGNING_SECRET not configured — cannot synthesize sandbox mandate');
   }
+  const scope: SyntheticMandate['scope'] = {
+    actions: ['clinpay:settle'],
+    resources: [`clinpay/${studyId}/*`],
+    maxPaymentUsdc: amountUsdc,
+    description: `ClinPay sandbox mandate — study ${studyId}`,
+  };
+  if (sponsorJurisdiction) scope.sponsorJurisdiction = sponsorJurisdiction;
   const base = {
     id: `mandate-${randomUUID()}`,
     grantor: `clinpay-sponsor-${studyId}`,
     grantee: 'invoica-clinpay',
-    scope: {
-      actions: ['clinpay:settle'],
-      resources: [`clinpay/${studyId}/*`],
-      maxPaymentUsdc: amountUsdc,
-      description: `ClinPay sandbox mandate — study ${studyId}`,
-    },
+    scope,
     expiresAt: expiresAtIso,
     issuedAt: new Date().toISOString(),
   };

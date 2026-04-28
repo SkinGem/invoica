@@ -8,6 +8,7 @@ import {
   updateSessionStatus,
   createClinPayInvoice,
 } from '../services/asterpay/clinpay-session';
+import { mintDrsReceipt, markInvoiceSettled, recordClinPayTax } from '../services/clinpay/drs-receipt';
 import { verifyPactMandate } from '../lib/pact-verify';
 
 // Sandbox-only in-memory idempotency. DB-backed before production (Sprint 2).
@@ -163,13 +164,52 @@ async function handleSessionSubmitted(
 
 async function handleSessionSettled(
   asterpaySessionId: string,
-  payload: { data?: Record<string, unknown> },
+  payload: Record<string, unknown>,
 ): Promise<void> {
-  // Day 6-7 will mint DRS receipt + AgentTax recordTax here. For now, just persist.
   const session = await findByAsterPaySessionId(asterpaySessionId);
-  if (!session) return;
-  await updateSessionStatus(session.id, 'settled', { last_event: { event: 'session.settled', ...payload } });
-  console.log(`[clinpay] session.settled persisted asterpay=${asterpaySessionId}`);
+  if (!session) {
+    console.warn(`[clinpay] session.settled: no ClinPaySession for asterpay=${asterpaySessionId}`);
+    return;
+  }
+
+  // Step 1: AgentTax (best-effort — failure doesn't block receipt or invoice settle)
+  let taxLine = null;
+  try {
+    taxLine = await recordClinPayTax(session, session.amount_usdc);
+    if (taxLine) {
+      console.log(`[clinpay] tax recorded jurisdiction=${taxLine.jurisdiction} total=${taxLine.total_tax}`);
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[clinpay] tax call errored (non-fatal): ${msg}`);
+  }
+
+  // Step 2: mint DRS receipt (idempotent — returns existing if already minted)
+  const receipt = await mintDrsReceipt(session, payload as Parameters<typeof mintDrsReceipt>[1], taxLine);
+  console.log(`[clinpay] DRS receipt ${receipt.receipt_id} minted for session=${session.id}`);
+
+  // Step 3: flip Invoice PENDING → SETTLED
+  if (session.invoice_id) {
+    await markInvoiceSettled(
+      session.invoice_id,
+      receipt.settled_at,
+      receipt.settlement_tx_hash,
+      receipt.settlement_provider,
+    );
+    console.log(`[clinpay] invoice ${session.invoice_id} marked SETTLED`);
+  } else {
+    console.warn(`[clinpay] session.settled: no invoice_id on ClinPaySession ${session.id} — receipt minted without invoice link`);
+  }
+
+  // Step 4: persist session state
+  await updateSessionStatus(session.id, 'settled', {
+    last_event: {
+      event: 'session.settled',
+      receipt_id: receipt.receipt_id,
+      tax_jurisdiction: taxLine?.jurisdiction || null,
+      ...payload,
+    },
+  });
 }
 
 async function handleSessionFailed(
@@ -197,7 +237,7 @@ export const clinpayRouter = Router();
 
 clinpayRouter.post('/api/redirect-to-payment', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { visitId, studyId, amountEur, recipientCountry, payoutMethod, description } = req.body || {};
+    const { visitId, studyId, amountEur, recipientCountry, payoutMethod, description, sponsorJurisdiction } = req.body || {};
     if (!visitId || !studyId || typeof amountEur !== 'number') {
       res.status(400).json({ success: false, error: { message: 'visitId, studyId, amountEur required', code: 'VALIDATION_ERROR' } });
       return;
@@ -221,7 +261,8 @@ clinpayRouter.post('/api/redirect-to-payment', async (req: Request, res: Respons
     });
 
     const amountUsdc = eurToUsdc(amountEur);
-    const mandate = synthesizeSponsorMandate(String(studyId), amountUsdc, session.expires_at);
+    const jurisdiction = typeof sponsorJurisdiction === 'string' ? sponsorJurisdiction : undefined;
+    const mandate = synthesizeSponsorMandate(String(studyId), amountUsdc, session.expires_at, jurisdiction);
 
     await createClinPaySession({
       asterpay_session_id: session.session_id,
