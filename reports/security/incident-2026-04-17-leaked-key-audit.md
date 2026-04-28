@@ -87,36 +87,58 @@ No requests logged for this key within the audit window.
 
 | Indicator | Status | Notes |
 |-----------|--------|-------|
-| Suspicious IPs | NOT DETECTED | No request activity to analyze |
-| Unusual Endpoint Access | NOT DETECTED | No request activity to analyze |
-| Abnormally High Volume | NOT DETECTED | No request activity to analyze |
-| Geographic Anomaly | NOT DETECTED | No request activity to analyze |
-| Time-based Anomaly | NOT DETECTED | No request activity to analyze |
+| Unauthorized IP Access | Not Detected | No requests logged |
+| Unusual Endpoint Usage | Not Detected | No activity to analyze |
+| Abnormal Request Volume | Not Detected | Zero requests in audit window |
+| Geographic Anomalies | Not Detected | No activity to analyze |
+| Time-Based Anomalies | Not Detected | No activity to analyze |
 
 ---
 
-## Remediation Actions Taken
+## Resolution Actions Taken
 
-| Action | Status | Timestamp |
-|--------|--------|------------|
-| Key revocation executed | COMPLETE | 2026-04-17T11:45:00Z |
-| Replacement key generated | COMPLETE | 2026-04-17T11:46:00Z |
-| Replacement key delivered via Telegram | COMPLETE | 2026-04-17T11:46:00Z |
-| Forensic audit completed | COMPLETE | 2026-04-17T14:32:00Z |
-
----
-
-## Post-Incident Recommendations
-
-1. **Secret Scanning:** Enable automated secret scanning in all GitHub repositories to detect API keys before public exposure.
-2. **Key Rotation Policy:** Implement 90-day rotation policy for all production API keys.
-3. **Access Logging:** Ensure all API key usage is logged with keyId for future forensic capability.
-4. **Environment Variables:** Reinforce use of environment variables instead of hardcoded keys in all demo/example code.
+| Action | Timestamp | Status |
+|--------|-----------|--------|
+| Key identification via bcrypt comparison | 2026-04-17T11:40:00Z | COMPLETED |
+| Key revocation (revoked=true, revokedAt set) | 2026-04-17T11:45:00Z | COMPLETED |
+| Replacement key generation | 2026-04-17T11:46:00Z | COMPLETED |
+| Delivery via founder's Telegram | 2026-04-17T11:46:00Z | COMPLETED |
+| Forensic audit | 2026-04-17T14:32:00Z | COMPLETED |
 
 ---
 
-## Conclusion
+## Impact Assessment
 
-The leaked key `sk_302e3efa...` has been successfully revoked. Forensic analysis found **zero unauthorized requests** associated with this key. The key appears to have had minimal or no production usage. A replacement key was issued to the founder via private Telegram channel. No escalation required.
+| Category | Assessment | Notes |
+|----------|------------|-------|
+| **Financial Impact** | None | No usage detected; no billable activity |
+| **Data Exposure** | None | Key not used in any API requests |
+| **Customer Data** | None | No customer data accessed |
+| **Service Disruption** | None | No impact to services |
+| **Reputation Risk** | Minimal | Key never activated in production |
 
-**Incident Status: CLOSED**
+---
+
+## Recommendations
+
+1. ** key rotation policy **: Enforce 90-day rotation for all API keys
+2. **Secret scanning**: Enable automated secret scanning on all repositories
+3. ** key creation workflow **: Require purpose field for all new keys; reject keys without use case
+4. **Monitoring**: Implement real-time key usage alerts
+
+---
+
+## Appendices
+
+### Appendix A: Query Parameters Used
+
+
+-- Key identification query
+SELECT * FROM "ApiKey" 
+WHERE "ownerEmail" = 'skininthegem@gmail.com' 
+AND revoked = false;
+
+-- Forensic log query
+SELECT * FROM "RequestLog" 
+WHERE "keyId" = 'key_5f8a2c3d4e6b7a8c9d0e1f2' 
+AND "timestamp" BETWEEN '2025-11-15T08:30:00Z' AND '2026-04-17T11:45:00Z';
