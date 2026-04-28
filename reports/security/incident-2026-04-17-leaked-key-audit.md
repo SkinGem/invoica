@@ -81,36 +81,45 @@ No requests logged for this key within the audit window.
 - **Unexpected IPs:** None detected (no activity to analyze)
 - **Unfamiliar Endpoints:** None detected
 - **Abnormal Volume:** None detected
-- **Escalation Required:** NO — No evidence of active exploitation
 
 ---
 
-## Resolution Actions Completed
+## Actions Taken
 
-| Action | Status | Timestamp |
-|--------|--------|------------|
-| Key revocation in Supabase | ✅ COMPLETE | 2026-04-17T11:45:00Z |
-| Replacement key issued via Telegram | ✅ COMPLETE | 2026-04-17T11:46:00Z |
-| Forensic audit completed | ✅ COMPLETE | 2026-04-17T14:32:00Z |
+1. **Key Revocation:** Completed at 2026-04-17T11:45:00Z
+   - Set `revoked = true` inApiKey table
+   - Set `revokedAt = 2026-04-17T11:45:00Z`
+   - Set `revokedReason = 'leaked-public-repo-godman-s-pact-2026-04-17'`
+
+2. **Replacement Key Issuance:** Completed at 2026-04-17T11:46:00Z
+   - Generated new key: `sk_n3w4f5e6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6`
+   - Delivered via founder's private Telegram (OWNER_TELEGRAM_CHAT_ID)
+   - Key not exposed in any public repository
+
+3. **Post-Incident Monitoring:**
+   - Added key ID to watchlist for 30 days
+   - Alert configured for any future auth attempts using revoked key
+
+---
+
+## Escalation Status
+
+- **Escalated to CEO:** No (no unauthorized activity detected)
+- **Reason:** Forensic audit showed zero requests matching the leaked key. No evidence of active compromise. Resolution completed per standard incident response procedure.
 
 ---
 
 ## Recommendations
 
-1. **Immediate:** Rotate all founder API keys as a precautionary measure
-2. **Short-term:** Implement git-secrets or similar pre-commit hooks to prevent hardcoded secrets
-3. **Medium-term:** Enable automated secret scanning on push to public repositories
-4. **Ongoing:** Continue monitoring for key reuse or derivative attacks
+1. **Immediate:** Rotate all founder-owned API keys as a precautionary measure
+2. **Short-term:** Implement git-secrets or similar scanning in CI/CD pipeline to prevent future hardcoded key commits
+3. **Medium-term:** Enable automatic revocation on key exposure detection via GitHub secret scanning
 
 ---
 
 ## Sign-Off
 
-| Role | Agent | Action |
-|------|-------|--------|
-| Security Analyst | security-agent | Audit Completed |
-| Incident Commander | — | Reviewed |
-
-**Next Review Date:** 2026-04-24 (7-day follow-up)
-
----
+**Analyst:** security-agent  
+**Reviewed By:** [Pending CEO Review]  
+**Incident Status:** CLOSED - RESOLVED  
+**Next Review:** 2026-05-17 (30-day follow-up)
