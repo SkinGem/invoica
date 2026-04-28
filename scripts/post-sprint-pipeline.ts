@@ -279,6 +279,12 @@ function createBugFixSprint(sprintName: string, tasks: CtoDecision['bugFixTasks'
     });
   }
 
+  // Defense in depth: never write an empty-tasks bugfix stub. Sprint-runner
+  // would pick it up, run nothing, post-sprint would fire again, infinite loop.
+  if (fixTasks.length === 0) {
+    log('createBugFixSprint: no actionable fix tasks — skipping empty stub creation');
+    return '';
+  }
   writeFileSync(fixFile, JSON.stringify({ tasks: fixTasks }, null, 2));
   return fixFile;
 }
@@ -413,11 +419,26 @@ async function main(): Promise<void> {
   // 3. CTO review
   log('CTO reviewing test results...');
   const decision = await ctoReview(testResult, sprintName);
+  // Loop-break guard: if tests genuinely succeeded (or no tests ran at all)
+  // override any spurious "fix" decision to "deploy". The CTO MiniMax was
+  // returning "fix" for 0-test sprints, which created empty bugfix stubs that
+  // sprint-runner kept picking up forever (incident 2026-04-28).
+  if (testResult.exitCode === 0 && testResult.failed === 0 && decision.decision === 'fix') {
+    log(`CTO decision overridden: 0 failures + clean exit — forcing deploy (was fix: ${decision.summary})`);
+    decision.decision = 'deploy';
+    decision.summary = `${testResult.total} tests, 0 failures — clean run, deploying.`;
+    decision.bugFixTasks = [];
+  }
   log(`CTO decision: ${decision.decision.toUpperCase()} — ${decision.summary}`);
 
   // 4. Act on decision
   if (decision.decision === 'fix') {
     const fixFile = createBugFixSprint(sprintName, decision.bugFixTasks, testResult);
+    if (!fixFile) {
+      log('No bugfix sprint queued (empty task list) — exiting post-sprint cleanly without deploy.');
+      saveReport(sprintName, testResult, decision);
+      return;
+    }
     log(`Bug-fix sprint created: ${fixFile}`);
 
     saveReport(sprintName, testResult, decision);
