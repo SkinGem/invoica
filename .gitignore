@@ -20,6 +20,10 @@ sandbox-credentials.md
 secrets/
 .secrets/
 
+# Auto-generated bugfix sprints — never commit (post-sprint-pipeline writes these locally)
+sprints/bugfix-*.json
+sprints/_parked-*/
+
 # Conway governance temp files
 .circuit-breaker.json
 x402-evm/node_modules/
