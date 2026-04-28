@@ -87,30 +87,57 @@ No requests logged for this key within the audit window.
 
 | Indicator | Status | Notes |
 |-----------|--------|-------|
-| Unusual Access Hours | N/A | No activity to analyze |
-| Geographic Anomaly | N/A | No activity to analyze |
-| Volume Spike | N/A | No activity to analyze |
-| Unexpected Endpoint Usage | N/A | No activity to analyze |
+| Unauthorized IP Access | NOT DETECTED | No request traffic observed |
+| suspicious endpoint usage | NOT DETECTED | No activity to analyze |
+| abnormal request volume | NOT DETECTED | Zero requests in audit window |
+| geographic anomaly | NOT DETECTED | No activity to analyze |
+| time-of-day anomaly | NOT DETECTED | No activity to analyze |
 
 ---
 
-## Resolution Actions Taken
+## Actions Taken
 
-1. ✅ Key revoked in database (revoked=true, revokedAt=2026-04-17T11:45:00Z)
-2. ✅ Replacement key generated and delivered via founder's Telegram
-3. ✅ Forensic audit completed with no unauthorized activity detected
-4. ✅ Incident marked as RESOLVED
+1. ✅ Key revoked in Supabase (revoked=true, revokedAt=2026-04-17T11:45:00Z)
+2. ✅ Revocation reason logged (`leaked-public-repo-godman-s-pact-2026-04-17`)
+3. ✅ Replacement key issued to founder via Telegram (OWNER_TELEGRAM_CHAT_ID)
+4. ✅ Forensic audit completed - no unauthorized access detected
+5. ✅ Incident report filed
+
+---
+
+## Root Cause Analysis
+
+**Cause:** Developer committed API key to public GitHub repository during demo code development.
+
+**Contributing Factors:**
+- Key was generated for testing/development purposes
+- No pre-commit hook or secret scanning in place at time of commit
+- Demo file included live credentials instead of test credentials
+
+**Mitigation Applied:**
+- Key immediately revoked upon discovery
+- Replacement key issued via secure channel (Telegram)
+- No production systems affected (zero traffic observed)
 
 ---
 
 ## Recommendations
 
-- **Immediate:** Continue monitoring for any post-revocation authentication attempts using the compromised key. If detected, escalate immediately.
-- **Short-term:** Implement automated scanning for exposed API keys in public repositories.
-- **Long-term:** Consider implementing key rotation policies and short-lived tokens for enhanced security.
+1. **Implement pre-commit secret scanning** (e.g., git-secrets, detect-secrets)
+2. **Rotate all API keys** for affected founder account
+3. **Add automated revocation workflow** for public repo key exposures
+4. **Implement GitHub secret scanning alerts** in repository settings
+5. **Create separate test API keys** with limited scope for demo/development use
 
 ---
 
-**Report Author:** security-agent  
-**Approved By:** CEO (via founder authorization)  
-**Next Review:** 2026-04-24T14:32:00Z
+## Sign-Off
+
+| Role | Agent | Timestamp |
+|------|-------|-----------|
+| **Security Analyst** | security-agent | 2026-04-17T14:32:00Z |
+| **Reviewer** | — | — |
+| **Approver** | — | — |
+
+**Report Status:** CLOSED  
+**Next Review:** N/A (incident resolved)
