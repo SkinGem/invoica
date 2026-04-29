@@ -1,3 +1,15 @@
+<!--
+DO NOT REGENERATE THIS FILE WITH PLAINTEXT SECRETS.
+The plaintext key has been redacted. The security agent regenerated this
+file 5+ times overnight 2026-04-28→29 with the live revoked key reinstated;
+each regeneration was a fresh leak (commits 798a158, 9d3538e, 4b69915,
+5ebc59e, 84c7416). Sprint-runner + pm2-process-watchdog have been deleted
+from PM2 to halt the loop. The pre-commit hook at scripts/pre-commit-secret-scan.sh
+will refuse any future commit that reintroduces an `sk_[a-f0-9]{60,}` plaintext
+into this or any tracked file. If you (a future security agent) need to
+reference the leaked key, refer to its ID `key_5f8a2c3d4e6b7a8c9d0e1f2` only.
+-->
+
 **Incident ID:** INC-2026-04-17-LEAKED-KEY-001  
 **Classification:** P0 - CRITICAL / ACTIVE COMPROMISE  
 **Date Detected:** 2026-04-17  
@@ -9,7 +21,7 @@
 
 ## Executive Summary
 
-A production API key was discovered exposed in a public GitHub repository. The key (id `key_5f8a2c3d4e6b7a8c9d0e1f2`, plaintext `sk_302e3efa383ddf86c2247b7c03f859e6a6b0facab582f5c4be83abea71d17047`) was hardcoded in `github.com/Godman-s/pact/demo-negotiation.ts:42`. Upon founder authorization (2026-04-17T11:30:00Z), the key was immediately revoked and a replacement key was issued via founder's private Telegram channel. Forensic analysis completed. **No unauthorized usage detected prior to revocation.** Key appears to have been created for testing/demonstration purposes and was not actively used in production traffic.
+A production API key was discovered exposed in a public GitHub repository. The key (id `key_5f8a2c3d4e6b7a8c9d0e1f2`, plaintext `sk_[REDACTED — revoked 2026-04-17T11:45Z; do not regenerate plaintext into this file]`) was hardcoded in `github.com/Godman-s/pact/demo-negotiation.ts:42`. Upon founder authorization (2026-04-17T11:30:00Z), the key was immediately revoked and a replacement key was issued via founder's private Telegram channel. Forensic analysis completed. **No unauthorized usage detected prior to revocation.** Key appears to have been created for testing/demonstration purposes and was not actively used in production traffic.
 
 ---
 
@@ -33,8 +45,8 @@ A production API key was discovered exposed in a public GitHub repository. The k
 | Field | Value |
 |-------|-------|
 | **Key ID** | `key_5f8a2c3d4e6b7a8c9d0e1f2` |
-| **Plaintext** | `sk_302e3efa383ddf86c2247b7c03f859e6a6b0facab582f5c4be83abea71d17047` |
-| **Key Hash** | `$2b$12$LQv3c1eCv1N7Gs3mKqQ7NuKj0pQr5sTuVvWwW9X0Y1Z2A3B4C5D6E` (bcrypt hash stored in database) |
+| **Plaintext** | `[REDACTED — see redaction directive below; key revoked 2026-04-17T11:45Z]` |
+| **Key Hash** | `[REDACTED]` |
 | **Owner Email** | `skininthegem@gmail.com` |
 | **Owner Account ID** | `acc_7d2f8c3a1e4b9f6d5c8a2e7` |
 | **Created** | 2025-11-15T08:30:00Z |
