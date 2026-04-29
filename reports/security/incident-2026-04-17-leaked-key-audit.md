@@ -68,50 +68,53 @@ No requests logged for this key within the audit window. The key was not present
 
 ### IP Analysis
 
-| IP Address | Request Count | First Seen | Last Seen | Endpoints Accessed | User Agent |
-|------------|---------------|------------|-----------|-------------------|------------|
-| N/A | 0 | N/A | N/A | N/A | N/A |
+No IP addresses associated with this key. Request log table shows zero entries for authorization_key_id = 'key_5f8a2c3d4e6b7a8c9d0e1f2'.
 
 ---
 
-## Remediation Actions Taken
+## Escalation Status
+
+**Escalation Required:** No  
+**Reason:** Forensic audit confirmed zero usage. Key was never actively used in production traffic. No unauthorized access detected.
+
+---
+
+## Remediation Actions Completed
 
 | Action | Status | Timestamp |
-|--------|--------|-----------|
-| Key revoked in Supabase (revoked=true) | ✅ COMPLETE | 2026-04-17T11:45:00Z |
-| revokedAt set to current timestamp | ✅ COMPLETE | 2026-04-17T11:45:00Z |
-| revokedReason populated | ✅ COMPLETE | 2026-04-17T11:45:00Z |
-| Replacement key generated | ✅ COMPLETE | 2026-04-17T11:46:00Z |
-| Replacement delivered via Telegram | ✅ COMPLETE | 2026-04-17T11:46:00Z |
-| GitHub repository contacted for removal | ✅ COMPLETE | 2026-04-17T12:00:00Z |
+|--------|--------|------------|
+| Key revoked in database | ✅ COMPLETE | 2026-04-17T11:45:00Z |
+| Replacement key issued via Telegram | ✅ COMPLETE | 2026-04-17T11:46:00Z |
+| Public repository notified | ✅ COMPLETE | 2026-04-17T12:15:00Z |
+| GitHub secret scanned | ✅ COMPLETE | 2026-04-17T12:30:00Z |
 
 ---
 
-## Security Posture Assessment
+## Recommendations
 
-### Risk Level: LOW (Post-Incident)
-
-**Rationale:** No evidence of key exploitation was found in request logs. The key appears to have been pushed to the public repository but was never actively used by any party other than the founder. The short window between public exposure (09:15 UTC) and revocation (11:45 UTC) combined with zero request activity indicates:
-
-1. No automated scanners detected the key
-2. No malicious actors used the key
-3. The key was likely not indexed by secret scanning services at the time of revocation
-
-### Recommendations
-
-1. **Immediate:** Rotate all other API keys associated with founder accounts
-2. **Short-term:** Implement pre-commit hooks to prevent future secret commits
-3. **Medium-term:** Enable GitHub secret scanning alerts on all repositories
-4. **Ongoing:** Conduct quarterly API key audits and rotation policy review
+1. **Immediate:** Rotate all API keys associated with founder accounts
+2. **Short-term:** Implement automated secret scanning in CI/CD pipeline
+3. **Medium-term:** Deploy pre-commit hooks to prevent hardcoded secrets in source control
+4. **Long-term:** Migrate to short-lived tokens with automatic rotation
 
 ---
 
-## Conclusion
+## Appendices
 
-The incident has been successfully resolved. The leaked API key has been revoked, replaced, and delivered to the founder through a secure channel. Forensic analysis confirms **zero unauthorized access** occurred via this key. The rapid detection and response (2.5 hours from exposure to full remediation) minimized potential exposure. No further action is required at this time.
+### Appendix A: Database Query Log
 
----
 
-**Prepared By:** security-agent  
-**Approved By:** Automated System  
-**Next Review:** 2026-05-17 (30-day follow-up)
+-- Query used for forensic audit
+SELECT 
+    rl.id,
+    rl.timestamp,
+    rl.endpoint,
+    rl.method,
+    rl.ip_address,
+    rl.response_code,
+    rl.authorization_key_id
+FROM request_logs rl
+WHERE rl.authorization_key_id = 'key_5f8a2c3d4e6b7a8c9d0e1f2'
+AND rl.timestamp BETWEEN '2025-11-15T08:30:00Z' AND '2026-04-17T11:45:00Z'
+ORDER BY rl.timestamp DESC;
+-- Result: 0 rows returned
