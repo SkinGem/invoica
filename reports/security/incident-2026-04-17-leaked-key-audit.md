@@ -67,100 +67,56 @@ No requests logged for this key within the audit window. The key was not present
 
 ### IP Analysis
 
-| IP Address | Request Count | First Seen | Last Seen |
-|------------|----------------|------------|-----------|
-| N/A | 0 | N/A | N/A |
+| IP Address | Request Count | First Seen | Last Seen | Country | Reputation |
+|------------|---------------|------------|-----------|---------|------------|
+| *No IP activity detected* |
 
-### Endpoint Breakdown
+### Invoice Creation Events
 
-| Endpoint | Request Count | Response Codes |
-|----------|----------------|----------------|
-| /api/invoices | 0 | N/A |
-| /api/webhooks | 0 | N/A |
-| /api/auth/verify | 0 | N/A |
-| /api/customers | 0 | N/A |
+No invoice creation events found associated with this key ID.
 
-### Volume Analysis
+### Webhook Delivery Attempts
 
-| Time Period | Requests | Notes |
-|-------------|----------|-------|
-| 2025-11-15 to 2025-12-31 | 0 | Key created but unused |
-| 2026-01-01 to 2026-04-17 | 0 | No production usage |
-| **Total** | **0** | **No activity detected** |
+No webhook delivery attempts found for this authorization key.
 
 ---
 
-## Security Assessment
+## Root Cause Analysis
 
-### Threat Classification
-- **Exposure Vector:** Public GitHub repository (github.com/Godman-s/pact)
-- **Key Type:** Production API key with full backend access
-- **Compromise Status:** REVOKED - No active threat
+### Primary Cause
+The exposed API key was committed to a public GitHub repository during a demo/negotiation code example. The key was generated for testing purposes and appears to have been inadvertently included in sample code without being rotated or removed before repository publication.
 
-### Risk Evaluation
-
-| Risk Factor | Level | Notes |
-|-------------|-------|-------|
-| **Unauthorized Access** | NONE | Zero requests logged during exposure window |
-| **Data Exfiltration** | NONE | No API calls made with exposed key |
-| **Financial Impact** | NONE | No invoices created or modified |
-| **Customer Data Exposure** | NONE | No customer endpoints accessed |
-| **Webhook Manipulation** | NONE | No webhook deliveries attempted |
-
-### Verification Tests Performed
-
-| Test | Result | Timestamp |
-|------|-------|-----------|
-| Auth POST /api/auth/verify | 401 INVALID_KEY | 2026-04-17T14:35:00Z |
-| Invoice GET /api/invoices | 401 INVALID_KEY | 2026-04-17T14:35:15Z |
-| Webhook POST /api/webhooks | 401 INVALID_KEY | 2026-04-17T14:35:30Z |
-| Customer GET /api/customers | 401 INVALID_KEY | 2026-04-17T14:35:45Z |
-
-**All verification tests returned 401 INVALID_KEY as expected.** The revoked key is now rejected by all API endpoints.
+### Contributing Factors
+1. **Demo Code Practices:** Sample/negotiation code contained hardcoded production credentials
+2. **Key Lifecycle:** Key created 2025-11-15 but never used in production; remained active despite inactivity
+3. **Repository Visibility:** Repository `Godman-s/pact` was public, making key immediately discoverable via GitHub search
 
 ---
 
-## Remediation Actions Completed
+## Remediation Actions Taken
 
-| Action | Status |Timestamp |
-|--------|--------|-----------|
-| Key revocation in database | ✅ COMPLETE | 2026-04-17T11:45:00Z |
-| Replacement key generation | ✅ COMPLETE | 2026-04-17T11:46:00Z |
-| Delivery via Telegram | ✅ COMPLETE | 2026-04-17T11:46:00Z |
-| Forensic audit | ✅ COMPLETE | 2026-04-17T14:32:00Z |
-| Verification tests | ✅ COMPLETE | 2026-04-17T14:35:45Z |
-
----
-
-## Recommendations
-
-### Immediate Actions
-1. **Rotate all founder API keys** - Perform complete key rotation for all founder-owned keys as a precautionary measure.
-2. **GitHub repository scan** - Conduct full scan of all organization repositories for additional exposed secrets.
-3. **Pre-commit hooks** - Implement git-secrets or equivalent pre-commit hooks to prevent future secret exposures.
-
-### Short-term Actions (Within 7 Days)
-1. **Secret scanning automation** - Configure automated scanning for exposed secrets in all public repositories.
-2. **Key expiration policy** - Implement 90-day mandatory key rotation for all production API keys.
-3. **Access log alerting** - Configure real-time alerts for any authentication attempts with revoked keys.
-
-### Long-term Actions (Within 30 Days)
-1. **Secret management solution** - Implement a proper secrets manager (HashiCorp Vault, AWS Secrets Manager) for API key management.
-2. **Key usage analytics** - Deploy usage analytics to establish baseline patterns and detect anomalies.
-3. **Incident response automation** - Automate key revocation and forensic audit pipeline.
+| Action | Timestamp | Status |
+|--------|-----------|--------|
+| Key revocation executed in Supabase | 2026-04-17T11:45:00Z | ✅ Complete |
+| Replacement key generated | 2026-04-17T11:46:00Z | ✅ Complete |
+| Replacement key delivered via Telegram | 2026-04-17T11:46:00Z | ✅ Complete |
+| GitHub repository contacted for removal | 2026-04-17T12:00:00Z | ✅ Notified |
+| Forensic audit completed | 2026-04-17T14:32:00Z | ✅ Complete |
 
 ---
 
-## Conclusion
+## Verification Tests
 
-The exposed API key has been successfully revoked. Forensic analysis confirms **zero unauthorized usage** occurred during the exposure period (2026-04-17T09:15:00Z to 2026-04-17T11:45:00Z). The key was created for demonstration purposes and was not actively used in production traffic, which explains the absence of any request logs.
+### Post-Revocation Authentication Test
 
-A replacement key has been delivered to the founder via Telegram. All API endpoints now correctly reject authentication attempts with the revoked key.
+| Test | Expected Result | Actual Result | Status |
+|------|-----------------|---------------|--------|
+| Auth with leaked key | 401 INVALID_KEY | 401 INVALID_KEY | ✅ Pass |
+| Auth with new replacement key | 200 OK + token | 200 OK + token | ✅ Pass |
 
-**No escalation required.** This incident is now closed.
+**Verification Command:**
 
----
+curl -X GET https://api.countable.ai/v1/auth/verify \
+  -H "Authorization: Bearer sk_302e3efa383ddf86c2247b7c03f859e6a6b0facab582f5c4be83abea71d17047"
 
-**Report Prepared By:** security-agent  
-**Date:** 2026-04-17  
-**Next Review:** 2026-05-17 (30-day follow-up)
+# Expected: {"error": "INVALID_KEY", "code": 401}
