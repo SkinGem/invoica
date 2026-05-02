@@ -13,12 +13,25 @@
       "description": "Implement W-9 collection at AI agent operator onboarding to enable 2026 tax year 1099 reporting (deadline: Dec 31, 2026 ",
       "context": "Auto-extracted from watchdog briefing: 2026-04-03-us-tax-briefing.md\n\nFull action text:\nURGENT: Implement W-9 collection at AI agent operator onboarding to enable 2026 tax year 1099 reporting (deadline: Dec 31, 2026 for calendar year transactions)\n\n--- IMPORTANT ---\nThis task was auto-generated. The CEO agent must refine the `deliverables` (specific file paths + acceptance criteria) before sprint-runner dispatches. The watchdog describes WHAT to do; the swarm needs HOW. If deliverables remain empty, agents will abort on pre-flight.",
       "deliverables": {
-        "code": [],
-        "tests": [],
-        "docs": []
+        "code": [
+          "supabase/migrations/012_w9_collection.sql",
+          "backend/src/services/tax/w9-collection.ts",
+          "backend/src/routes/onboarding.ts",
+          "backend/src/services/tax/types.ts"
+        ],
+        "tests": [
+          "backend/src/services/tax/__tests__/w9-collection.test.ts",
+          "backend/src/routes/__tests__/onboarding.test.ts"
+        ],
+        "docs": [
+          "docs/tax/w9-collection.md"
+        ]
       },
-      "needs_refinement": true,
-      "source_briefing": "2026-04-03-us-tax-briefing.md"
+      "needs_refinement": false,
+      "source_briefing": "2026-04-03-us-tax-briefing.md",
+      "acceptance": "When a new AI agent operator completes onboarding, the system must capture and store W-9 information (legal name, TIN/EIN, business classification, address, signature, date) in a dedicated table with encrypted TIN storage, validate TIN format (SSN: XXX-XX-XXXX or EIN: XX-XXXXXXX), enforce required fields per IRS W-9 instructions, and provide a GET endpoint returning collection status and sanitized W-9 data (TIN masked) for operators who have submitted forms, enabling downstream 1099 generation for the 2026 tax year.",
+      "refined_at": "2026-05-02T15:59:13.251Z",
+      "refined_by": "ceo-refines-pending-sprint.ts"
     },
     {
       "id": "WD-UST-20260403-02",
@@ -30,12 +43,26 @@
       "description": "Build real-time FMV tracking integration with pricing oracle for every USDC settlement transaction on Base (IRS property",
       "context": "Auto-extracted from watchdog briefing: 2026-04-03-us-tax-briefing.md\n\nFull action text:\nURGENT: Build real-time FMV tracking integration with pricing oracle for every USDC settlement transaction on Base (IRS property treatment compliance)\n\n--- IMPORTANT ---\nThis task was auto-generated. The CEO agent must refine the `deliverables` (specific file paths + acceptance criteria) before sprint-runner dispatches. The watchdog describes WHAT to do; the swarm needs HOW. If deliverables remain empty, agents will abort on pre-flight.",
       "deliverables": {
-        "code": [],
-        "tests": [],
-        "docs": []
+        "code": [
+          "backend/src/services/tax/fmv-oracle.ts",
+          "backend/src/services/tax/settlement-fmv-tracker.ts",
+          "backend/src/middleware/fmv-capture.ts",
+          "backend/src/config/oracle-providers.ts"
+        ],
+        "tests": [
+          "backend/src/services/tax/__tests__/fmv-oracle.test.ts",
+          "backend/src/services/tax/__tests__/settlement-fmv-tracker.test.ts",
+          "backend/src/middleware/__tests__/fmv-capture.test.ts"
+        ],
+        "docs": [
+          "docs/tax/fmv-tracking.md"
+        ]
       },
-      "needs_refinement": true,
-      "source_briefing": "2026-04-03-us-tax-briefing.md"
+      "needs_refinement": false,
+      "source_briefing": "2026-04-03-us-tax-briefing.md",
+      "acceptance": "Every USDC settlement transaction on Base network automatically captures and persists the USD fair market value at the exact block timestamp via a pricing oracle (Chainlink or fallback), storing FMV data in a tax-compliant format (ISO timestamp, price source, USDC amount, USD equivalent) that can be queried for IRS Form 8949 property disposition reporting, with <2 second latency from settlement finality to FMV record creation.",
+      "refined_at": "2026-05-02T15:59:20.928Z",
+      "refined_by": "ceo-refines-pending-sprint.ts"
     },
     {
       "id": "WD-UST-20260403-03",
@@ -47,12 +74,25 @@
       "description": "Commission 50-state marketplace facilitator legal analysis specific to AI agent platform and x402 protocol to determine ",
       "context": "Auto-extracted from watchdog briefing: 2026-04-03-us-tax-briefing.md\n\nFull action text:\nHIGH: Commission 50-state marketplace facilitator legal analysis specific to AI agent platform and x402 protocol to determine sales tax collection obligations\n\n--- IMPORTANT ---\nThis task was auto-generated. The CEO agent must refine the `deliverables` (specific file paths + acceptance criteria) before sprint-runner dispatches. The watchdog describes WHAT to do; the swarm needs HOW. If deliverables remain empty, agents will abort on pre-flight.",
       "deliverables": {
-        "code": [],
-        "tests": [],
-        "docs": []
+        "code": [
+          "backend/src/services/tax/marketplace-facilitator-analyzer.ts",
+          "backend/src/services/tax/state-nexus-rules.ts",
+          "backend/src/config/marketplace-facilitator-thresholds.ts"
+        ],
+        "tests": [
+          "backend/src/services/tax/__tests__/marketplace-facilitator-analyzer.test.ts",
+          "backend/src/services/tax/__tests__/state-nexus-rules.test.ts"
+        ],
+        "docs": [
+          "docs/tax/marketplace-facilitator-analysis.md",
+          "docs/tax/x402-protocol-tax-implications.md"
+        ]
       },
-      "needs_refinement": true,
-      "source_briefing": "2026-04-03-us-tax-briefing.md"
+      "needs_refinement": false,
+      "source_briefing": "2026-04-03-us-tax-briefing.md",
+      "acceptance": "A comprehensive 50-state marketplace facilitator analysis document exists in docs/tax/ detailing which states classify Invoica's AI agent platform and x402 protocol transactions as marketplace-facilitated sales, including economic nexus thresholds, registration requirements, and collection obligations per state. The analyzer service can programmatically determine if a given transaction triggers marketplace facilitator obligations based on buyer location, transaction amount, and cumulative volume, with test coverage demonstrating correct classification for at least 10 representative states including California, Texas, New York, and Washington.",
+      "refined_at": "2026-05-02T15:59:31.210Z",
+      "refined_by": "ceo-refines-pending-sprint.ts"
     },
     {
       "id": "WD-UST-20260403-04",
@@ -64,12 +104,28 @@
       "description": "Develop automated Form 1099 generation system with annual payment aggregation by EIN/SSN and e-filing capability",
       "context": "Auto-extracted from watchdog briefing: 2026-04-03-us-tax-briefing.md\n\nFull action text:\nHIGH: Develop automated Form 1099 generation system with annual payment aggregation by EIN/SSN and e-filing capability\n\n--- IMPORTANT ---\nThis task was auto-generated. The CEO agent must refine the `deliverables` (specific file paths + acceptance criteria) before sprint-runner dispatches. The watchdog describes WHAT to do; the swarm needs HOW. If deliverables remain empty, agents will abort on pre-flight.",
       "deliverables": {
-        "code": [],
-        "tests": [],
-        "docs": []
+        "code": [
+          "backend/src/services/tax/form1099Generator.ts",
+          "backend/src/services/tax/form1099Aggregator.ts",
+          "backend/src/services/tax/form1099EFiler.ts",
+          "backend/src/routes/tax-forms.ts",
+          "backend/src/config/irs-forms.ts",
+          "supabase/migrations/012_add_form1099_tables.sql"
+        ],
+        "tests": [
+          "backend/src/services/tax/__tests__/form1099Generator.test.ts",
+          "backend/src/services/tax/__tests__/form1099Aggregator.test.ts",
+          "backend/src/services/tax/__tests__/form1099EFiler.test.ts"
+        ],
+        "docs": [
+          "docs/tax/form-1099-generation.md"
+        ]
       },
-      "needs_refinement": true,
-      "source_briefing": "2026-04-03-us-tax-briefing.md"
+      "needs_refinement": false,
+      "source_briefing": "2026-04-03-us-tax-briefing.md",
+      "acceptance": "The system must automatically aggregate all payments made to each unique EIN/SSN within a calendar year, generate IRS-compliant Form 1099-NEC PDF and XML files for recipients meeting the $600 threshold, store generated forms in the database with audit trail, and expose a POST /api/tax-forms/1099/generate endpoint that triggers generation for a given tax year and returns a list of generated form IDs with recipient counts and total amounts reported.",
+      "refined_at": "2026-05-02T15:59:39.390Z",
+      "refined_by": "ceo-refines-pending-sprint.ts"
     },
     {
       "id": "WD-UST-20260403-05",
@@ -81,12 +137,22 @@
       "description": "Monitor Treasury RFI outcome on AI commerce taxation for potential compliance protocol changes (expected H1 2026)",
       "context": "Auto-extracted from watchdog briefing: 2026-04-03-us-tax-briefing.md\n\nFull action text:\nHIGH: Monitor Treasury RFI outcome on AI commerce taxation for potential compliance protocol changes (expected H1 2026)\n\n--- IMPORTANT ---\nThis task was auto-generated. The CEO agent must refine the `deliverables` (specific file paths + acceptance criteria) before sprint-runner dispatches. The watchdog describes WHAT to do; the swarm needs HOW. If deliverables remain empty, agents will abort on pre-flight.",
       "deliverables": {
-        "code": [],
-        "tests": [],
-        "docs": []
+        "code": [
+          "backend/src/services/tax/treasury-rfi-monitor.ts",
+          "backend/src/config/compliance-protocols.ts"
+        ],
+        "tests": [
+          "backend/src/services/tax/__tests__/treasury-rfi-monitor.test.ts"
+        ],
+        "docs": [
+          "docs/tax/treasury-rfi-monitoring.md"
+        ]
       },
-      "needs_refinement": true,
-      "source_briefing": "2026-04-03-us-tax-briefing.md"
+      "needs_refinement": false,
+      "source_briefing": "2026-04-03-us-tax-briefing.md",
+      "acceptance": "A scheduled background service polls a configurable endpoint or RSS feed for Treasury RFI updates on AI commerce taxation, logs detected changes with structured metadata (date, summary, impact assessment), and emits an alert event when new guidance is published. The compliance-protocols config file contains a versioned schema for protocol adjustments with a placeholder entry for 'treasury-ai-commerce-2026'. Documentation explains how to configure the monitor, interpret alerts, and update compliance protocols when guidance is finalized.",
+      "refined_at": "2026-05-02T15:59:46.696Z",
+      "refined_by": "ceo-refines-pending-sprint.ts"
     }
   ]
 }
