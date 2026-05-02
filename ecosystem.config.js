@@ -480,5 +480,46 @@ module.exports = {
       out_file: "/home/invoica/apps/Invoica/logs/watchdog-out.log",
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
+    {
+      // briefing-to-sprint: convert new watchdog briefings into pending sprint tasks
+      // Runs after the 07:00 UTC tax watchdogs, before ceo-refines at 08:30
+      name: "briefing-to-sprint",
+      script: "./scripts/briefing-to-sprint.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "0 8 * * *",
+      kill_timeout: 30000,
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json"
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/briefing-to-sprint-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/briefing-to-sprint-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
+      // ceo-refines-pending-sprint: CEO (Claude) refines auto-generated tasks
+      // with concrete deliverables + acceptance criteria so sprint-runner agents
+      // don't abort on pre-flight. Runs after briefing-to-sprint at 08:00.
+      name: "ceo-refines",
+      script: "./scripts/ceo-refines-pending-sprint.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "30 8 * * *",
+      kill_timeout: 180000,    // 3 min: ~5 Claude calls per sprint @ ~10s each
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json"
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/ceo-refines-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/ceo-refines-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
   ]
 };
