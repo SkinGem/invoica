@@ -1,0 +1,22 @@
+{
+  "files": {
+    "2026-04-02-eu-japan-tax-briefing.md": {
+      "hash": "c3f2c7c086feb3a0",
+      "processedAt": "2026-05-02T15:50:36.393Z",
+      "sprintFile": "",
+      "taskIds": []
+    },
+    "2026-04-03-us-tax-briefing.md": {
+      "hash": "04a986f15f8a1922",
+      "processedAt": "2026-05-02T15:50:36.395Z",
+      "sprintFile": "sprints/week-119.json",
+      "taskIds": [
+        "WD-UST-20260403-01",
+        "WD-UST-20260403-02",
+        "WD-UST-20260403-03",
+        "WD-UST-20260403-04",
+        "WD-UST-20260403-05"
+      ]
+    }
+  }
+}
