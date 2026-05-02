@@ -36,6 +36,14 @@ End-to-end test session `d6c07090-3b73-47ea-8bcc-a9404da11c90` (2026-04-28 08:04
 
 All idempotent. Both callbacks should be in AsterPay's `callbacks_ledger` for that session.
 
+### Mastercard demo cycle log
+
+| Cycle | Sponsor / Visit | Amount | Invoica Session | Settled (UTC) | DRS Receipt | AsterPay confirmation |
+|-------|-----------------|--------|------------------|----------------|--------------|------------------------|
+| 1     | DemoBio-001 / visit-001 | €50 | `5b378bac-3a82-4d62-91d9-f4be6570c535` | 2026-05-01 10:39:37 | `drs-090e01e5-c662-46c1-aa5e-9de52ad63864` | **confirmed bilateral 2026-05-02** — Petteri: both callbacks ledgered, `provider_ref sandbox-5b378bac`, our acks logged 200 first try |
+| 2     | DemoBio-001 / visit-002 | €50 | (pending Sat 2026-05-03 09:00 Paris auto-fire via `trig_01YAsky1a95d3wi1HMpncSy9`) | — | — | — |
+| 3     | DemoBio-001 / visit-003 | €50 | (pending Mon 2026-05-05 09:00 Paris auto-fire via `trig_01CYQww8qV9e8BkQEzY3qnzB`) | — | — | — |
+
 ## AsterPay partnership state
 
 Petteri (AsterPay BD/dev) shipped two fixes 2026-04-27:
