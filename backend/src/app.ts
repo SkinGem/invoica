@@ -86,13 +86,13 @@ app.use('/.well-known', wellKnownRoutes);
 app.use(companyRoutes);
 app.use(billingRoutes);
 app.use(clinpayRouter);
+app.use(apiKeyRoutes);   // public: dashboard creates first key with no api-key header (chicken-and-egg)
+app.use(webhookRoutes);  // public: receive-side path used by external webhooks
 app.use(authenticate, invoiceDownloadRoutes);
 app.use('/v1/pact', pactSessionRoutes);
 app.use(authenticate, invoiceStatsRoutes);
 app.use(authenticate, invoiceExportRoutes);
 app.use(authenticate, invoiceRoutes);
-app.use(apiKeyRoutes);
-app.use(webhookRoutes);
 app.use(authenticate, settlementSummaryRoutes);
 app.use(authenticate, settlementRoutes);
 app.use(authenticate, aiInferenceRoutes);
