@@ -35,6 +35,19 @@
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
+// Load .env explicitly. PM2 doesn't auto-load dotenv files, so when this script
+// runs via cron_restart it has no ANTHROPIC_API_KEY unless we read it ourselves.
+// Bug observed 2026-05-06: ceo-refines fired daily but refined 0 of 65 tasks
+// because process.env.ANTHROPIC_API_KEY was undefined.
+function loadDotenv(path: string): void {
+  if (!existsSync(path)) return;
+  for (const line of readFileSync(path, 'utf8').split('\n')) {
+    const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+}
+loadDotenv(join(process.cwd(), '.env'));
+
 const SPRINTS_DIR = 'sprints';
 const MODEL = process.env.CEO_REFINER_MODEL || 'claude-sonnet-4-5-20250929';
 const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
