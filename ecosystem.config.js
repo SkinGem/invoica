@@ -481,6 +481,29 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
+      // anthropic-balance-watchdog: 1-token canary call. If credits are
+      // depleted or key invalid, fires Telegram. Runs at 06:00 UTC — before
+      // tax-watchdogs (07:00), briefing-to-sprint (08:00), and ceo-refines
+      // (08:30) so a depleted balance is caught before the day's work tries
+      // to run on broken infra.
+      name: "anthropic-balance-watchdog",
+      script: "./scripts/anthropic-balance-watchdog.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "0 6 * * *",
+      kill_timeout: 30000,
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json"
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/anthropic-balance-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/anthropic-balance-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
       // briefing-to-sprint: convert new watchdog briefings into pending sprint tasks
       // Runs after the 07:00 UTC tax watchdogs, before ceo-refines at 08:30
       name: "briefing-to-sprint",
