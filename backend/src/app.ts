@@ -90,6 +90,7 @@ app.use('/.well-known', wellKnownRoutes);
 // M1-SEC-01 (plan §3.1): authenticate all read-side routes that expose platform data.
 app.use(companyRoutes);
 app.use(billingRoutes);
+app.use(billingPayAsYouGoRoutes);  // /v1/billing/topup, /v1/billing/balance — must be ABOVE authenticate-mounted routes (does its own dual auth)
 app.use(clinpayRouter);
 app.use(apiKeyRoutes);   // public: dashboard creates first key with no api-key header (chicken-and-egg)
 app.use(webhookRoutes);  // public: receive-side path used by external webhooks
@@ -112,7 +113,6 @@ app.use(authenticate, reputationHistoryRoutes);
 app.use(authenticate, metricsRoutes);
 app.use(authenticate, taxRoutes);
 app.use(authenticate, agentRoutes);
-app.use(billingPayAsYouGoRoutes);  // /v1/billing/topup, /v1/billing/balance — does its own dual auth (Supabase JWT or x-api-key)
 app.use('/v1/sap', authenticate, sapRoutes);
 
 app.use((_req, res) => {
