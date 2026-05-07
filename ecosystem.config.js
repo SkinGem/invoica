@@ -481,6 +481,29 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
+      // token-budget-watchdog: hourly check on cumulative supervisor review
+      // count from sprint-runner-out.log (each review ≈ 50K Sonnet tokens).
+      // Halts sprint-runner if 24h reviews exceed budget. Built after the
+      // 2026-05-06 incident where sprint-runner burned $300-500/day in 0%-
+      // approval-rate review loops while shipping zero commits.
+      name: "token-budget-watchdog",
+      script: "./scripts/token-budget-watchdog.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "0 * * * *",   // every hour at :00
+      kill_timeout: 30000,
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json"
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/token-budget-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/token-budget-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
       // anthropic-balance-watchdog: 1-token canary call. If credits are
       // depleted or key invalid, fires Telegram. Runs at 06:00 UTC — before
       // tax-watchdogs (07:00), briefing-to-sprint (08:00), and ceo-refines
