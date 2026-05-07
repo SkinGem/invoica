@@ -29,6 +29,20 @@ export interface SettlementFeeResult {
   reason?: string;
 }
 
+/**
+ * Fire-and-forget wrapper. Use from any code path that flips an invoice to
+ * SETTLED — never blocks the settlement response, never throws.
+ */
+export function triggerSettlementFee(invoiceId: string): void {
+  applySettlementFee(invoiceId)
+    .then(r => {
+      if (!r.charged && r.reason !== 'no issuer_customer_id (legacy invoice)' && r.reason !== 'already processed') {
+        console.warn(`[settlement-fee] not charged invoice=${invoiceId}: ${r.reason}`);
+      }
+    })
+    .catch(err => console.error(`[settlement-fee] hook crash invoice=${invoiceId}: ${(err as Error).message}`));
+}
+
 export async function applySettlementFee(invoiceId: string): Promise<SettlementFeeResult> {
   const sb = getSb();
 

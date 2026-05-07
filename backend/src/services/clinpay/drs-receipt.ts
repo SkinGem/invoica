@@ -142,6 +142,10 @@ export async function markInvoiceSettled(
     .update({ status: 'SETTLED', settledAt, paymentDetails: merged })
     .eq('id', invoiceId);
   if (updErr) throw new Error(`markInvoiceSettled update: ${updErr.message}`);
+
+  // Fire-and-forget billing hook.
+  const { triggerSettlementFee } = await import('../billing/settlement-fee');
+  triggerSettlementFee(invoiceId);
 }
 
 /**

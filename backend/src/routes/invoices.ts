@@ -807,6 +807,13 @@ router.post('/v1/invoices/bulk/status', async (req: Request, res: Response, next
       .select('id');
     if (error) throw error;
     const updatedIds = (data || []).map((r: any) => r.id);
+
+    // Fire-and-forget billing hook for each newly-settled invoice.
+    if (status === 'SETTLED' && updatedIds.length > 0) {
+      const { triggerSettlementFee } = await import('../services/billing/settlement-fee');
+      for (const invId of updatedIds) triggerSettlementFee(invId);
+    }
+
     res.json({ success: true, data: { updated: updatedIds.length, ids: updatedIds } });
   } catch (err) { next(err); }
 });
@@ -990,6 +997,13 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
       .single();
 
     if (error) throw error;
+
+    // Fire-and-forget billing hook on SETTLED transition.
+    if (status === 'SETTLED') {
+      const { triggerSettlementFee } = await import('../services/billing/settlement-fee');
+      triggerSettlementFee(String(id));
+    }
+
     res.json({ success: true, data: mapInvoice(data) });
   } catch (err) {
     next(err);

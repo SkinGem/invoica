@@ -247,11 +247,9 @@ export async function markAsSettled(
     },
   });
 
-  // Settlement fee — fire-and-forget so a slow Stripe call can't block the
-  // settlement response. Errors are logged inside; idempotent at DB level.
-  import('./billing/settlement-fee')
-    .then(m => m.applySettlementFee(invoiceId))
-    .catch(err => console.error(`[markAsSettled] fee hook error: ${(err as Error).message}`));
+  // Fire-and-forget billing hook.
+  const { triggerSettlementFee } = await import('./billing/settlement-fee');
+  triggerSettlementFee(invoiceId);
 
   return updatedInvoice as typeof updatedInvoice;
 }
