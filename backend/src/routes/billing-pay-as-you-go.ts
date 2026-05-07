@@ -1,12 +1,15 @@
 // billing-pay-as-you-go.ts — top-up + balance endpoints for the M2 billing surface.
 //
-// Mounted behind `authenticate` so req.customer.{id,email} is always present.
-// The legacy billing.ts (Conway-Edition placeholder) lives alongside this and
-// is kept for the existing /v1/billing/status endpoint until the dashboard
-// migrates fully.
+// Dual-auth: accepts EITHER a Supabase JWT (dashboard) OR an x-api-key
+// (programmatic clients). Mirrors the existing /v1/billing/status pattern.
+//
+// The customer identity is the Supabase user.id (when JWT) or ApiKey.customerId
+// (when x-api-key). For the dashboard path, we look up the user's email via
+// Supabase auth and lazy-create the Customer row keyed on user.id.
 import { Router, Request, Response } from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { createTopupCheckoutSession, getOrCreateStripeCustomer } from '../lib/stripe';
+import { findApiKeyByKey } from '../services/api-keys';
 
 const router = Router();
 
@@ -18,8 +21,36 @@ function dashboardUrl(): string {
   return process.env.DASHBOARD_BASE_URL || 'https://app.invoica.ai';
 }
 
+interface AuthedCustomer { id: string; email: string }
+
+/**
+ * Resolve the customer identity from either a Supabase JWT (dashboard) or an
+ * x-api-key header (programmatic). Returns null when neither is present/valid.
+ */
+async function resolveCustomer(req: Request): Promise<AuthedCustomer | null> {
+  const auth = req.headers.authorization;
+  if (auth?.startsWith('Bearer ')) {
+    const token = auth.slice(7);
+    const anonKey = process.env.SUPABASE_ANON_KEY;
+    if (!anonKey) return null;
+    const sb = createClient(process.env.SUPABASE_URL!, anonKey);
+    const { data } = await sb.auth.getUser(token);
+    if (data.user?.id) {
+      return { id: data.user.id, email: data.user.email || `${data.user.id}@dashboard.invoica.ai` };
+    }
+  }
+  const apiKey = (req.headers['x-api-key'] as string | undefined)?.trim();
+  if (apiKey) {
+    const record = await findApiKeyByKey(apiKey);
+    if (record?.isActive) {
+      return { id: record.customerId, email: record.customerEmail };
+    }
+  }
+  return null;
+}
+
 router.post('/v1/billing/topup', async (req: Request, res: Response): Promise<void> => {
-  const customer = req.customer;
+  const customer = await resolveCustomer(req);
   if (!customer) {
     res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
     return;
@@ -57,14 +88,13 @@ router.post('/v1/billing/topup', async (req: Request, res: Response): Promise<vo
 });
 
 router.get('/v1/billing/balance', async (req: Request, res: Response): Promise<void> => {
-  const customer = req.customer;
+  const customer = await resolveCustomer(req);
   if (!customer) {
     res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Authentication required' } });
     return;
   }
 
   try {
-    // Ensure Customer + Credit rows exist (lazy-create on first balance check).
     await getOrCreateStripeCustomer(customer.id, customer.email);
     const sb = getSb();
     const { data: credit } = await sb

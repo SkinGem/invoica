@@ -1,117 +1,213 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { fetchBillingStatus, type BillingStatus } from '@/lib/api-client';
+import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import {
+  fetchBillingBalance,
+  createTopupSession,
+  type BillingBalance,
+  type CreditTxn,
+} from '@/lib/api-client';
 
-function UsageBar({ used, limit, label }: { used: number; limit: number; label: string }) {
-  const pct = limit === Infinity ? 0 : Math.min((used / limit) * 100, 100);
-  const isHigh = pct > 80;
-  return (
-    <div className="border rounded-lg p-4">
-      <div className="flex justify-between items-baseline mb-2">
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-xs text-gray-400">
-          {used.toLocaleString()} / {limit === Infinity ? '∞' : limit.toLocaleString()}
-        </p>
-      </div>
-      <div className="w-full bg-gray-100 rounded-full h-2">
-        <div
-          className={`h-2 rounded-full transition-all ${isHigh ? 'bg-orange-500' : 'bg-[#635BFF]'}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-    </div>
-  );
+const PRESETS = [2000, 5000, 10000, 25000];  // $20, $50, $100, $250
+
+function formatCents(cents: number): string {
+  const dollars = Math.abs(cents) / 100;
+  const sign = cents < 0 ? '−' : '';
+  return `${sign}$${dollars.toFixed(2)}`;
 }
 
-export default function BillingPage() {
-  const [billing, setBilling] = useState<BillingStatus | null>(null);
-  const [loading, setLoading] = useState(true);
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', {
+    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  });
+}
 
-  const loadBilling = useCallback(async () => {
+function txnLabel(txn: CreditTxn): string {
+  switch (txn.type) {
+    case 'topup':       return 'Top-up';
+    case 'debit':       return `Settlement fee${txn.ref_id ? ` · ${txn.ref_id.slice(0, 8)}` : ''}`;
+    case 'charge':      return `Card charge${txn.ref_id ? ` · ${txn.ref_id.slice(0, 8)}` : ''}`;
+    case 'refund':      return 'Refund';
+    case 'outstanding': return `Outstanding fee${txn.ref_id ? ` · ${txn.ref_id.slice(0, 8)}` : ''}`;
+  }
+}
+
+function txnColor(txn: CreditTxn): string {
+  if (txn.type === 'topup' || txn.type === 'refund') return 'text-green-600';
+  if (txn.type === 'outstanding') return 'text-orange-600';
+  return 'text-gray-700';
+}
+
+function BillingPageContent() {
+  const searchParams = useSearchParams();
+  const [balance, setBalance] = useState<BillingBalance | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [topupBusy, setTopupBusy] = useState(false);
+  const [customAmount, setCustomAmount] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [banner, setBanner] = useState<{ kind: 'success' | 'cancel'; message: string } | null>(null);
+
+  const load = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchBillingStatus();
-      setBilling(data);
-    } catch {
-      // silently fail — usage shows zeros
+      setError(null);
+      const data = await fetchBillingBalance();
+      setBalance(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load balance');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadBilling();
-  }, [loadBilling]);
+    const status = searchParams.get('topup');
+    if (status === 'success') {
+      setBanner({ kind: 'success', message: 'Top-up successful — your balance is being updated.' });
+    } else if (status === 'cancelled') {
+      setBanner({ kind: 'cancel', message: 'Top-up cancelled. No charge was made.' });
+    }
+    load();
+  }, [searchParams, load]);
+
+  const handleTopup = async (amountCents: number) => {
+    if (topupBusy) return;
+    if (amountCents < 1000) { setError('Minimum top-up is $10'); return; }
+    if (amountCents > 100000) { setError('Maximum single top-up is $1,000'); return; }
+    try {
+      setTopupBusy(true);
+      setError(null);
+      const { url } = await createTopupSession(amountCents);
+      window.location.href = url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to start checkout');
+      setTopupBusy(false);
+    }
+  };
+
+  const handleCustomTopup = () => {
+    const cents = Math.round(parseFloat(customAmount) * 100);
+    if (!Number.isFinite(cents) || cents <= 0) { setError('Enter a valid amount'); return; }
+    handleTopup(cents);
+  };
 
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-2">Billing</h1>
-      <p className="text-sm text-gray-500 mb-8">Your usage and plan details</p>
+      <p className="text-sm text-gray-500 mb-8">Pay-as-you-go credits · 1% per settled invoice (min $0.01, cap $5)</p>
 
-      {/* Beta Banner */}
-      <div className="mb-8 rounded-xl border border-[#635BFF]/20 bg-gradient-to-br from-[#635BFF]/5 to-[#818CF8]/5 p-6">
-        <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 mt-0.5">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#635BFF]/10 border border-[#635BFF]/20 text-xs font-semibold text-[#635BFF] uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#635BFF] animate-pulse" />
-              Beta
-            </span>
-          </div>
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">Free during beta</h2>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Invoica is currently in private beta. All features are free to use.
-              Pricing tiers will be announced at the end of the beta period — and early adopters
-              will receive preferential rates.
-            </p>
-          </div>
+      {banner && (
+        <div className={`mb-6 rounded-xl border p-4 text-sm ${
+          banner.kind === 'success'
+            ? 'border-green-200 bg-green-50 text-green-800'
+            : 'border-gray-200 bg-gray-50 text-gray-700'
+        }`}>
+          {banner.message}
         </div>
-      </div>
+      )}
 
-      {/* Current Plan */}
-      <section className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Current Plan</h2>
-        <div className="border rounded-xl p-6 bg-white shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <h3 className="text-xl font-bold">Beta Plan</h3>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-              Active
-            </span>
-          </div>
-          <p className="text-gray-500 text-sm mb-1">Free &mdash; All features included</p>
-          <p className="text-xs text-gray-400">
-            Founding member status locked in &mdash; pricing announced post-beta
-          </p>
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {error}
         </div>
+      )}
+
+      {/* Balance */}
+      <section className="mb-8 rounded-xl border bg-white shadow-sm p-6">
+        <p className="text-sm text-gray-500 mb-1">Current balance</p>
+        <p className="text-4xl font-bold text-gray-900">
+          {loading ? '—' : balance ? formatCents(balance.balance_cents) : '$0.00'}
+        </p>
+        {balance?.updated_at && (
+          <p className="text-xs text-gray-400 mt-2">Updated {formatDate(balance.updated_at)}</p>
+        )}
       </section>
 
-      {/* Usage */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Usage This Month</h2>
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="h-20 bg-gray-100 rounded-lg animate-pulse" />
-            <div className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+      {/* Top-up */}
+      <section className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Add credits</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          {PRESETS.map(cents => (
+            <button
+              key={cents}
+              disabled={topupBusy}
+              onClick={() => handleTopup(cents)}
+              className="border rounded-lg p-4 text-center hover:border-[#635BFF] hover:bg-[#635BFF]/5 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              <p className="text-2xl font-bold">${cents / 100}</p>
+              <p className="text-xs text-gray-500 mt-1">add to balance</p>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-3 items-end">
+          <div className="flex-1">
+            <label className="block text-sm text-gray-600 mb-1">Custom amount (USD)</label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+              <input
+                type="number"
+                min="10"
+                max="1000"
+                step="1"
+                placeholder="50"
+                value={customAmount}
+                onChange={e => setCustomAmount(e.target.value)}
+                disabled={topupBusy}
+                className="w-full pl-7 pr-3 py-2 border rounded-lg focus:outline-none focus:border-[#635BFF] disabled:opacity-50"
+              />
+            </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <UsageBar
-              used={billing?.invoice_count_this_month || 0}
-              limit={Infinity}
-              label="Invoices Created"
-            />
-            <UsageBar
-              used={billing?.api_call_count_this_month || 0}
-              limit={Infinity}
-              label="API Calls"
-            />
+          <button
+            disabled={topupBusy || !customAmount}
+            onClick={handleCustomTopup}
+            className="px-4 py-2 bg-[#635BFF] text-white rounded-lg hover:bg-[#5347e6] disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {topupBusy ? 'Redirecting…' : 'Add credits'}
+          </button>
+        </div>
+        <p className="text-xs text-gray-400 mt-2">Min $10, max $1,000 per top-up. Card details are saved for automatic top-ups when balance runs low.</p>
+      </section>
+
+      {/* Recent transactions */}
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Recent activity</h2>
+        {loading && <p className="text-sm text-gray-500">Loading…</p>}
+        {!loading && balance && balance.recent_transactions.length === 0 && (
+          <div className="rounded-xl border bg-white p-6 text-center text-sm text-gray-500">
+            No transactions yet. Add credits above to get started.
           </div>
         )}
-        <p className="text-xs text-gray-400 mt-3">
-          No limits apply during beta &mdash; unlimited usage for all early adopters.
-        </p>
+        {!loading && balance && balance.recent_transactions.length > 0 && (
+          <div className="rounded-xl border bg-white overflow-hidden">
+            {balance.recent_transactions.map((txn, i) => (
+              <div
+                key={txn.id}
+                className={`flex items-center justify-between p-4 ${
+                  i !== balance.recent_transactions.length - 1 ? 'border-b' : ''
+                }`}
+              >
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{txnLabel(txn)}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{formatDate(txn.created_at)}</p>
+                </div>
+                <p className={`text-sm font-mono font-semibold ${txnColor(txn)}`}>
+                  {txn.amount_cents > 0 ? '+' : ''}{formatCents(txn.amount_cents)}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
+  );
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense fallback={<div className="max-w-3xl mx-auto p-6"><p className="text-sm text-gray-500">Loading…</p></div>}>
+      <BillingPageContent />
+    </Suspense>
   );
 }

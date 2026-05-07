@@ -197,6 +197,36 @@ export async function createPortalSession(): Promise<{ url: string }> {
   return { url: res.data.url };
 }
 
+// Pay-as-you-go billing (M2): top-up + balance.
+export interface CreditTxn {
+  id: string;
+  type: 'topup' | 'debit' | 'charge' | 'refund' | 'outstanding';
+  amount_cents: number;
+  ref_table: string | null;
+  ref_id: string | null;
+  created_at: string;
+}
+
+export interface BillingBalance {
+  balance_cents: number;
+  currency: string;
+  updated_at: string | null;
+  recent_transactions: CreditTxn[];
+}
+
+export async function fetchBillingBalance(): Promise<BillingBalance> {
+  const res = await apiGet<{ success: boolean; data: BillingBalance }>('/v1/billing/balance');
+  return res.data;
+}
+
+export async function createTopupSession(amountCents: number): Promise<{ url: string; sessionId: string }> {
+  const res = await apiPost<{ success: boolean; data: { url: string; session_id: string } }>(
+    '/v1/billing/topup',
+    { amount_cents: amountCents },
+  );
+  return { url: res.data.url, sessionId: res.data.session_id };
+}
+
 // Company Profile
 export interface SupportedCountry {
   code: string;

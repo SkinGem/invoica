@@ -112,7 +112,7 @@ app.use(authenticate, reputationHistoryRoutes);
 app.use(authenticate, metricsRoutes);
 app.use(authenticate, taxRoutes);
 app.use(authenticate, agentRoutes);
-app.use(authenticate, billingPayAsYouGoRoutes);  // /v1/billing/topup, /v1/billing/balance
+app.use(billingPayAsYouGoRoutes);  // /v1/billing/topup, /v1/billing/balance — does its own dual auth (Supabase JWT or x-api-key)
 app.use('/v1/sap', authenticate, sapRoutes);
 
 app.use((_req, res) => {
