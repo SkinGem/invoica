@@ -28,6 +28,8 @@ import companyRoutes from './routes/company';
 import billingRoutes from './routes/billing';
 import { clinpayWebhookRouter, clinpayRouter } from './routes/clinpay';
 import x402InvoiceRoutes from './routes/x402-invoice';
+import stripeWebhookRoutes from './routes/webhooks-stripe';
+import billingPayAsYouGoRoutes from './routes/billing-pay-as-you-go';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -64,6 +66,8 @@ app.use(cors({
 }));
 // AsterPay webhook needs raw body for HMAC verification — must run BEFORE express.json.
 app.use(clinpayWebhookRouter);
+// Stripe webhook also needs raw body for HMAC verification.
+app.use(stripeWebhookRoutes);
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -108,6 +112,7 @@ app.use(authenticate, reputationHistoryRoutes);
 app.use(authenticate, metricsRoutes);
 app.use(authenticate, taxRoutes);
 app.use(authenticate, agentRoutes);
+app.use(authenticate, billingPayAsYouGoRoutes);  // /v1/billing/topup, /v1/billing/balance
 app.use('/v1/sap', authenticate, sapRoutes);
 
 app.use((_req, res) => {

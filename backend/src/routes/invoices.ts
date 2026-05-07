@@ -763,6 +763,9 @@ router.post('/v1/invoices', async (req: Request, res: Response, next: NextFuncti
       customerName,
       companyId: companyId || null,
       paymentDetails,
+      // Billing link: who pays the 1% settlement fee. Set from authenticated
+      // API key holder; null OK in unauth/admin paths (legacy invoices).
+      issuer_customer_id: req.customer?.id || null,
       createdAt: now,
       updatedAt: now,
     };
