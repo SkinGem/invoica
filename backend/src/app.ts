@@ -27,6 +27,7 @@ import pactSessionRoutes from './routes/pact-session';
 import companyRoutes from './routes/company';
 import billingRoutes from './routes/billing';
 import { clinpayWebhookRouter, clinpayRouter } from './routes/clinpay';
+import x402InvoiceRoutes from './routes/x402-invoice';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -89,6 +90,7 @@ app.use(clinpayRouter);
 app.use(apiKeyRoutes);   // public: dashboard creates first key with no api-key header (chicken-and-egg)
 app.use(webhookRoutes);  // public: receive-side path used by external webhooks
 app.use('/api/sap', sapExecuteRoutes);  // public: x402 paywall endpoint — must return 402 not 401
+app.use('/api/x402', x402InvoiceRoutes);  // public: standard x402 v2 via PayAI facilitator (pay.sh probes this)
 app.use(authenticate, invoiceDownloadRoutes);
 app.use('/v1/pact', pactSessionRoutes);
 app.use(authenticate, invoiceStatsRoutes);

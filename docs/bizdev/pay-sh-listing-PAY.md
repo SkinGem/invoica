@@ -10,7 +10,7 @@ version: "1.0"
 endpoints:
   - id: payment:invoice
     method: POST
-    path: /api/sap/execute
+    path: /api/x402/invoice
     description: "Create an x402 invoice for a completed agent service. Body includes amount, currency, customer (anonymous-OK), payment chain. Returns invoice id + invoice number + on-chain settlement address. Tax line auto-populated by jurisdiction if buyer location supplied."
     pricing:
       price_usd: 0.01
@@ -18,7 +18,7 @@ endpoints:
       networks: [solana-mainnet]
   - id: payment:settle
     method: POST
-    path: /api/sap/execute
+    path: /api/x402/settle
     description: "Check on-chain settlement status for an invoice. Returns SETTLED/PENDING/FAILED + tx_hash + settled_at if matched. Idempotent."
     pricing:
       price_usd: 0.005
@@ -26,7 +26,7 @@ endpoints:
       networks: [solana-mainnet]
   - id: compliance:tax
     method: POST
-    path: /api/sap/execute
+    path: /api/x402/tax
     description: "Tax classification and compliance line for a transaction. Returns rate, jurisdiction, statute citation (where available), confidence score, requires_review flag. Backed by AgentTax (US) and native VAT engine (EU/UK). 27 EU countries + UK + 5 US states (CA, TX, NY, FL, WA) currently."
     pricing:
       price_usd: 0.02
@@ -62,7 +62,7 @@ An Invoica invoice is durable: stored in Postgres with a unique `invoiceNumber`,
 
 ## Networks
 
-Currently x402-enabled on Solana mainnet for pay.sh listing. The same Invoica endpoints accept payments on Base, Polygon, Arbitrum One, and SKALE Base mainnet via direct API key auth — see `https://api.invoica.ai/.well-known/x402` for the full manifest.
+Currently x402-enabled on Solana mainnet for pay.sh listing via the **PayAI facilitator** (`https://facilitator.payai.network`) — standard x402 v2 protocol, USDC payments to seller wallet `G21o7DdeBzqMDYswJzbsp2BZ6jGLxbvxDVvtmLvo4N8k`. The same Invoica endpoints accept payments on Base, Polygon, Arbitrum One, and SKALE Base mainnet via direct API key auth — see `https://api.invoica.ai/.well-known/x402` for the full manifest.
 
 ## Built on
 

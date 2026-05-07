@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "Invoica Backend API",
   "dependencies": {
+    "@payai/facilitator": "^2.4.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/nodemailer": "^7.0.11",
+    "@x402/core": "^2.11.0",
+    "@x402/express": "^2.11.0",
     "bcryptjs": "^3.0.3",
-    "nodemailer": "^8.0.1"
+    "nodemailer": "^8.0.1",
+    "x402-solana": "^2.0.4"
   }
 }
