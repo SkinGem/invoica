@@ -88,6 +88,7 @@ app.use(billingRoutes);
 app.use(clinpayRouter);
 app.use(apiKeyRoutes);   // public: dashboard creates first key with no api-key header (chicken-and-egg)
 app.use(webhookRoutes);  // public: receive-side path used by external webhooks
+app.use('/api/sap', sapExecuteRoutes);  // public: x402 paywall endpoint — must return 402 not 401
 app.use(authenticate, invoiceDownloadRoutes);
 app.use('/v1/pact', pactSessionRoutes);
 app.use(authenticate, invoiceStatsRoutes);
@@ -105,7 +106,6 @@ app.use(authenticate, reputationHistoryRoutes);
 app.use(authenticate, metricsRoutes);
 app.use(authenticate, taxRoutes);
 app.use(authenticate, agentRoutes);
-app.use('/api/sap', sapExecuteRoutes);
 app.use('/v1/sap', authenticate, sapRoutes);
 
 app.use((_req, res) => {
