@@ -5,6 +5,7 @@ import Features from '@/components/Features';
 import Chains from '@/components/Chains';
 import CodeExample from '@/components/CodeExample';
 import McpIntegration from '@/components/McpIntegration';
+import PactDemo from '@/components/PactDemo';
 import Enterprise from '@/components/Enterprise';
 import SocialProof from '@/components/SocialProof';
 import BetaBanner from '@/components/BetaBanner';
@@ -51,7 +52,10 @@ export default function HomePage() {
         {/* 6. MCP Integration — Use Invoica from Claude, Cursor & Windsurf */}
         <McpIntegration />
 
-        {/* 7. Enterprise value prop — RBAC, compliance, SLA */}
+        {/* 7. PACT demo — mandate verification (the trust layer) */}
+        <PactDemo />
+
+        {/* 8. Enterprise value prop — RBAC, compliance, SLA */}
         <Enterprise />
 
         {/* 8. Social proof — stats + testimonials */}
