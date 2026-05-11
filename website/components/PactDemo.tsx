@@ -68,10 +68,10 @@ export default function PactDemo() {
         {/* CTA */}
         <div className="flex justify-center mt-12">
           <Link
-            href="https://docs.invoica.ai/pact"
+            href="mailto:team@invoica.ai?subject=PACT%20%2F%20agent%20trust"
             className="inline-flex items-center px-6 py-3 rounded-lg bg-invoica-purple text-white font-medium hover:bg-invoica-purple/90 transition"
           >
-            Read the PACT spec &rarr;
+            Talk to us about agent trust &rarr;
           </Link>
         </div>
       </div>
