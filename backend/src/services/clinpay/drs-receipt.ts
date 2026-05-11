@@ -165,22 +165,45 @@ export async function recordClinPayTax(
     return null;
   }
   const jur = mandate.scope?.sponsorJurisdiction;
-  if (!jur || !jur.startsWith('US-')) {
-    if (jur) console.log(`[clinpay] tax skip: jurisdiction ${jur} non-US`);
-    return null;
+  if (!jur) return null;
+
+  // UK (GB-*) path — native HMRC engine, no external API call.
+  if (jur === 'GB' || jur.startsWith('GB-')) {
+    const { calculateUKVATResult } = await import('../tax/uk-vat');
+    const result = calculateUKVATResult(amountUsdc, { countryCode: 'GB' });
+    return {
+      source: 'local_fallback',
+      total_tax: result.taxAmount,
+      rate: result.taxRate,
+      jurisdiction: 'GB',
+      statute: result.invoiceNote,
+      confidence_score: 100,
+      confidence_level: 'high',
+      requires_review: false,
+      classification_basis: result.isReverseCharge ? 'b2b-reverse-charge' : `hmrc-${result.rateType.toLowerCase()}`,
+      engine_version: 'uk-vat/1.0',
+      calculated_at: new Date().toISOString(),
+    };
   }
-  const buyerState = jur.slice(3); // "US-CA" -> "CA"
-  try {
-    return await calculateAgentTax({
-      role: 'seller',
-      amount: amountUsdc,
-      buyer_state: buyerState,
-      transaction_type: 'service',
-      counterparty_id: mandate.grantor,
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.warn(`[clinpay] AgentTax call failed (non-fatal): ${msg}`);
-    return null;
+
+  // US (US-XX) path — AgentTax API.
+  if (jur.startsWith('US-')) {
+    const buyerState = jur.slice(3); // "US-CA" -> "CA"
+    try {
+      return await calculateAgentTax({
+        role: 'seller',
+        amount: amountUsdc,
+        buyer_state: buyerState,
+        transaction_type: 'service',
+        counterparty_id: mandate.grantor,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[clinpay] AgentTax call failed (non-fatal): ${msg}`);
+      return null;
+    }
   }
+
+  console.log(`[clinpay] tax skip: jurisdiction ${jur} not yet supported`);
+  return null;
 }
