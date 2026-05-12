@@ -62,7 +62,7 @@
     },
     {
       "group": "Core Concepts",
-      "pages": ["concepts/x402-protocol", "concepts/invoice-middleware"]
+      "pages": ["concepts/x402-protocol", "concepts/invoice-middleware", "concepts/pact"]
     },
     {
       "group": "Guides",

@@ -1,0 +1,156 @@
+---
+title: PACT
+description: "Mandate verification for autonomous agent payments — cryptographic spend authorization with hard caps, expiry, and an audit trail back to the human principal."
+---
+
+# PACT — Protocol for Agent Constitutional Trust
+
+When an autonomous agent pays an invoice on your behalf, three questions follow your auditor: **who approved the spend, how much could the agent ever spend, and how do we prove it after the fact?**
+
+PACT is the lightweight protocol Invoica uses to answer all three on every settlement. A signed mandate travels with the request, encodes the human-authorized spend ceiling, and is verified against a shared secret before the invoice can transition to `SETTLED`.
+
+This page documents PACT v0.2 as implemented in Invoica today.
+
+## Why mandates, not just API keys
+
+API keys authenticate *the agent*. They do not bound *what the agent can spend*. An agent with a working key plus a buggy retry loop could drain a budget overnight before anyone notices.
+
+A PACT mandate is a separate, narrower authorization:
+
+- Signed by the **grantor** (the human principal or their key-management service)
+- Scoped to a specific **grantee** (the agent identity)
+- Capped at a **maxPaymentUsdc** ceiling — enforced at the invoice layer, not as a soft business rule
+- **Expires** automatically, so a leaked or replayed mandate has a bounded blast radius
+- **Hash-bound** to every settled invoice, so the audit trail reproduces who authorized what years later
+
+## Mandate shape
+
+A PACT mandate is JSON with seven fields. The full shape:
+
+```json
+{
+  "id": "mandate_2026q2_acme_panel",
+  "grantor": "did:agent:acme-research-ops",
+  "grantee": "did:agent:acme-panel-payouts",
+  "scope": {
+    "actions": ["invoice.settle"],
+    "resources": ["invoice:*"],
+    "maxPaymentUsdc": 50.00,
+    "description": "Q2 2026 panelist honoraria, single-payout cap"
+  },
+  "issuedAt": "2026-05-12T09:00:00Z",
+  "expiresAt": "2026-08-12T00:00:00Z",
+  "signature": "a3f1e8…"
+}
+```
+
+**Required fields enforced by the verifier:**
+
+| Field | Constraint |
+|---|---|
+| `expiresAt` | RFC 3339 timestamp; rejected if in the past |
+| `scope.maxPaymentUsdc` | Positive number; invoice amount must be ≤ this |
+| `signature` | Hex HMAC-SHA256 over canonical mandate JSON (see below) |
+
+A mandate missing `expiresAt` or `maxPaymentUsdc` is rejected outright — no blank cheques. This is intentional (TICKET-044, P0).
+
+## Signature scheme
+
+The signature is computed over a canonical JSON serialization of the mandate fields *excluding* `signature` itself, using HMAC-SHA256 with a secret shared between the grantor's signer and Invoica:
+
+```js
+// Canonical signable form
+const signable = JSON.stringify({
+  id, grantor, grantee, scope, expiresAt, issuedAt,
+});
+
+// Signature
+const signature = crypto
+  .createHmac('sha256', PACT_SIGNING_SECRET)
+  .update(signable)
+  .digest('hex');
+```
+
+Verification uses `crypto.timingSafeEqual` to compare expected vs. supplied signatures — constant-time, immune to timing-oracle attacks.
+
+## Sending a mandate with a payment
+
+Include the mandate JSON in the `X-Pact-Mandate` header on any settle-side call:
+
+```bash
+curl -X PATCH https://api.invoica.ai/v1/invoices/$INVOICE_ID/status \
+  -H "X-API-Key: $INVOICA_KEY" \
+  -H "X-Pact-Mandate: $(cat mandate.json | jq -c)" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"SETTLED","txHash":"0x…","chain":"base"}'
+```
+
+If a mandate is present and valid, the settle proceeds. If a mandate is present but invalid or over-cap, the response is `HTTP 403` with `code: PACT_DENIED` and a reason string.
+
+If **no** mandate header is present, the endpoint behaves as before — mandates are an additive trust layer, not a hard requirement.
+
+## Verification logic
+
+The verifier rejects in five distinct cases:
+
+| Reason | Cause | HTTP |
+|---|---|---|
+| `PACT_SIGNING_SECRET not configured` | Server has a mandate header but no secret — fail-closed on misconfig | 403 |
+| `Mandate missing expiresAt` | Schema violation | 403 |
+| `Mandate missing or non-positive maxPaymentUsdc` | Schema violation | 403 |
+| `Mandate expired` | `expiresAt` is in the past | 403 |
+| `Invalid mandate signature` | HMAC does not match canonical content + secret | 403 |
+| `Mandate cap N USDC < invoice M USDC` | Invoice amount exceeds the authorized ceiling | 403 |
+
+The verifier returns `{ allowed: true }` only when **all** checks pass.
+
+## Helixa trust ceiling (PACT Chamber 2)
+
+In addition to per-mandate caps, Invoica enforces a **per-grantor reputation ceiling** via [Helixa](https://helixa.ai). When a mandate is present, Invoica fetches the grantor's current trust score and applies a tier-based USDC ceiling:
+
+| Helixa tier | Per-invoice max | Behavior |
+|---|---|---|
+| `REJECTED` | — | Settle denied with `HELIXA_REJECTED` |
+| `PROBATION` | $10 | Caps low until reputation rebuilds |
+| `STANDARD` | $1,000 | Normal operations |
+| `TRUSTED` | $10,000 | High-trust counterparties |
+| `VERIFIED_KYC` | unlimited | KYC'd corporate principals |
+
+If Helixa is unreachable, the policy is configurable via `HELIXA_POLICY`:
+
+- `fail-closed` (production default): denies the settle with `HELIXA_UNAVAILABLE`
+- `fail-open` (founder-only opt-in): proceeds without the ceiling check
+
+Both the mandate cap **and** the Helixa ceiling must pass — the lower of the two wins.
+
+## Audit trail
+
+Every settled invoice records the mandate hash in its `paymentDetails.mandate_hash` field, and (for ClinPay sessions) in the DRS receipt. Seven years on, you can reproduce:
+
+- Which mandate authorized the settle
+- Who the grantor was
+- What the maximum ever-authorized amount was
+- When the mandate expired
+
+The mandate itself does not need to be stored — its canonical form + signature can be reconstructed from any copy a counterparty retains, and the hash is the proof.
+
+## Configuration
+
+Two environment variables on the Invoica backend:
+
+| Variable | Purpose |
+|---|---|
+| `PACT_SIGNING_SECRET` | Shared HMAC secret. Required if any mandate is ever submitted. |
+| `HELIXA_POLICY` | `fail-closed` (default) or `fail-open` |
+
+## Versioning
+
+PACT v0.2 is the current shipped spec (HMAC-SHA256 + canonical JSON). PACT v0.3.2 is what ClinPay receipts stamp into the DRS — the bump reflects the addition of the Helixa Chamber 2 ceiling and the synthetic-mandate shape used in the ClinPay sponsor → panelist flow.
+
+PACT lives as a separate package, `@godman-protocols/pact`, with the reference implementation maintained alongside Invoica.
+
+## Further reading
+
+- [Invoice middleware](/concepts/invoice-middleware) — how mandates plug into the settle path
+- [x402 protocol](/concepts/x402-protocol) — the payment layer below the mandate layer
+- Email [team@invoica.ai](mailto:team@invoica.ai?subject=PACT%20%2F%20agent%20trust) to discuss mandate issuance for your stack
