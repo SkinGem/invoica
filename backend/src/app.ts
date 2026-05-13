@@ -30,6 +30,7 @@ import { clinpayWebhookRouter, clinpayRouter } from './routes/clinpay';
 import x402InvoiceRoutes from './routes/x402-invoice';
 import stripeWebhookRoutes from './routes/webhooks-stripe';
 import billingPayAsYouGoRoutes from './routes/billing-pay-as-you-go';
+import clinpayReportsRoutes from './routes/clinpay-reports';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -91,6 +92,7 @@ app.use('/.well-known', wellKnownRoutes);
 app.use(companyRoutes);
 app.use(billingRoutes);
 app.use(billingPayAsYouGoRoutes);  // /v1/billing/topup, /v1/billing/balance — must be ABOVE authenticate-mounted routes (does its own dual auth)
+app.use(clinpayReportsRoutes);     // /v1/clinpay/reports/rollup — same dual-auth pattern
 app.use(clinpayRouter);
 app.use(apiKeyRoutes);   // public: dashboard creates first key with no api-key header (chicken-and-egg)
 app.use(webhookRoutes);  // public: receive-side path used by external webhooks
