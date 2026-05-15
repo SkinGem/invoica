@@ -168,12 +168,18 @@ export async function recordClinPayTax(
   if (!jur) return null;
 
   // UK (GB-*) path — native HMRC engine, no external API call.
+  // The UK VAT engine works in integer subunits (Math.round(amount * rate)),
+  // but `amountUsdc` arrives in EUR units (e.g. 0.50). Convert EUR→cents
+  // before calling, then back to EUR units for the AgentTaxLine — matches
+  // the unit convention used by the AgentTax path + the DRS receipt's
+  // `amount_eur` column (NUMERIC(19,4)).
   if (jur === 'GB' || jur.startsWith('GB-')) {
     const { calculateUKVATResult } = await import('../tax/uk-vat');
-    const result = calculateUKVATResult(amountUsdc, { countryCode: 'GB' });
+    const amountCents = Math.round(amountUsdc * 100);
+    const result = calculateUKVATResult(amountCents, { countryCode: 'GB' });
     return {
       source: 'local_fallback',
-      total_tax: result.taxAmount,
+      total_tax: result.taxAmount / 100,
       rate: result.taxRate,
       jurisdiction: 'GB',
       statute: result.invoiceNote,
