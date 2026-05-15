@@ -90,16 +90,35 @@ if [ "${1:-}" = "--rollup" ]; then
   echo "$RESP" | python3 -c '
 import json, sys
 d = json.load(sys.stdin)["data"]
-print(f"\n  Study: {d.get(\"study_id\") or \"(all)\"}   Period: {d[\"period\"]}   {d[\"from\"][:10]} → {d[\"to\"][:10]}")
-print(f"  {\"-\" * 78}")
-print(f"  {\"Date\":12} {\"#\":>4}   {\"Amount (€)\":>12}   {\"Tax (€)\":>10}   {\"Jurisdictions\":<20}")
-print(f"  {\"-\" * 78}")
+dash = "-" * 78
+study = d.get("study_id") or "(all)"
+period = d["period"]
+from_d = d["from"][:10]
+to_d = d["to"][:10]
+hdr = "Date"
+hdr_n = "#"
+hdr_amt = "Amount (EUR)"
+hdr_tax = "Tax (EUR)"
+hdr_jur = "Jurisdictions"
+total_label = "TOTAL"
+print()
+print(f"  Study: {study}   Period: {period}   {from_d} -> {to_d}")
+print(f"  {dash}")
+print(f"  {hdr:12} {hdr_n:>4}   {hdr_amt:>14}   {hdr_tax:>12}   {hdr_jur:<20}")
+print(f"  {dash}")
 for b in d["buckets"]:
-    juris = ", ".join(b["jurisdictions"]) or "—"
-    print(f"  {b[\"bucket_start\"][:10]:12} {b[\"settlement_count\"]:>4}   {b[\"total_amount_eur\"]:>12}   {b[\"total_tax_eur\"]:>10}   {juris:<20}")
-print(f"  {\"-\" * 78}")
+    juris = ", ".join(b["jurisdictions"]) or "-"
+    date = b["bucket_start"][:10]
+    cnt = b["settlement_count"]
+    amt = b["total_amount_eur"]
+    tax = b["total_tax_eur"]
+    print(f"  {date:12} {cnt:>4}   {amt:>14}   {tax:>12}   {juris:<20}")
+print(f"  {dash}")
 t = d["totals"]
-print(f"  {\"TOTAL\":12} {t[\"settlement_count\"]:>4}   {t[\"total_amount_eur\"]:>12}   {t[\"total_tax_eur\"]:>10}")
+t_n = t["settlement_count"]
+t_amt = t["total_amount_eur"]
+t_tax = t["total_tax_eur"]
+print(f"  {total_label:12} {t_n:>4}   {t_amt:>14}   {t_tax:>12}")
 print()
 '
   exit 0
