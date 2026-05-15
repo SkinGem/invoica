@@ -24,6 +24,8 @@ export interface ClinPaySessionRow {
   invoice_id: string | null;
   status: 'created' | 'submitted' | 'settled' | 'failed' | 'expired';
   last_event: Record<string, unknown> | null;
+  /** Resolved at /api/redirect-to-payment from the caller's x-api-key. */
+  issuer_customer_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +39,8 @@ export interface CreateClinPaySessionInput {
   recipient_country: string;
   payout_method: 'sepa' | 'wallet';
   mandate: SyntheticMandate;
+  /** Optional. When the caller authed with x-api-key, this is ApiKey.customerId. */
+  issuer_customer_id?: string | null;
 }
 
 export async function createClinPaySession(input: CreateClinPaySessionInput): Promise<ClinPaySessionRow> {
@@ -55,6 +59,7 @@ export async function createClinPaySession(input: CreateClinPaySessionInput): Pr
       mandate_json: mandateJson,
       mandate_hash: input.mandate.signature.slice(0, 16),
       status: 'created',
+      issuer_customer_id: input.issuer_customer_id ?? null,
     })
     .select()
     .single();
@@ -93,13 +98,21 @@ export interface ClinPayInvoiceInput {
   asterpay_session_id: string;
   study_id: string;
   visit_id: string;
-  amount_usdc: number;
+  /** Amount in EUR units (matches the DRS receipt's amount_eur column). */
+  amount_eur: number;
   mandate_hash: string;
+  /** Optional. Resolved from the session's issuer_customer_id (which itself
+   * came from the panel platform's x-api-key at redirect-to-payment time). */
+  issuer_customer_id?: string | null;
 }
 
 /**
  * Create an Invoica invoice for a ClinPay session. Zero PII: customer fields
  * are synthetic placeholders derived from anonymous trial identifiers.
+ *
+ * Currency is EUR — the ClinPay flow settles via SEPA. Earlier hardcoded
+ * 'USDC' was a copy-paste from x402 paths and produced internally-inconsistent
+ * receipts (amount_eur EUR vs paymentDetails.currency USDC). Fixed 2026-05-15.
  */
 export async function createClinPayInvoice(input: ClinPayInvoiceInput): Promise<{ id: string; invoiceNumber: number }> {
   const { data: maxData } = await sb()
@@ -117,12 +130,13 @@ export async function createClinPayInvoice(input: ClinPayInvoiceInput): Promise<
     .insert({
       invoiceNumber: nextNumber,
       status: 'PENDING',
-      amount: input.amount_usdc,
-      currency: 'USDC',
+      amount: input.amount_eur,
+      currency: 'EUR',
       customerEmail: synthEmail,
       customerName: synthName,
       agentId: `clinpay-sponsor-${input.study_id}`,
       isTest: true,
+      issuer_customer_id: input.issuer_customer_id ?? null,
       paymentDetails: {
         product: 'clinpay',
         sandbox: true,

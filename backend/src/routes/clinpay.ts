@@ -10,6 +10,7 @@ import {
 } from '../services/asterpay/clinpay-session';
 import { mintDrsReceipt, markInvoiceSettled, recordClinPayTax } from '../services/clinpay/drs-receipt';
 import { verifyPactMandate } from '../lib/pact-verify';
+import { findApiKeyByKey } from '../services/api-keys';
 
 // Sandbox-only in-memory idempotency. DB-backed before production (Sprint 2).
 const SEEN_NONCES = new Map<string, number>();
@@ -127,8 +128,9 @@ async function handleSessionSubmitted(
     asterpay_session_id: asterpaySessionId,
     study_id: session.study_id,
     visit_id: session.visit_id,
-    amount_usdc: session.amount_usdc,
+    amount_eur: session.amount_eur,
     mandate_hash: session.mandate_hash,
+    issuer_customer_id: session.issuer_customer_id,
   });
   console.log(`[clinpay] invoice issued #${invoice.invoiceNumber} (${invoice.id}) for asterpay=${asterpaySessionId}`);
 
@@ -264,6 +266,17 @@ clinpayRouter.post('/api/redirect-to-payment', async (req: Request, res: Respons
     const jurisdiction = typeof sponsorJurisdiction === 'string' ? sponsorJurisdiction : undefined;
     const mandate = synthesizeSponsorMandate(String(studyId), amountUsdc, session.expires_at, jurisdiction);
 
+    // Resolve the issuer customer from x-api-key if present. The panel platform
+    // (All Global, Kantar, future) calls this with their own api-key; the
+    // resolved customerId flows through to Invoice.issuer_customer_id so the
+    // rollup endpoint surfaces it.
+    const apiKeyHeader = (req.headers['x-api-key'] as string | undefined)?.trim();
+    let issuerCustomerId: string | null = null;
+    if (apiKeyHeader) {
+      const rec = await findApiKeyByKey(apiKeyHeader);
+      if (rec?.isActive) issuerCustomerId = rec.customerId;
+    }
+
     await createClinPaySession({
       asterpay_session_id: session.session_id,
       study_id: String(studyId),
@@ -273,6 +286,7 @@ clinpayRouter.post('/api/redirect-to-payment', async (req: Request, res: Respons
       recipient_country: typeof recipientCountry === 'string' ? recipientCountry : 'FR',
       payout_method: payoutMethod === 'wallet' ? 'wallet' : 'sepa',
       mandate,
+      issuer_customer_id: issuerCustomerId,
     });
 
     res.json({
