@@ -20,7 +20,23 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
 import { execSync } from 'child_process';
-import 'dotenv/config';
+
+// Manual .env loader. The `dotenv` package silently fails under PM2's
+// spawn context (TS_NODE module-resolution interference); parsing .env
+// line-by-line and writing to process.env directly works reliably.
+// Same pattern as ceo-refines-pending-sprint.ts (commit b62d708 2026-05-07).
+// Bug observed 2026-05-06 → 2026-05-16: every CMO weekly plan fire crashed
+// with "Claude API error: invalid x-api-key" because process.env.ANTHROPIC_API_KEY
+// was undefined under PM2.
+function loadDotenv(p: string): void {
+  if (!fs.existsSync(p)) return;
+  for (const line of fs.readFileSync(p, 'utf8').split('\n')) {
+    const m = line.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+}
+loadDotenv(path.join(process.cwd(), '.env'));
+
 import { ManusClient } from './lib/manus-client';
 
 // ── Cron guard: prevent PM2 reload from triggering this script off-schedule ──

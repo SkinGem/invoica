@@ -70,6 +70,65 @@ function saveState(s: DailyState) {
   fs.writeFileSync(STATE_FILE, JSON.stringify(s, null, 2));
 }
 
+// ── Cross-day dedup ────────────────────────────────────────────────────────
+// Belt-and-braces guard against the failure mode observed 2026-05-16:
+// the CMO weekly plan crashed silently for 10 days (PM2 dotenv load bug),
+// x-admin fell back to its LLM template, the template produced identical
+// text day after day. Even with a working CMO plan, near-duplicate output
+// can still slip through. This dedup is the last gate.
+
+function tokenize(s: string): Set<string> {
+  return new Set(
+    s.toLowerCase()
+      .replace(/https?:\/\/\S+/g, ' ')   // drop URLs (vary per post)
+      .replace(/[^\w\s@#]/g, ' ')
+      .split(/\s+/)
+      .filter(t => t.length > 2),
+  );
+}
+
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 && b.size === 0) return 1;
+  const inter = [...a].filter(x => b.has(x)).length;
+  const union = new Set([...a, ...b]).size;
+  return inter / union;
+}
+
+/**
+ * Returns the highest jaccard similarity between `candidate` and any post
+ * recorded in the last `days` of x-admin logs. The caller decides whether
+ * to publish based on the score (typical block threshold: 0.70).
+ */
+function maxRecentSimilarity(candidate: string, days = 7): { score: number; matchedDate: string | null } {
+  const candTok = tokenize(candidate);
+  if (candTok.size === 0) return { score: 0, matchedDate: null };
+
+  let best = 0;
+  let bestDate: string | null = null;
+  const today = new Date();
+  for (let i = 0; i <= days; i++) {
+    const d = new Date(today);
+    d.setUTCDate(d.getUTCDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const logFile = path.join(LOG_DIR, `${dateStr}.md`);
+    if (!fs.existsSync(logFile)) continue;
+    const content = fs.readFileSync(logFile, 'utf-8');
+    // Each post is delimited by `---` in the log. The first line of a
+    // section is `## <label> — <timestamp>`, followed by `URL: ...` then
+    // `Image: ...` then blank line then the actual post text.
+    for (const block of content.split(/\n---\n/)) {
+      const lines = block.split('\n');
+      const txtStart = lines.findIndex((l, idx) => idx > 0 && lines[idx - 1]?.startsWith('Image:'));
+      if (txtStart < 0) continue;
+      const postText = lines.slice(txtStart).join('\n').trim();
+      if (!postText) continue;
+      const score = jaccard(candTok, tokenize(postText));
+      if (score > best) { best = score; bestDate = dateStr; }
+    }
+  }
+  return { score: best, matchedDate: bestDate };
+}
+
 // HTTP helper
 function apiCall(
   method: string, hostname: string, urlPath: string,
@@ -693,6 +752,23 @@ async function main() {
       const cto = await ctoReview(gen.tweets);
       console.log(`  CTO: ${cto.approved ? '✅' : '❌'} ${cto.feedback}`);
       if (!cto.approved) { saveRejected(slot.key, gen.tweets, `CTO: ${cto.feedback}`); continue; }
+    }
+
+    // ── Cross-day dedup gate ─────────────────────────────────────────────
+    // Block near-duplicates of anything posted in the last 7 days.
+    // Threshold 0.70 = ~70% token overlap. The repeated posts observed
+    // 2026-05-06→16 scored >0.95 against the prior day's post.
+    const candidate = gen!.tweets.join('\n\n');
+    const similarity = maxRecentSimilarity(candidate, 7);
+    if (similarity.score >= 0.70) {
+      console.log(`  ⚠ Cross-day dedup: too similar (jaccard=${similarity.score.toFixed(2)}) to ${similarity.matchedDate} post — skipping ${slot.key}`);
+      saveRejected(`${slot.key}-dedup-block`, gen!.tweets, `Cross-day similarity ${similarity.score.toFixed(2)} vs ${similarity.matchedDate}`);
+      // Mark posted=true to prevent the same-day cron from retrying the same
+      // LLM output. A fresh CMO weekly plan will produce different content
+      // on the next day's first fire.
+      state.posted[slot.key] = true;
+      saveState(state);
+      continue;
     }
 
     // CMO images only — use pre-produced branded image from weekly plan, or post text-only
