@@ -6,6 +6,7 @@ import { checkTrustGate } from '../middleware/trust-gate';
 import { verifyPactMandate } from '../lib/pact-verify';
 import { fetchHelixaCred, getHelixaTrustCeiling } from '../lib/helixa';
 import { recordPaymentEvent, DuplicatePaymentError } from '../services/settlement/payment-events';
+import { getChainConfig } from '../config/chains';
 
 const router = Router();
 
@@ -673,7 +674,19 @@ router.post('/v1/invoices', async (req: Request, res: Response, next: NextFuncti
 
     // Build paymentDetails with chain context
     const paymentDetails: Record<string, any> = { chain };
-    if (paymentAddress) paymentDetails.paymentAddress = paymentAddress;
+
+    // Resolve seller wallet: caller-supplied wins, else fall back to env config.
+    // EVM chains share X402_SELLER_WALLET; Solana uses its own var.
+    const fallbackSellerWallet = chain === 'solana'
+      ? process.env.X402_SOLANA_SELLER_WALLET
+      : (process.env.X402_SELLER_WALLET || process.env.SELLER_WALLET);
+    const resolvedPaymentAddress = paymentAddress || fallbackSellerWallet;
+    if (resolvedPaymentAddress) paymentDetails.paymentAddress = resolvedPaymentAddress;
+
+    // Surface USDC contract for the chain — saves caller a lookup before transfer.
+    const chainConfig = getChainConfig(chain);
+    paymentDetails.usdcAddress = chainConfig.usdcAddress;
+
     if (chain === 'solana') {
       paymentDetails.programId = programId || SOLANA_TOKEN_PROGRAM;
       paymentDetails.tokenMint = tokenMint || SOLANA_USDC_MINT;
