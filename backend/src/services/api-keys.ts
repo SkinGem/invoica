@@ -45,6 +45,7 @@ export const createApiKeySchema = z.object({
   plan: z.string().default('basic'),
   permissions: z.array(z.string()).default([]),
   expiresInDays: z.number().min(1).max(365).optional(),
+  expiresAt: z.string().datetime({ message: 'expiresAt must be a valid ISO 8601 datetime (e.g. 2026-08-19T00:00:00Z)' }).optional(),
 });
 
 /**
@@ -220,9 +221,11 @@ export const createApiKey = async (input: CreateApiKeyInput): Promise<ApiKeyResp
   const keyHash = await hashApiKey(apiKey);
   const keyPrefix = getKeyPrefix(apiKey);
   
-  // Calculate expiration if specified
+  // Calculate expiration. Absolute (expiresAt) wins if both provided.
   let expiresAt: Date | null = null;
-  if (validatedInput.expiresInDays) {
+  if (validatedInput.expiresAt) {
+    expiresAt = new Date(validatedInput.expiresAt);
+  } else if (validatedInput.expiresInDays) {
     expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + validatedInput.expiresInDays);
   }
