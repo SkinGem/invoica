@@ -1,0 +1,196 @@
+{
+  "info": {
+    "name": "Invoica — PACT Mandate API v0.1",
+    "description": "Helixa Synagent reference collection. Set api_key and pact_signing_secret in your environment, then run the requests in order. Pre-request scripts compute HMAC-SHA256 signatures automatically.\n\nDocs: https://github.com/SkinGem/invoica/blob/main/docs/api/mandates-v0.1.md\nAnchor contract: 0x55acad606c488057db395e87ac5d57944f31c497 (Base Sepolia)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "api_url", "value": "https://api.invoica.ai", "type": "string" },
+    { "key": "api_key", "value": "sk_REPLACE_WITH_YOUR_KEY", "type": "string" },
+    { "key": "pact_signing_secret", "value": "REPLACE_WITH_PACT_SIGNING_SECRET", "type": "string" },
+    { "key": "proposer", "value": "alice@helixa", "type": "string" },
+    { "key": "counterparty", "value": "bob@helixa", "type": "string" }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "key", "value": "x-api-key", "type": "string" },
+      { "key": "value", "value": "{{api_key}}", "type": "string" },
+      { "key": "in", "value": "header", "type": "string" }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Propose Mandate",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Save mandate_id and fields for downstream signing.",
+              "const res = pm.response.json();",
+              "if (res && res.data && res.data.mandate_id) {",
+              "  pm.environment.set('mandate_id', res.data.mandate_id);",
+              "  pm.collectionVariables.set('mandate_id', res.data.mandate_id);",
+              "}",
+              "// Persist the signable fields so the sign requests can rebuild canonical JSON.",
+              "const body = JSON.parse(pm.request.body.raw);",
+              "const fields = {",
+              "  id: res.data.mandate_id,",
+              "  proposer_agent_id: body.proposer,",
+              "  counterparty_agent_id: body.counterparty,",
+              "  scope: body.scope,",
+              "  terms: body.terms,",
+              "  expires_at: body.expiry",
+              "};",
+              "pm.environment.set('mandate_fields_json', JSON.stringify(fields));",
+              "pm.collectionVariables.set('mandate_fields_json', JSON.stringify(fields));",
+              "console.log('saved mandate_id=' + res.data.mandate_id);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "content-type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"proposer\":     \"{{proposer}}\",\n  \"counterparty\": \"{{counterparty}}\",\n  \"scope\":        \"Write 100 words of weather copy for SF\",\n  \"terms\": {\n    \"amount\":      \"5\",\n    \"currency\":    \"USDC\",\n    \"deliverable\": \"weather copy, 100 words\",\n    \"deadline\":    \"2026-05-22T17:00:00.000Z\"\n  },\n  \"expiry\":  \"2026-05-25T00:00:00.000Z\",\n  \"context\": {\n    \"source\":  \"helixa_synagent_tg_bot\",\n    \"chat_id\": \"1234567890\"\n  }\n}"
+        },
+        "url": { "raw": "{{api_url}}/v1/mandates", "host": ["{{api_url}}"], "path": ["v1", "mandates"] }
+      }
+    },
+    {
+      "name": "2. Sign as Proposer",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Build canonical JSON of mandate fields and HMAC-SHA256 sign with shared secret.",
+              "// Must match backend/src/services/mandate/sign.ts canonicalize() exactly.",
+              "function sortKeys(v) {",
+              "  if (v === null || typeof v !== 'object') return v;",
+              "  if (Array.isArray(v)) return v.map(sortKeys);",
+              "  const sorted = {};",
+              "  Object.keys(v).sort().forEach(k => { sorted[k] = sortKeys(v[k]); });",
+              "  return sorted;",
+              "}",
+              "const fields = JSON.parse(pm.environment.get('mandate_fields_json') || pm.collectionVariables.get('mandate_fields_json'));",
+              "const canonical = JSON.stringify({",
+              "  counterparty_agent_id: fields.counterparty_agent_id,",
+              "  expires_at: new Date(fields.expires_at).toISOString(),",
+              "  id: fields.id,",
+              "  proposer_agent_id: fields.proposer_agent_id,",
+              "  scope: fields.scope,",
+              "  terms: sortKeys(fields.terms)",
+              "});",
+              "const secret = pm.environment.get('pact_signing_secret') || pm.collectionVariables.get('pact_signing_secret');",
+              "const sig = CryptoJS.HmacSHA256(canonical, secret).toString(CryptoJS.enc.Hex);",
+              "pm.environment.set('mandate_signature', sig);",
+              "pm.collectionVariables.set('mandate_signature', sig);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "content-type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"signer\": \"proposer\",\n  \"signature\": \"{{mandate_signature}}\"\n}"
+        },
+        "url": { "raw": "{{api_url}}/v1/mandates/{{mandate_id}}/sign", "host": ["{{api_url}}"], "path": ["v1", "mandates", "{{mandate_id}}", "sign"] }
+      }
+    },
+    {
+      "name": "3. Sign as Counterparty",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Signature is identical to step 2 — same fields, same secret.",
+              "function sortKeys(v) {",
+              "  if (v === null || typeof v !== 'object') return v;",
+              "  if (Array.isArray(v)) return v.map(sortKeys);",
+              "  const sorted = {};",
+              "  Object.keys(v).sort().forEach(k => { sorted[k] = sortKeys(v[k]); });",
+              "  return sorted;",
+              "}",
+              "const fields = JSON.parse(pm.environment.get('mandate_fields_json') || pm.collectionVariables.get('mandate_fields_json'));",
+              "const canonical = JSON.stringify({",
+              "  counterparty_agent_id: fields.counterparty_agent_id,",
+              "  expires_at: new Date(fields.expires_at).toISOString(),",
+              "  id: fields.id,",
+              "  proposer_agent_id: fields.proposer_agent_id,",
+              "  scope: fields.scope,",
+              "  terms: sortKeys(fields.terms)",
+              "});",
+              "const secret = pm.environment.get('pact_signing_secret') || pm.collectionVariables.get('pact_signing_secret');",
+              "const sig = CryptoJS.HmacSHA256(canonical, secret).toString(CryptoJS.enc.Hex);",
+              "pm.environment.set('mandate_signature', sig);",
+              "pm.collectionVariables.set('mandate_signature', sig);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "content-type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"signer\": \"counterparty\",\n  \"signature\": \"{{mandate_signature}}\"\n}"
+        },
+        "url": { "raw": "{{api_url}}/v1/mandates/{{mandate_id}}/sign", "host": ["{{api_url}}"], "path": ["v1", "mandates", "{{mandate_id}}", "sign"] }
+      }
+    },
+    {
+      "name": "4. Complete Mandate",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "content-type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"triggered_by\": \"{{proposer}}\"\n}"
+        },
+        "url": { "raw": "{{api_url}}/v1/mandates/{{mandate_id}}/complete", "host": ["{{api_url}}"], "path": ["v1", "mandates", "{{mandate_id}}", "complete"] }
+      }
+    },
+    {
+      "name": "5. Get Mandate + Trail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{api_url}}/v1/mandates/{{mandate_id}}", "host": ["{{api_url}}"], "path": ["v1", "mandates", "{{mandate_id}}"] }
+      }
+    },
+    {
+      "name": "6. Dispute Mandate (alternate terminal path)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "content-type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"triggered_by\": \"{{counterparty}}\",\n  \"reason\": \"Deliverable not received by deadline\"\n}"
+        },
+        "url": { "raw": "{{api_url}}/v1/mandates/{{mandate_id}}/dispute", "host": ["{{api_url}}"], "path": ["v1", "mandates", "{{mandate_id}}", "dispute"] }
+      }
+    },
+    {
+      "name": "7. Register Webhook (to receive state events)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "content-type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\":    \"https://your-bot.example.com/invoica/webhook\",\n  \"events\": [\"mandate.proposed\", \"mandate.signed_by_proposer\", \"mandate.signed_by_both\", \"mandate.completed\", \"mandate.disputed\"],\n  \"secret\": \"your-bot-webhook-secret\"\n}"
+        },
+        "url": { "raw": "{{api_url}}/v1/webhooks", "host": ["{{api_url}}"], "path": ["v1", "webhooks"] }
+      }
+    }
+  ]
+}
