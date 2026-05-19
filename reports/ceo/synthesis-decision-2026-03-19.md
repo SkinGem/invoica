@@ -8,4 +8,4 @@ The CMO evaluation is clear: Invoica is a perfect fit for the "Agents that pay" 
 
 This is not a stretch entry. Invoica IS the "agents that pay" infrastructure the event was designed to highlight. The risk is near-zero (no new build required, submission packages existing live product) and the upside is substantial: credibility signal during the free beta window, visibility to Ethereum/Base developers who are Invoica's exact ICP, and potential prize recognition.
 
-**Decision: We enter. Tarek registers as the human agent harness operator before March 22.**
+**Decision: We enter. the founder registers as the human agent harness operator before March 22.**

@@ -48,7 +48,7 @@ M1 gate: 2026-04-24 (5 days). Original plan allocated 7 days for WS-1 + WS-2 + g
 - Revocation: **complete** (Supabase dashboard, 2026-04-17). Verified with 401 response on the dead key.
 - Forensic audit (HOTFIX-01): **not started**. Swarm couldn't execute. Owner to run the bcrypt-compare + request-log scan manually, output to `reports/security/incident-2026-04-17-leaked-key-audit.md`.
 - PACT repo fix (HOTFIX-02): **not started**. Owner-owned repo, owner can patch `src/verifier.ts` and env-ify demo key directly.
-- Public repo scan (HOTFIX-03): **not started**. Owner to `gh search code` across skingem1 and Godman-s orgs.
+- Public repo scan (HOTFIX-03): **not started**. Owner to `gh search code` across the-founder and Godman-s orgs.
 
 Owner will treat 115a tasks as ops work done out of band and mark them `done` with manual completion notes, not re-run via swarm.
 

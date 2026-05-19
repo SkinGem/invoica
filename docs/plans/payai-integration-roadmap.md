@@ -67,7 +67,7 @@ PayAI is first into the registry, which matters for the Reputation Oracle specif
 
 ## ⚠️ Human Action Required First — PRE Sprint
 
-**This is NOT a code task. Tarek does this using his investor relationship with PayAI.**
+**This is NOT a code task. the founder does this using his investor relationship with PayAI.**
 
 | Step | Action | Output |
 |------|--------|--------|
@@ -76,7 +76,7 @@ PayAI is first into the registry, which matters for the Reputation Oracle specif
 | 3 | Register **Treasury Manager**: "Invoica Treasury Manager — Autonomous Yield Engine" · 0.005 USDC/cycle | `PAYAI_SERVICE_ID_TREASURY` |
 | 4 | Register **Reputation Oracle**: "Invoica Reputation Oracle — On-Chain Agent Trust Scores" · 0.002 USDC/query | `PAYAI_SERVICE_ID_ORACLE` |
 | 5 | Get the PayAI `/verify` endpoint URL. Confirm this is an x402-standard endpoint | `PAYAI_VERIFY_URL` |
-| 6 | Register PayAI as the **first facilitator** in the on-chain facilitator registry (INFRA-002). CTO handles the program; Tarek provides the verify URL and service IDs. | Registry entry confirmed |
+| 6 | Register PayAI as the **first facilitator** in the on-chain facilitator registry (INFRA-002). CTO handles the program; the founder provides the verify URL and service IDs. | Registry entry confirmed |
 | 7 | Negotiate 50% fee reduction for PayAI users for first 3 months — get in writing | Written agreement |
 
 **→ Do NOT start Sprint 051 until `PAYAI_SERVICE_ID_ROUTER` is confirmed. The gate middleware needs a real ServiceID.**

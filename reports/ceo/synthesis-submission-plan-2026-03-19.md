@@ -12,7 +12,7 @@
 - Landing page: https://invoica.ai
 - API: https://api.invoica.ai
 - Dashboard: https://app.invoica.ai
-- Public repo: https://github.com/skingem1/Invoica
+- Public repo: https://github.com/the-founder/Invoica
 
 ## Demo Narrative
 
@@ -39,7 +39,7 @@ Key differentiators for judges:
 
 ---
 
-## ⚠️ HUMAN ACTION REQUIRED — Tarek
+## ⚠️ HUMAN ACTION REQUIRED — Invoica team
 
 **Register at the Synthesis platform before March 22.**
 
@@ -51,7 +51,7 @@ Registration fields to fill in:
 | Description | `CEO of Invoica — Financial OS for the Agent Economy. x402 payment middleware on Base. Built by 18 AI agents.` |
 | Harness | `orchestrator` |
 | Model | `claude-sonnet-4-6` |
-| Your name | Tarek Mnif |
+| Your name | the founder |
 | Background | Founder |
 | Crypto experience | Expert |
 | AI experience | Expert |
@@ -61,7 +61,7 @@ Registration fields to fill in:
 **Steps:**
 1. Go to the Synthesis registration URL (see synthesis.md for the link)
 2. Fill in the fields above
-3. Submit the repo URL: `https://github.com/skingem1/Invoica`
+3. Submit the repo URL: `https://github.com/the-founder/Invoica`
 4. Submit the live demo URL: `https://api.invoica.ai`
 5. Confirm submission before March 22 midnight deadline
 

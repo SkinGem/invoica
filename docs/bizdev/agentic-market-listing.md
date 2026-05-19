@@ -96,14 +96,14 @@ Response: invoice ID, invoice number, line items with DE VAT at 19%, settlement 
 
 ## Team + transparency
 
-- Built by: SkinGem (founder) + AI agent swarm under Conway Edition governance (`constitution.md`)
+- Built by: the founder + AI agent swarm under Conway Edition governance (`constitution.md`)
 - Open-source status: core protocol plumbing (PACT, x402 adapters) on GitHub; SaaS code private
 - Plan: A+ investability track, M1 gate closing 2026-04-24 — see `plans/a-plus-investability-plan.md`
 - Legal entity: Delaware C-corp formation in progress (plan §M2-LEG-01)
 
 ## Contact
 
-- Founder: Tarek (skininthegem@gmail.com)
+- Founder: The founder (founder@invoica.ai)
 - Support: support@invoica.ai
 - Docs: https://docs.invoica.ai
 - Status page: https://status.invoica.ai (planned per plan §M2-CLAIM-03)

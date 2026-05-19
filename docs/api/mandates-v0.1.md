@@ -21,7 +21,7 @@ All endpoints require an Invoica API key in the `x-api-key` header:
 x-api-key: sk_<32 hex bytes>
 ```
 
-Request a key from `tarek@invoica.ai` for the closed beta.
+Request a key from `support@invoica.ai` for the closed beta.
 
 ## 3. Signing algorithm — canonical JSON + HMAC-SHA256
 
@@ -336,8 +336,8 @@ All errors return JSON:
 
 ## 11. Support & feedback
 
-- Issues + design questions: `tarek@invoica.ai`
-- TG: `@SkinGem`
+- Issues + design questions: `support@invoica.ai`
+- TG: `@invoica_ai`
 - Source (private): `https://github.com/SkinGem/invoica`
 - Anchor contract source: `contracts/MandateAnchor.sol` in repo
 - State machine: `backend/src/services/mandate/state-machine.ts`

@@ -14,7 +14,7 @@ Synthesis is an online builder event (March 4–25, 2026) explicitly designed fo
 
 **Track 1 — "Agents that pay"** is a direct description of Invoica:
 - Invoica IS the payment infrastructure for the agent economy: x402 invoice middleware, on-chain USDC settlement on Base, autonomous billing end-to-end
-- Public repo at github.com/skingem1/Invoica — open source requirement already met
+- Public repo at github.com/the-founder/Invoica — open source requirement already met
 - Live demo: api.invoica.ai + app.invoica.ai — working product, not a prototype
 - On-chain evidence: Base Mainnet USDC settlement transactions in DB (Supabase settlements table)
 - Agent-native provenance: built entirely by 18 AI agents, zero human-written code, 769 commits, 96.4% approval rate
@@ -29,7 +29,7 @@ Agents create invoices, receive x402 payment requests, settle in USDC on Base �
 ## Risks / Concerns
 
 - **Deadline:** Building ends March 22 — register within 24h.
-- **Registration:** Requires human action (Tarek) to register on the Synthesis platform.
+- **Registration:** Requires human action (Founder) to register on the Synthesis platform.
 - **Competition:** Unknown field, but Invoica's live + on-chain + agent-built story is strongly differentiated.
 - **Open source:** Already satisfied — repo is public.
 

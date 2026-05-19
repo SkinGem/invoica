@@ -1,7 +1,7 @@
 # HELIXA-001: API Setup Report
 **Date:** 2026-03-20
 **Task:** Establish Helixa API access — smoke test, agent registration, API key
-**Status:** Research complete. SIWA registration requires human action (Tarek).
+**Status:** Research complete. SIWA registration requires human action (Founder).
 
 ---
 

@@ -1,7 +1,7 @@
 # Invoica Modules — Canonical Module Catalog
 
 **Status:** Draft v0.1 · 2026-05-15
-**Owner:** Tarek (Godman)
+**Owner:** The founder (Godman)
 **Trigger:** Kognai master docs landed 2026-05-15 reframing Invoica's commercial surface from per-transaction fee → per-module credit-based subscription. This document locks the module names + maps current Invoica capabilities to them + flags gaps.
 
 **Companion docs:**

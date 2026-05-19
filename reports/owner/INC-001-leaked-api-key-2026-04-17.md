@@ -8,7 +8,7 @@
 
 ## Summary
 
-A live-format Invoica API key (`sk_302e3efa383ddf86c2247b7c03f859e6a6b0facab582f5c4be83abea71d17047`) was hard-coded in `github.com/Godman-s/pact/blob/main/demo-negotiation.ts:42`, a public repo. The repo owner is the founder (skingem1 / skininthegem@gmail.com), so this is an internal mistake, not a third-party customer leak. Incident disclosed by the Asterpay dev who also flagged a PACT verifier HMAC timing attack in the same review.
+A live-format Invoica API key (`sk_REDACTED_LEAKED_KEY`) was hard-coded in `github.com/Godman-s/pact/blob/main/demo-negotiation.ts:42`, a public repo. The repo owner is the founder (the-founder / founder@invoica.ai), so this is an internal mistake, not a third-party customer leak. Incident disclosed by the Asterpay dev who also flagged a PACT verifier HMAC timing attack in the same review.
 
 ## Actions Taken
 

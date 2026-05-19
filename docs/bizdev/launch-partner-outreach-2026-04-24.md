@@ -7,7 +7,7 @@
 **Signature block (reuse):**
 
 ```
-— Tarek
+— Invoica team
 Invoica — x402-native invoice + tax compliance for AI agents
 https://invoica.ai | https://api.invoica.ai/.well-known/x402
 ```

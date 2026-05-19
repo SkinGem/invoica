@@ -2,7 +2,7 @@
 
 **Context:** Asterpay dev privately flagged (1) a live-format Invoica API key hard-coded in Godman-s/pact/demo-negotiation.ts, (2) a non-constant-time HMAC compare in src/verifier.ts.
 
-**Channel:** same channel the report came in on. Reply from the owner (skingem / skininthegem@gmail.com), not from a Invoica company handle.
+**Channel:** same channel the report came in on. Reply from the owner (skingem / founder@invoica.ai), not from a Invoica company handle.
 
 **Tone:** direct, professional, no deflection. Credit the finder; confirm scope; state action; don't over-share.
 
@@ -12,7 +12,7 @@
 
 Thanks — both confirmed, both real, both on me.
 
-1. **Key leak.** The `sk_...` in `Godman-s/pact/demo-negotiation.ts` is a live Invoica key. Godman-s is my own GitHub account (the PACT demo side — same person as skingem1 on the Invoica side), so this is my own key in my own repo, not a customer key. Doesn't make it less bad. Revoking it now, rotating, and env-ifying the constant. History stays public so revocation is the real fix — force-rewriting a public repo's history breaks forks. Anyone who's already scraped the string gets a 401 the next time they try it.
+1. **Key leak.** The `sk_...` in `Godman-s/pact/demo-negotiation.ts` is a live Invoica key. Godman-s is my own GitHub account (the PACT demo side — same person as the-founder on the Invoica side), so this is my own key in my own repo, not a customer key. Doesn't make it less bad. Revoking it now, rotating, and env-ifying the constant. History stays public so revocation is the real fix — force-rewriting a public repo's history breaks forks. Anyone who's already scraped the string gets a 401 the next time they try it.
 
 2. **Timing attack in verifier.ts.** You're right — `!==` on the HMAC hex string is the wrong primitive for a public reference impl, even if the practical exploit cost is high. Switching to `crypto.timingSafeEqual` with a length-check guard, same commit. Will push to main today.
 
@@ -20,7 +20,7 @@ Also adding a repo-sweep for any other leaked credentials across my public repos
 
 Appreciate the catch. If you notice anything else, keep it coming.
 
-— SkinGem
+— Invoica team
 
 ---
 

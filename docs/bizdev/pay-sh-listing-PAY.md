@@ -82,4 +82,4 @@ x402 v2 via the **PayAI facilitator** (`https://facilitator.payai.network`) on S
 
 ## Provider
 
-[invoica.ai](https://invoica.ai) · operated by Kognai Labs SAS (France). Issues: file on this repo and tag `@SkinGem`.
+[invoica.ai](https://invoica.ai) · operated by Kognai Labs SAS (France). Issues: file on this repo and tag `@invoica_ai`.

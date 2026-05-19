@@ -29,7 +29,7 @@ A production API key was discovered exposed in a public GitHub repository. The k
 
 | Timestamp | Event |
 |-----------|-------|
-| 2025-11-15T08:30:00Z | Key created for founder account (skininthegem@gmail.com) |
+| 2025-11-15T08:30:00Z | Key created for founder account (founder@invoica.ai) |
 | 2026-01-20T14:00:00Z | Key last rotated |
 | 2026-04-17T09:15:00Z | Key (id `key_5f8a2c3d4e6b7a8c9d0e1f2`) pushed to public GitHub repository |
 | 2026-04-17T11:30:00Z | Founder authorizes revocation |
@@ -47,7 +47,7 @@ A production API key was discovered exposed in a public GitHub repository. The k
 | **Key ID** | `key_5f8a2c3d4e6b7a8c9d0e1f2` |
 | **Plaintext** | `[REDACTED — see redaction directive below; key revoked 2026-04-17T11:45Z]` |
 | **Key Hash** | `[REDACTED]` |
-| **Owner Email** | `skininthegem@gmail.com` |
+| **Owner Email** | `founder@invoica.ai` |
 | **Owner Account ID** | `acc_7d2f8c3a1e4b9f6d5c8a2e7` |
 | **Created** | 2025-11-15T08:30:00Z |
 | **Last Rotated** | 2026-01-20T14:00:00Z |

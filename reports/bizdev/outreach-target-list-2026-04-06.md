@@ -11,13 +11,13 @@
 
 | Pri | Target | Action | Owner | Status |
 |-----|--------|--------|-------|--------|
-| **P0 NEW** | **Agentic.Market (Coinbase CDP)** | **Submit Invoica listing — draft at `docs/bizdev/agentic-market-listing.md`** | **Tarek** | **Submit by 2026-04-24** |
-| P0 NEW | Bloomberg (Agentic.Market data partner) | Outreach: invoicing/tax for agent customers | Tarek | New |
-| P0 NEW | CoinGecko (Agentic.Market data partner) | Outreach: invoicing/tax for agent customers | Tarek | New |
-| P0 NEW | AWS Lambda (Agentic.Market infra partner) | Outreach: invoicing/tax for pay-per-call infra | Tarek | New |
-| P0 NEW | OpenAI / Venice (Agentic.Market inference) | Outreach: receipts for agent token purchases | Tarek | New |
-| P0 | x402 Foundation | Apply for membership | Tarek | New |
-| P0 | PayAI | Register 3 services via partner portal | Tarek | Pipeline |
+| **P0 NEW** | **Agentic.Market (Coinbase CDP)** | **Submit Invoica listing — draft at `docs/bizdev/agentic-market-listing.md`** | **the founder** | **Submit by 2026-04-24** |
+| P0 NEW | Bloomberg (Agentic.Market data partner) | Outreach: invoicing/tax for agent customers | the founder | New |
+| P0 NEW | CoinGecko (Agentic.Market data partner) | Outreach: invoicing/tax for agent customers | the founder | New |
+| P0 NEW | AWS Lambda (Agentic.Market infra partner) | Outreach: invoicing/tax for pay-per-call infra | the founder | New |
+| P0 NEW | OpenAI / Venice (Agentic.Market inference) | Outreach: receipts for agent token purchases | the founder | New |
+| P0 | x402 Foundation | Apply for membership | the founder | New |
+| P0 | PayAI | Register 3 services via partner portal | the founder | Pipeline |
 | P0 | Messari | Final follow-up by Apr 10 | BizDev | Follow-up sent |
 | P1 | x402Relay @79yuuki_en | Re-send DM (was never sent — API bug) | X-Admin | Warm lead |
 | P1 | Vouch @rabi_heree | Re-send DM (was never sent) | X-Admin | Warm lead |
@@ -26,7 +26,7 @@
 | P1 | Skale @TheGreatAxios | Follow-up DM — partnership | CMO | Warm lead |
 | P1 | LangChain | Submit to integrations directory | CTO | Integration exists |
 | P1 | Anthropic MCP | Submit to MCP server directory | CTO | MCP server exists |
-| P2 | Coinbase CDP | Developer relations outreach | Tarek | New |
+| P2 | Coinbase CDP | Developer relations outreach | the founder | New |
 | P2 | dTelecom | Their x402 audience = our audience | CMO | New |
 | P2 | CrewAI | Build tool integration | CTO | New |
 | P2 | Skyfire | Evaluate as facilitator candidate | CTO | New |
@@ -46,7 +46,7 @@
 ### PayAI — Launch Partner (Active)
 - x402 facilitator marketplace. Invoica's designated launch partner
 - 3 services (Payment Router, Treasury Manager, Reputation Oracle) for listing
-- payai.network — Tarek has investor relationship with founder
+- payai.network — Invoica team has investor relationship with founder
 
 ### x402Relay — @79yuuki_en
 - x402 relay for autonomous API payments. Japan-based (@ango_ya)
