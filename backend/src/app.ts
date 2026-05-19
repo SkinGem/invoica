@@ -25,6 +25,7 @@ import sapExecuteRoutes from './routes/sap-execute';
 import invoiceDownloadRoutes from './routes/invoice-download';
 import pactSessionRoutes from './routes/pact-session';
 import mandateRoutes from './routes/mandates';
+import openapiRoutes from './routes/openapi';
 import companyRoutes from './routes/company';
 import billingRoutes from './routes/billing';
 import { clinpayWebhookRouter, clinpayRouter } from './routes/clinpay';
@@ -88,6 +89,7 @@ app.use((req, _res, next) => {
 // Public routes (explicit allowlist — all other data routes require auth).
 app.use(healthRoutes);
 app.use('/.well-known', wellKnownRoutes);
+app.use(openapiRoutes);  // public: /openapi.json + /.well-known/openapi.json — discovery for AgentCash / x402scan / IETF crawlers
 
 // M1-SEC-01 (plan §3.1): authenticate all read-side routes that expose platform data.
 app.use(companyRoutes);

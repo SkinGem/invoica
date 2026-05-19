@@ -1,0 +1,564 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Invoica — Financial OS for the Agent Economy",
+    "version": "1.0.0",
+    "description": "x402-native invoice middleware + PACT mandate primitive for AI agents. Invoice, settle, and comply autonomously.",
+    "x-guidance": "Invoica is the constitutional substrate for agent-to-agent commerce. Two surfaces: (1) x402-paywalled discovery endpoints for one-shot invoice / settlement / tax classification — pay per call in USDC via the x402 protocol; (2) authenticated API for sustained integrations — create invoices, propose mandates, register webhooks, fetch settlement rollups. PACT mandates (cryptographically-signed bilateral agreements) are anchored on Base (mainnet for production, Sepolia for v0.1 PACT API). Tax compliance built in (EU VAT, UK HMRC, US AgentTax across 5 states).",
+    "contact": {
+      "name": "Invoica",
+      "url": "https://invoica.ai",
+      "email": "support@invoica.ai"
+    },
+    "license": {
+      "name": "Apache-2.0"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.invoica.ai",
+      "description": "Production"
+    }
+  ],
+  "x-discovery": {
+    "ownershipProofs": [
+      "dns-txt:invoica.ai:_pact-discovery:invoica-self-attested-2026-05-19"
+    ]
+  },
+  "x-service-info": {
+    "categories": ["payment", "invoice", "tax-compliance", "agent-economy", "settlement"],
+    "documentation": "https://docs.invoica.ai",
+    "agentNetworks": ["solana-mainnet", "base-mainnet", "polygon-mainnet", "arbitrum-mainnet", "skale-base-mainnet", "base-sepolia"]
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Invoica API key (sk_ prefix). Request at https://app.invoica.ai/api-keys"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "enum": [false] },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" }
+            },
+            "required": ["code", "message"]
+          }
+        },
+        "required": ["success", "error"]
+      },
+      "Invoice": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "invoiceNumber": { "type": "integer" },
+          "status": { "type": "string", "enum": ["PENDING", "PROCESSING", "SETTLED", "COMPLETED", "CANCELLED", "REFUNDED"] },
+          "amount": { "type": "number" },
+          "currency": { "type": "string" },
+          "customerEmail": { "type": "string", "format": "email" },
+          "customerName": { "type": "string" },
+          "paymentDetails": {
+            "type": "object",
+            "properties": {
+              "chain": { "type": "string", "enum": ["base", "polygon", "arbitrum", "skale", "solana"] },
+              "paymentAddress": { "type": "string" },
+              "usdcAddress": { "type": "string" }
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["id", "invoiceNumber", "status", "amount", "currency"]
+      },
+      "Mandate": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "proposer_agent_id": { "type": "string" },
+          "counterparty_agent_id": { "type": "string" },
+          "scope": { "type": "string" },
+          "terms": { "type": "object", "additionalProperties": true },
+          "state": { "type": "string", "enum": ["proposed", "signed_by_proposer", "signed_by_both", "in_progress", "completed", "disputed", "expired"] },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "pact_mandate_hash": { "type": ["string", "null"] }
+        },
+        "required": ["id", "proposer_agent_id", "counterparty_agent_id", "scope", "terms", "state", "expires_at"]
+      }
+    }
+  },
+  "paths": {
+    "/.well-known/x402": {
+      "get": {
+        "operationId": "getX402Discovery",
+        "summary": "x402 v2 discovery manifest",
+        "description": "Public discovery endpoint. Agent clients (pay.sh, AgentCash, etc.) probe this for the list of paywalled capabilities and supported networks.",
+        "responses": {
+          "200": {
+            "description": "Discovery manifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": { "type": "string" },
+                    "agent": { "type": "object" },
+                    "x402Endpoints": { "type": "object" },
+                    "facilitator": { "type": "string" },
+                    "capabilities": { "type": "array", "items": { "type": "object" } },
+                    "networks": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Health check",
+        "description": "Public health endpoint. Returns service status + dependency states.",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "enum": ["healthy", "degraded"] },
+                    "version": { "type": "string" },
+                    "uptime": { "type": "number" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/x402/invoice": {
+      "post": {
+        "operationId": "createX402Invoice",
+        "summary": "Create an invoice via x402 paywall",
+        "description": "Pay 0.01 USDC via x402 protocol to create a new invoice. Payment is the credential — no API key required. Settles on Solana mainnet via PayAI facilitator.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "amount": { "type": "number" },
+                  "currency": { "type": "string" },
+                  "issuer": { "type": "string" },
+                  "recipient": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "description": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Invoice created (payment received)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "capability": { "type": "string" },
+                    "result": { "$ref": "#/components/schemas/Invoice" }
+                  }
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required — pay 0.01 USDC via x402 facilitator",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "x402Version": { "type": "integer" },
+                    "accepts": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-payment-info": {
+          "protocols": [
+            { "x402": {} }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USDC",
+            "amount": "0.01"
+          },
+          "facilitator": "https://facilitator.payai.network"
+        }
+      }
+    },
+    "/api/x402/settle": {
+      "post": {
+        "operationId": "checkX402Settlement",
+        "summary": "Check invoice settlement status via x402",
+        "description": "Pay 0.005 USDC via x402 to fetch current settlement state for an invoice. Payment is the credential.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "invoiceId": { "type": "string" }
+                },
+                "required": ["invoiceId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Settlement state returned" },
+          "402": { "description": "Payment required" }
+        },
+        "x-payment-info": {
+          "protocols": [
+            { "x402": {} }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USDC",
+            "amount": "0.005"
+          },
+          "facilitator": "https://facilitator.payai.network"
+        }
+      }
+    },
+    "/api/x402/tax": {
+      "post": {
+        "operationId": "classifyTax",
+        "summary": "Tax classification (AgentTax AMD-22)",
+        "description": "Pay 0.02 USDC via x402 to receive jurisdiction + rate + statute citation for a transaction. Covers 27 EU countries + UK + 5 US states (CA, TX, NY, FL, WA).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "buyer_state": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "transaction_type": { "type": "string" },
+                  "counterparty_id": { "type": "string" }
+                },
+                "required": ["buyer_state"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Tax classification returned" },
+          "402": { "description": "Payment required" }
+        },
+        "x-payment-info": {
+          "protocols": [
+            { "x402": {} }
+          ],
+          "price": {
+            "mode": "fixed",
+            "currency": "USDC",
+            "amount": "0.02"
+          },
+          "facilitator": "https://facilitator.payai.network"
+        }
+      }
+    },
+    "/v1/invoices": {
+      "post": {
+        "operationId": "createInvoice",
+        "summary": "Create an invoice",
+        "description": "Authenticated invoice creation. Supports EVM (base, polygon, arbitrum, skale) and Solana. Auto-populates seller wallet + USDC contract; auto-calculates tax when buyer location supplied.",
+        "security": [{ "ApiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customerEmail": { "type": "string", "format": "email" },
+                  "customerName": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "currency": { "type": "string", "default": "USD" },
+                  "chain": { "type": "string", "enum": ["base", "polygon", "arbitrum", "skale", "solana"], "default": "base" },
+                  "buyerCountryCode": { "type": "string" },
+                  "buyerStateCode": { "type": "string" },
+                  "companyId": { "type": "string" }
+                },
+                "required": ["customerEmail", "customerName", "amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invoice created",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Invoice" } } }
+          },
+          "400": { "description": "Validation error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "401": { "description": "Missing or invalid API key" }
+        }
+      },
+      "get": {
+        "operationId": "listInvoices",
+        "summary": "List invoices",
+        "description": "Paginated list with filters (status, customerEmail, companyId, chain, date range, amount range).",
+        "security": [{ "ApiKeyAuth": [] }],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } },
+          { "name": "customerEmail", "in": "query", "schema": { "type": "string" } },
+          { "name": "chain", "in": "query", "schema": { "type": "string" } },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20, "maximum": 100 } },
+          { "name": "offset", "in": "query", "schema": { "type": "integer", "default": 0 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Invoice list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Invoice" } },
+                    "meta": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/invoices/{id}": {
+      "get": {
+        "operationId": "getInvoice",
+        "summary": "Get invoice by id",
+        "security": [{ "ApiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Invoice", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Invoice" } } } },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/v1/mandates": {
+      "post": {
+        "operationId": "createMandate",
+        "summary": "Propose a PACT mandate",
+        "description": "Create a new bilateral mandate between proposer and counterparty. Returns mandate id; proposer must sign next via /sign. Every state transition is anchored on Base Sepolia (v0.1).",
+        "security": [{ "ApiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "proposer": { "type": "string" },
+                  "counterparty": { "type": "string" },
+                  "scope": { "type": "string" },
+                  "terms": { "type": "object", "additionalProperties": true },
+                  "expiry": { "type": "string", "format": "date-time" },
+                  "context": { "type": "object", "additionalProperties": true }
+                },
+                "required": ["proposer", "counterparty", "scope", "terms", "expiry"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mandate proposed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "mandate_id": { "type": "string" },
+                        "status": { "type": "string" },
+                        "proposer_signature_required": { "type": "boolean" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/mandates/{id}": {
+      "get": {
+        "operationId": "getMandate",
+        "summary": "Get mandate + transition trail",
+        "description": "Returns full mandate state plus the on-chain anchor tx hashes for every state transition. Each transition is verifiable on BaseScan.",
+        "security": [{ "ApiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Mandate", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Mandate" } } } },
+          "404": { "description": "Not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/v1/mandates/{id}/sign": {
+      "post": {
+        "operationId": "signMandate",
+        "summary": "Sign a mandate",
+        "description": "Sign as proposer or counterparty. Signature is HMAC-SHA256 over canonical mandate bytes (see docs.invoica.ai/api-reference/mandates).",
+        "security": [{ "ApiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "signer": { "type": "string", "enum": ["proposer", "counterparty"] },
+                  "signature": { "type": "string" }
+                },
+                "required": ["signer", "signature"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Signature accepted, state advanced" },
+          "403": { "description": "Invalid signature" },
+          "409": { "description": "Invalid transition for current state" }
+        }
+      }
+    },
+    "/v1/mandates/{id}/complete": {
+      "post": {
+        "operationId": "completeMandate",
+        "summary": "Mark mandate as completed",
+        "description": "Terminal transition. Anchors final state on Base Sepolia.",
+        "security": [{ "ApiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "triggered_by": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Completed" } }
+      }
+    },
+    "/v1/mandates/{id}/dispute": {
+      "post": {
+        "operationId": "disputeMandate",
+        "summary": "Flag mandate as disputed",
+        "description": "Terminal state. Pauses further transitions.",
+        "security": [{ "ApiKeyAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": { "type": "string" },
+                  "triggered_by": { "type": "string" }
+                },
+                "required": ["reason"]
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Disputed" } }
+      }
+    },
+    "/v1/webhooks": {
+      "post": {
+        "operationId": "registerWebhook",
+        "summary": "Register a webhook endpoint",
+        "description": "Subscribe to event types (invoice.*, mandate.*, settlement.*). Webhook deliveries are HMAC-signed via the shared secret.",
+        "security": [{ "ApiKeyAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": { "type": "string", "format": "uri" },
+                  "events": { "type": "array", "items": { "type": "string" } },
+                  "secret": { "type": "string", "minLength": 16 }
+                },
+                "required": ["url", "events", "secret"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Webhook registered" }
+        }
+      }
+    },
+    "/v1/clinpay/reports/rollup": {
+      "get": {
+        "operationId": "clinpayRollup",
+        "summary": "ClinPay DRS receipt rollup",
+        "description": "Daily or weekly bucketed report of DRS receipts (settled clinical-trial / panel payouts). Includes per-jurisdiction tax totals. JSON or CSV.",
+        "security": [{ "ApiKeyAuth": [] }],
+        "parameters": [
+          { "name": "study_id", "in": "query", "schema": { "type": "string" } },
+          { "name": "period", "in": "query", "schema": { "type": "string", "enum": ["day", "week"] } },
+          { "name": "format", "in": "query", "schema": { "type": "string", "enum": ["json", "csv"] } },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": {
+          "200": { "description": "Rollup report" }
+        }
+      }
+    }
+  }
+}
