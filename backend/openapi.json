@@ -32,7 +32,7 @@
   },
   "components": {
     "securitySchemes": {
-      "ApiKeyAuth": {
+      "apiKey": {
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key",
@@ -204,11 +204,9 @@
         },
         "x-payment-info": {
           "pricingMode": "fixed",
-          "amount": "0.01",
+          "price": "0.01",
           "currency": "USDC",
           "protocols": ["x402"],
-          "method": "x402",
-          "intent": "charge",
           "description": "Pay 0.01 USDC via x402 facilitator (PayAI) to create an invoice. Payment is the credential.",
           "facilitator": "https://facilitator.payai.network"
         }
@@ -240,11 +238,9 @@
         },
         "x-payment-info": {
           "pricingMode": "fixed",
-          "amount": "0.005",
+          "price": "0.005",
           "currency": "USDC",
           "protocols": ["x402"],
-          "method": "x402",
-          "intent": "charge",
           "description": "Pay 0.005 USDC via x402 to fetch invoice settlement state.",
           "facilitator": "https://facilitator.payai.network"
         }
@@ -279,11 +275,9 @@
         },
         "x-payment-info": {
           "pricingMode": "fixed",
-          "amount": "0.02",
+          "price": "0.02",
           "currency": "USDC",
           "protocols": ["x402"],
-          "method": "x402",
-          "intent": "charge",
           "description": "Pay 0.02 USDC via x402 for jurisdiction-aware tax classification (AgentTax AMD-22).",
           "facilitator": "https://facilitator.payai.network"
         }
@@ -294,7 +288,7 @@
         "operationId": "createInvoice",
         "summary": "Create an invoice",
         "description": "Authenticated invoice creation. Supports EVM (base, polygon, arbitrum, skale) and Solana. Auto-populates seller wallet + USDC contract; auto-calculates tax when buyer location supplied.",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -329,7 +323,7 @@
         "operationId": "listInvoices",
         "summary": "List invoices",
         "description": "Paginated list with filters (status, customerEmail, companyId, chain, date range, amount range).",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "parameters": [
           { "name": "status", "in": "query", "schema": { "type": "string" } },
           { "name": "customerEmail", "in": "query", "schema": { "type": "string" } },
@@ -362,7 +356,7 @@
       "get": {
         "operationId": "getInvoice",
         "summary": "Get invoice by id",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
@@ -377,7 +371,7 @@
         "operationId": "createMandate",
         "summary": "Propose a PACT mandate",
         "description": "Create a new bilateral mandate between proposer and counterparty. Returns mandate id; proposer must sign next via /sign. Every state transition is anchored on Base Sepolia (v0.1).",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -427,7 +421,7 @@
         "operationId": "getMandate",
         "summary": "Get mandate + transition trail",
         "description": "Returns full mandate state plus the on-chain anchor tx hashes for every state transition. Each transition is verifiable on BaseScan.",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
@@ -442,7 +436,7 @@
         "operationId": "signMandate",
         "summary": "Sign a mandate",
         "description": "Sign as proposer or counterparty. Signature is HMAC-SHA256 over canonical mandate bytes (see docs.invoica.ai/api-reference/mandates).",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
@@ -473,7 +467,7 @@
         "operationId": "completeMandate",
         "summary": "Mark mandate as completed",
         "description": "Terminal transition. Anchors final state on Base Sepolia.",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
@@ -495,7 +489,7 @@
         "operationId": "disputeMandate",
         "summary": "Flag mandate as disputed",
         "description": "Terminal state. Pauses further transitions.",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
@@ -522,7 +516,7 @@
         "operationId": "registerWebhook",
         "summary": "Register a webhook endpoint",
         "description": "Subscribe to event types (invoice.*, mandate.*, settlement.*). Webhook deliveries are HMAC-signed via the shared secret.",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "requestBody": {
           "required": true,
           "content": {
@@ -549,7 +543,7 @@
         "operationId": "clinpayRollup",
         "summary": "ClinPay DRS receipt rollup",
         "description": "Daily or weekly bucketed report of DRS receipts (settled clinical-trial / panel payouts). Includes per-jurisdiction tax totals. JSON or CSV.",
-        "security": [{ "ApiKeyAuth": [] }],
+        "security": [{ "apiKey": [] }],
         "parameters": [
           { "name": "study_id", "in": "query", "schema": { "type": "string" } },
           { "name": "period", "in": "query", "schema": { "type": "string", "enum": ["day", "week"] } },
