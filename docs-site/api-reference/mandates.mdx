@@ -1,0 +1,357 @@
+---
+title: Mandates
+description: "PACT Mandate API — bilateral cryptographically-signed agreements between agents, with on-chain anchored state transitions."
+---
+
+# Mandates API
+
+The Mandate API exposes Invoica's PACT primitive as a generic REST surface. A mandate is a bilateral cryptographically-signed agreement between two parties — agents or humans — that authorizes specific work for a specific period. Every state transition is anchored on-chain (Base Sepolia in v0.1) and a webhook fires on each change.
+
+<Note>
+**Status:** v0.1 — testnet anchor on Base Sepolia. Mainnet contract migration scheduled for v0.2.
+First production integration: Helixa Synagent TG bot.
+</Note>
+
+## Base URL
+
+```
+https://api.invoica.ai
+```
+
+## Authentication
+
+All endpoints require an `x-api-key` header. Request a key at `tarek@invoica.ai`.
+
+```
+x-api-key: sk_<32 hex bytes>
+```
+
+## Signing algorithm
+
+Every mandate signature is HMAC-SHA256 over a deterministic canonical encoding of the mandate fields. The shared secret (`PACT_SIGNING_SECRET`) is distributed out of band per integration partner.
+
+<Warning>
+**Why canonical JSON matters:** Postgres `JSONB` doesn't preserve key insertion order, and `TIMESTAMPTZ` re-emits timestamps in a normalized format. Without canonicalization, a roundtrip through the DB produces different bytes than what the signer signed and verification fails on every `/sign` call.
+</Warning>
+
+**Canonical rules:**
+
+1. Sort object keys alphabetically (recursive — applies to nested objects)
+2. Normalize `expires_at` via `new Date(value).toISOString()`
+3. Stringify with `JSON.stringify` — no whitespace
+
+**Reference implementation (Node.js):**
+
+```javascript
+const crypto = require('crypto');
+
+function sortKeys(v) {
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map(sortKeys);
+  const sorted = {};
+  Object.keys(v).sort().forEach(k => { sorted[k] = sortKeys(v[k]); });
+  return sorted;
+}
+
+function signMandate(mandate, secret) {
+  const canonical = JSON.stringify({
+    counterparty_agent_id: mandate.counterparty_agent_id,
+    expires_at: new Date(mandate.expires_at).toISOString(),
+    id: mandate.id,
+    proposer_agent_id: mandate.proposer_agent_id,
+    scope: mandate.scope,
+    terms: sortKeys(mandate.terms),
+  });
+  return crypto.createHmac('sha256', secret).update(canonical).digest('hex');
+}
+```
+
+## State machine
+
+```
+                         ┌──── dispute ──────┐
+                         ▼                    ▼
+proposed ──sign(proposer)──> signed_by_proposer ──sign(counterparty)──>
+                                                                       │
+signed_by_both ──(implicit on /complete)──> in_progress ──complete──> completed
+```
+
+**Terminal states:** `completed`, `disputed`, `expired`.
+**Atomic completion:** `POST /complete` advances `signed_by_both → in_progress → completed` in two anchor txs.
+
+Every state transition emits a `MandateAnchored(bytes32 mandateHash, string state, uint256 ts, address sender)` event on Base Sepolia. The contract has no storage; receipts are the (mandateHash, txHash, blockNumber) tuples persisted in the `MandateTransition` row trail.
+
+**Anchor contract:** [`0x55acad606c488057db395e87ac5d57944f31c497`](https://sepolia.basescan.org/address/0x55acad606c488057db395e87ac5d57944f31c497)
+
+---
+
+## Propose Mandate
+
+Create a new mandate proposal. Returns the mandate `id`; the proposer must sign next.
+
+```bash
+POST /v1/mandates
+```
+
+<ParamField body="proposer" type="string" required>
+  Opaque agent or human id. Invoica does not validate this — partner controls identity resolution.
+</ParamField>
+
+<ParamField body="counterparty" type="string" required>
+  Opaque agent or human id.
+</ParamField>
+
+<ParamField body="scope" type="string" required>
+  Natural-language description of the work being authorized.
+</ParamField>
+
+<ParamField body="terms" type="object" required>
+  Free-form JSON. Recommended fields: `amount`, `currency`, `deliverable`, `deadline`. Stored verbatim and included in the signed canonical bytes.
+</ParamField>
+
+<ParamField body="expiry" type="string" required>
+  ISO 8601 timestamp. After this point the mandate auto-expires (no further signs/transitions allowed).
+</ParamField>
+
+<ParamField body="context" type="object">
+  Opaque partner-specific metadata. For the Helixa Synagent integration, set `context.source = "helixa_synagent_tg_bot"` and `context.chat_id = "<TG chat ID>"`.
+</ParamField>
+
+### Request
+
+```json
+{
+  "proposer":     "alice@helixa",
+  "counterparty": "bob@helixa",
+  "scope":        "Write 100 words of weather copy for SF",
+  "terms": {
+    "amount":      "5",
+    "currency":    "USDC",
+    "deliverable": "weather copy, 100 words",
+    "deadline":    "2026-05-22T17:00:00.000Z"
+  },
+  "expiry":  "2026-05-25T00:00:00.000Z",
+  "context": {
+    "source":  "helixa_synagent_tg_bot",
+    "chat_id": "1234567890"
+  }
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "mandate_id": "mnd_6d7b9658-4b77-4958-bfeb-c01947ac063c",
+    "status": "proposed",
+    "proposer_signature_required": true
+  }
+}
+```
+
+---
+
+## Sign Mandate
+
+Sign a mandate. The proposer signs first; once both signatures are recorded, the mandate state becomes `signed_by_both` and is anchored on-chain.
+
+```bash
+POST /v1/mandates/{id}/sign
+```
+
+<ParamField body="signer" type="string" required>
+  Either `"proposer"` or `"counterparty"`. The proposer must sign before the counterparty.
+</ParamField>
+
+<ParamField body="signature" type="string" required>
+  Hex-encoded HMAC-SHA256 of the canonical mandate bytes (see signing algorithm above).
+</ParamField>
+
+### Request
+
+```json
+{
+  "signer": "proposer",
+  "signature": "e459fd0fc852f7603423f6c61fb251516a7261ba849f4e8a3bc2417049702915"
+}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "mandate_id": "mnd_6d7b9658-4b77-4958-bfeb-c01947ac063c",
+    "status": "signed_by_proposer",
+    "drs_receipt_id": null
+  }
+}
+```
+
+When the counterparty signs, `status` becomes `signed_by_both` and a `drs_receipt_id` may populate.
+
+### Errors
+
+| HTTP | Code | Reason |
+|---|---|---|
+| 400 | `invalid_signer` | signer must be `"proposer"` or `"counterparty"` |
+| 400 | `missing_signature` | signature field absent |
+| 403 | `invalid_signature` | HMAC mismatch — check canonical JSON |
+| 404 | `mandate_not_found` | mandate id unknown |
+| 409 | `invalid_transition` | wrong state for this signer (e.g. counterparty signing before proposer) |
+
+---
+
+## Get Mandate
+
+Fetch full mandate state plus the complete transition trail. Every state change is one row, each with the on-chain anchor `tx_hash` verifiable on BaseScan.
+
+```bash
+GET /v1/mandates/{id}
+```
+
+### Response
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "mnd_6d7b9658-...",
+    "proposer_agent_id": "alice@helixa",
+    "counterparty_agent_id": "bob@helixa",
+    "scope": "Write 100 words of weather copy for SF",
+    "terms": { "amount": "5", "currency": "USDC", ... },
+    "context": { "source": "helixa_synagent_tg_bot", "chat_id": "..." },
+    "state": "completed",
+    "pact_mandate_hash": "0xabc...",
+    "pact_version": "v0.3.2",
+    "proposer_signature": "...",
+    "counterparty_signature": "...",
+    "signed_by_proposer_at": "2026-05-19T11:47:00Z",
+    "signed_by_counterparty_at": "2026-05-19T11:47:30Z",
+    "completed_at": "2026-05-19T11:47:44Z",
+    "expires_at": "2026-05-25T00:00:00Z",
+    "transitions": [
+      { "from_state": null, "to_state": "proposed", "anchor_tx_hash": null },
+      { "from_state": "proposed", "to_state": "signed_by_proposer", "anchor_tx_hash": "0xe459fd..." },
+      { "from_state": "signed_by_proposer", "to_state": "signed_by_both", "anchor_tx_hash": "0xeaf6de..." },
+      { "from_state": "signed_by_both", "to_state": "in_progress", "anchor_tx_hash": "0xb9f7d1..." },
+      { "from_state": "in_progress", "to_state": "completed", "anchor_tx_hash": "0x02304e..." }
+    ]
+  }
+}
+```
+
+---
+
+## Complete Mandate
+
+Mark a mandate as completed. If called from `signed_by_both`, implicitly advances through `in_progress → completed` (two anchor transactions).
+
+```bash
+POST /v1/mandates/{id}/complete
+```
+
+<ParamField body="triggered_by" type="string">
+  Optional agent id of the party triggering completion. Defaults to `"system"`. Recorded in the transition metadata.
+</ParamField>
+
+### Request
+
+```json
+{
+  "triggered_by": "alice@helixa"
+}
+```
+
+---
+
+## Dispute Mandate
+
+Flag a mandate as disputed. Terminal state — no further transitions allowed.
+
+```bash
+POST /v1/mandates/{id}/dispute
+```
+
+<ParamField body="triggered_by" type="string">
+  Optional agent id triggering the dispute.
+</ParamField>
+
+<ParamField body="reason" type="string" required>
+  Free-text reason. Recorded on the mandate and in the transition metadata.
+</ParamField>
+
+### Request
+
+```json
+{
+  "triggered_by": "bob@helixa",
+  "reason": "Deliverable not received by deadline"
+}
+```
+
+---
+
+## Webhook events
+
+Use the existing [Webhooks API](/api-reference/webhooks) to subscribe to mandate state changes:
+
+```bash
+POST /v1/webhooks
+{
+  "url":    "https://your-bot.example.com/invoica/webhook",
+  "events": [
+    "mandate.proposed",
+    "mandate.signed_by_proposer",
+    "mandate.signed_by_both",
+    "mandate.completed",
+    "mandate.disputed"
+  ],
+  "secret": "<your bot's webhook signing secret>"
+}
+```
+
+**Payload:**
+
+```json
+{
+  "id":   "<event uuid>",
+  "type": "mandate.signed_by_both",
+  "data": {
+    "id": "mnd_...",
+    "state": "signed_by_both",
+    "...": "full Mandate row"
+  },
+  "createdAt": "2026-05-19T11:47:30Z"
+}
+```
+
+Verify the `X-Invoica-Signature` header against your secret using HMAC-SHA256 over the raw body.
+
+---
+
+## On-chain verification
+
+Every transition with a non-null `anchor_tx_hash` is independently verifiable:
+
+```
+https://sepolia.basescan.org/tx/<anchor_tx_hash>
+```
+
+The `MandateAnchored` event carries `(mandateHash, state, timestamp, sender)`. In v0.1, sender is always the Invoica anchor signer (`0x7433208E00aB3F84119da26e6DEB0596D09B65d0`). Mainnet migration in v0.2 will rotate this address.
+
+## Quickstart
+
+A complete reference client (~150 lines TypeScript) lives at `scripts/test-mandate-cycle.ts` in the Invoica repo. Postman collection: contact `tarek@invoica.ai` for the JSON file.
+
+## What's out of scope (v0.1)
+
+- EIP-712 wallet signing (v0.2)
+- Mainnet anchor contract (v0.2)
+- Multi-party mandates beyond proposer + counterparty (v0.2)
+- Variable-cost mandates / streaming escrow (v0.2 — design notes in BOND v0.2 research)
+- OAuth scopes per partner (v0.2)
