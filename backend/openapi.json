@@ -98,6 +98,7 @@
       "get": {
         "operationId": "getX402Discovery",
         "summary": "x402 v2 discovery manifest",
+        "security": [],
         "description": "Public discovery endpoint. Agent clients (pay.sh, AgentCash, etc.) probe this for the list of paywalled capabilities and supported networks.",
         "responses": {
           "200": {
@@ -125,6 +126,7 @@
       "get": {
         "operationId": "getHealth",
         "summary": "Health check",
+        "security": [],
         "description": "Public health endpoint. Returns service status + dependency states.",
         "responses": {
           "200": {
@@ -149,6 +151,7 @@
       "post": {
         "operationId": "createX402Invoice",
         "summary": "Create an invoice via x402 paywall",
+        "security": [],
         "description": "Pay 0.01 USDC via x402 protocol to create a new invoice. Payment is the credential — no API key required. Settles on Solana mainnet via PayAI facilitator.",
         "requestBody": {
           "required": true,
@@ -200,14 +203,13 @@
           }
         },
         "x-payment-info": {
-          "protocols": [
-            { "x402": {} }
-          ],
-          "price": {
-            "mode": "fixed",
-            "currency": "USDC",
-            "amount": "0.01"
-          },
+          "pricingMode": "fixed",
+          "amount": "0.01",
+          "currency": "USDC",
+          "protocols": ["x402"],
+          "method": "x402",
+          "intent": "charge",
+          "description": "Pay 0.01 USDC via x402 facilitator (PayAI) to create an invoice. Payment is the credential.",
           "facilitator": "https://facilitator.payai.network"
         }
       }
@@ -216,6 +218,7 @@
       "post": {
         "operationId": "checkX402Settlement",
         "summary": "Check invoice settlement status via x402",
+        "security": [],
         "description": "Pay 0.005 USDC via x402 to fetch current settlement state for an invoice. Payment is the credential.",
         "requestBody": {
           "required": true,
@@ -236,14 +239,13 @@
           "402": { "description": "Payment required" }
         },
         "x-payment-info": {
-          "protocols": [
-            { "x402": {} }
-          ],
-          "price": {
-            "mode": "fixed",
-            "currency": "USDC",
-            "amount": "0.005"
-          },
+          "pricingMode": "fixed",
+          "amount": "0.005",
+          "currency": "USDC",
+          "protocols": ["x402"],
+          "method": "x402",
+          "intent": "charge",
+          "description": "Pay 0.005 USDC via x402 to fetch invoice settlement state.",
           "facilitator": "https://facilitator.payai.network"
         }
       }
@@ -252,6 +254,7 @@
       "post": {
         "operationId": "classifyTax",
         "summary": "Tax classification (AgentTax AMD-22)",
+        "security": [],
         "description": "Pay 0.02 USDC via x402 to receive jurisdiction + rate + statute citation for a transaction. Covers 27 EU countries + UK + 5 US states (CA, TX, NY, FL, WA).",
         "requestBody": {
           "required": true,
@@ -275,14 +278,13 @@
           "402": { "description": "Payment required" }
         },
         "x-payment-info": {
-          "protocols": [
-            { "x402": {} }
-          ],
-          "price": {
-            "mode": "fixed",
-            "currency": "USDC",
-            "amount": "0.02"
-          },
+          "pricingMode": "fixed",
+          "amount": "0.02",
+          "currency": "USDC",
+          "protocols": ["x402"],
+          "method": "x402",
+          "intent": "charge",
+          "description": "Pay 0.02 USDC via x402 for jurisdiction-aware tax classification (AgentTax AMD-22).",
           "facilitator": "https://facilitator.payai.network"
         }
       }
