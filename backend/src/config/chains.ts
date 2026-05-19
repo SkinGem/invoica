@@ -106,6 +106,19 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     type: 'solana',
     usdcDecimals: 6,
   },
+  {
+    // Base Sepolia testnet — used for PACT Mandate API v0.1 (Helixa Synagent).
+    // DRS receipts anchored via MandateAnchor.sol (contracts/MandateAnchor.sol).
+    // Chain ID 84532. Faucet: https://www.alchemy.com/faucets/base-sepolia
+    id: 'base-sepolia',
+    name: 'Base Sepolia',
+    rpcUrl: process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
+    usdcAddress: '0x036CbD53842c5426634e7929541eC2318f3dCd01',
+    explorerUrl: 'https://sepolia.basescan.org',
+    isTestnet: true,
+    type: 'evm',
+    usdcDecimals: 6,
+  },
 ];
 
 /**

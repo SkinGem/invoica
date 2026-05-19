@@ -24,6 +24,7 @@ import sapRoutes from './routes/sap';
 import sapExecuteRoutes from './routes/sap-execute';
 import invoiceDownloadRoutes from './routes/invoice-download';
 import pactSessionRoutes from './routes/pact-session';
+import mandateRoutes from './routes/mandates';
 import companyRoutes from './routes/company';
 import billingRoutes from './routes/billing';
 import { clinpayWebhookRouter, clinpayRouter } from './routes/clinpay';
@@ -100,6 +101,7 @@ app.use('/api/sap', sapExecuteRoutes);  // public: x402 paywall endpoint — mus
 app.use('/api/x402', x402InvoiceRoutes);  // public: standard x402 v2 via PayAI facilitator (pay.sh probes this)
 app.use(authenticate, invoiceDownloadRoutes);
 app.use('/v1/pact', pactSessionRoutes);
+app.use(authenticate, mandateRoutes);  // /v1/mandates/* — PACT Mandate API v0.1 (Helixa Synagent)
 app.use(authenticate, invoiceStatsRoutes);
 app.use(authenticate, invoiceExportRoutes);
 app.use(authenticate, invoiceRoutes);
