@@ -28,18 +28,36 @@ function timingSafeStringEqual(a: string, b: string): boolean {
 }
 
 /**
- * Canonical signable JSON. Fields ordered deterministically so the bot
- * and the server produce identical bytes.
+ * Recursively sort all object keys for deterministic JSON stringification.
+ * Strings/numbers/null/arrays pass through; arrays sort their elements
+ * (since order is meaningful) but objects get keys sorted alphabetically.
+ */
+function sortKeys(v: unknown): unknown {
+  if (v === null || typeof v !== 'object') return v;
+  if (Array.isArray(v)) return v.map(sortKeys);
+  const sorted: Record<string, unknown> = {};
+  Object.keys(v as Record<string, unknown>).sort().forEach((k) => {
+    sorted[k] = sortKeys((v as Record<string, unknown>)[k]);
+  });
+  return sorted;
+}
+
+/**
+ * Canonical signable JSON. Survives DB roundtrips:
+ *   - Object keys sorted alphabetically (JSONB doesn't preserve insertion order)
+ *   - Timestamps normalized via toISOString() (TIMESTAMPTZ reformats)
+ *   - No whitespace
  */
 function canonicalize(m: MandateSignable): string {
-  return JSON.stringify({
+  const normalized = {
+    counterparty_agent_id: m.counterparty_agent_id,
+    expires_at: new Date(m.expires_at).toISOString(),
     id: m.id,
     proposer_agent_id: m.proposer_agent_id,
-    counterparty_agent_id: m.counterparty_agent_id,
     scope: m.scope,
-    terms: m.terms,
-    expires_at: m.expires_at,
-  });
+    terms: sortKeys(m.terms),
+  };
+  return JSON.stringify(normalized);
 }
 
 export function computeMandateSignature(m: MandateSignable): string {
