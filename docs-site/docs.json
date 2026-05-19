@@ -62,7 +62,8 @@
           "api-reference/overview",
           "api-reference/invoices",
           "api-reference/settlements",
-          "api-reference/webhooks"
+          "api-reference/webhooks",
+          "api-reference/mandates"
         ]
       },
       {
