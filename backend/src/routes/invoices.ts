@@ -895,16 +895,21 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
     };
 
     const sb = getSupabase();
+    // Accept both UUID and invoiceNumber on this path — common typo trap.
+    const lookupField = /^\d+$/.test(String(id)) ? 'invoiceNumber' : 'id';
+    const lookupValue = lookupField === 'invoiceNumber' ? Number(id) : id;
     const { data: existing, error: fetchErr } = await sb
       .from('Invoice')
       .select('id, status, amount')
-      .eq('id', id)
+      .eq(lookupField, lookupValue)
       .single();
 
     if (fetchErr || !existing) {
       res.status(404).json({ success: false, error: { message: 'Invoice not found', code: 'NOT_FOUND' } });
       return;
     }
+    // From here on, use the resolved UUID for downstream operations.
+    const invoiceId = existing.id;
 
     if (status === 'SETTLED') {
       const pactResult = verifyPactMandate(
@@ -978,7 +983,7 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
       }
       try {
         await recordPaymentEvent({
-          invoiceId: id,
+          invoiceId,
           chain,
           txHash,
           amountUsdc: Number(amountUsdc ?? existing.amount ?? 0),
@@ -1005,7 +1010,7 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
     const { data, error } = await sb
       .from('Invoice')
       .update(updateData)
-      .eq('id', id)
+      .eq('id', invoiceId)
       .select(SELECT_FIELDS)
       .single();
 
@@ -1014,7 +1019,7 @@ router.patch('/v1/invoices/:id/status', async (req: Request, res: Response, next
     // Fire-and-forget billing hook on SETTLED transition.
     if (status === 'SETTLED') {
       const { triggerSettlementFee } = await import('../services/billing/settlement-fee');
-      triggerSettlementFee(String(id));
+      triggerSettlementFee(String(invoiceId));
     }
 
     res.json({ success: true, data: mapInvoice(data) });
