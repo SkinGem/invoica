@@ -31,6 +31,27 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
+      // On-chain USDC transfer watcher → auto-settles matching PENDING invoices.
+      // Opt-in via SETTLEMENT_WATCHER_ENABLED=true in .env. Long-running.
+      name: "settlement-watcher",
+      script: "./scripts/run-settlement-watcher.ts",
+      interpreter: "node",
+      interpreter_args: "-r ts-node/register",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: true,
+      watch: false,
+      max_memory_restart: "256M",
+      min_uptime: "30s",
+      restart_delay: 5000,
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json"
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/settlement-watcher-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/settlement-watcher-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z"
+    },
+    {
       name: "openclaw-gateway",
       script: "/opt/oc/gateway-wrapper.sh",
       interpreter: "bash",
