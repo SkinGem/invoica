@@ -1,12 +1,15 @@
 import { ChainConfig, SUPPORTED_CHAINS } from '../../config/chains';
 import { EvmSettlementDetector } from './evm-detector';
+import { SolanaSettlementDetector } from './solana-detector';
+
+export type SettlementDetector = EvmSettlementDetector | SolanaSettlementDetector;
 
 /**
  * Registry for managing settlement detectors across different blockchain networks.
  * Provides a unified interface for creating and accessing chain-specific detectors.
  */
 export class ChainRegistry {
-  private detectors: Map<string, EvmSettlementDetector> = new Map();
+  private detectors: Map<string, SettlementDetector> = new Map();
 
   constructor() {
     this.initializeDetectors();
@@ -17,9 +20,11 @@ export class ChainRegistry {
    */
   private initializeDetectors(): void {
     for (const chain of SUPPORTED_CHAINS) {
+      const id = String(chain.id);
       if (chain.type === 'evm') {
-        const detector = new EvmSettlementDetector(chain);
-        this.detectors.set(chain.id, detector);
+        this.detectors.set(id, new EvmSettlementDetector(chain));
+      } else if (chain.type === 'solana') {
+        this.detectors.set(id, new SolanaSettlementDetector({ rpcUrl: chain.rpcUrl, id }));
       }
     }
   }
@@ -30,7 +35,7 @@ export class ChainRegistry {
    * @returns The settlement detector for the chain
    * @throws Error if chain is not supported
    */
-  getDetector(chainId: string): EvmSettlementDetector {
+  getDetector(chainId: string): SettlementDetector {
     const detector = this.detectors.get(chainId);
     if (!detector) {
       throw new Error(`No detector available for chain: ${chainId}`);

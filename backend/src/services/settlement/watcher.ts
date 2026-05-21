@@ -17,28 +17,35 @@
 //   X402_SELLER_WALLET                     — required (the recipient address to watch)
 
 import { ChainRegistry } from './chain-registry';
+import { EvmSettlementDetector } from './evm-detector';
+import { SolanaSettlementDetector } from './solana-detector';
 import { autoSettleFromTransfer } from './auto-settle';
+import { SUPPORTED_CHAINS_MAP } from '../../config/chains';
 
 const DEFAULT_POLL_MS = 20_000;
 const DEFAULT_INITIAL_BLOCKS_BACK = 200;
-const DEFAULT_CHAINS = 'base,polygon,arbitrum,skale';
+const DEFAULT_SOLANA_SIG_LIMIT = 20;
+const DEFAULT_CHAINS = 'base,arbitrum,skale,solana';
 
 export interface WatcherConfig {
   enabled: boolean;
   pollIntervalMs: number;
   chains: string[];
-  sellerWallet: string;
+  evmSellerWallet: string;
+  solanaSellerWallet: string;
   initialBlocksBack: number;
+  solanaSigLimit: number;
 }
 
 export function loadWatcherConfig(): WatcherConfig {
-  const sellerWallet = process.env.X402_SELLER_WALLET || process.env.SELLER_WALLET || '';
   return {
     enabled: process.env.SETTLEMENT_WATCHER_ENABLED === 'true',
     pollIntervalMs: Number(process.env.SETTLEMENT_WATCHER_POLL_INTERVAL_MS) || DEFAULT_POLL_MS,
     chains: (process.env.SETTLEMENT_WATCHER_CHAINS || DEFAULT_CHAINS).split(',').map(c => c.trim()).filter(Boolean),
-    sellerWallet,
+    evmSellerWallet: process.env.X402_SELLER_WALLET || process.env.SELLER_WALLET || '',
+    solanaSellerWallet: process.env.X402_SOLANA_SELLER_WALLET || '',
     initialBlocksBack: Number(process.env.SETTLEMENT_WATCHER_INITIAL_BLOCKS_BACK) || DEFAULT_INITIAL_BLOCKS_BACK,
+    solanaSigLimit: Number(process.env.SETTLEMENT_WATCHER_SOLANA_SIG_LIMIT) || DEFAULT_SOLANA_SIG_LIMIT,
   };
 }
 
@@ -60,21 +67,33 @@ export class SettlementWatcher {
       console.log('[watcher] disabled (SETTLEMENT_WATCHER_ENABLED!=true) — exiting');
       return;
     }
-    if (!this.config.sellerWallet) {
-      throw new Error('[watcher] X402_SELLER_WALLET not configured — cannot start');
-    }
+
+    // Validate that at least one seller wallet is configured for the chains being watched.
+    const needsEvm = this.config.chains.some(c => SUPPORTED_CHAINS_MAP.get(c)?.type === 'evm');
+    const needsSolana = this.config.chains.some(c => SUPPORTED_CHAINS_MAP.get(c)?.type === 'solana');
+    if (needsEvm && !this.config.evmSellerWallet) throw new Error('[watcher] X402_SELLER_WALLET not configured');
+    if (needsSolana && !this.config.solanaSellerWallet) throw new Error('[watcher] X402_SOLANA_SELLER_WALLET not configured');
 
     this.running = true;
-    console.log(`[watcher] starting · chains=${this.config.chains.join(',')} · interval=${this.config.pollIntervalMs}ms · wallet=${this.config.sellerWallet}`);
+    console.log(`[watcher] starting · chains=${this.config.chains.join(',')} · interval=${this.config.pollIntervalMs}ms · evm=${this.config.evmSellerWallet || '-'} · solana=${this.config.solanaSellerWallet || '-'}`);
 
-    // Cold-start: seed lastBlock with (latest - initialBlocksBack) per chain
+    // Cold-start: EVM chains seed lastBlock; Solana chains seed nothing (signature-based, no block range needed).
     for (const chainId of this.config.chains) {
       try {
-        const detector = this.registry.getDetector(chainId);
-        const latest = await detector.getLatestBlock();
-        const startFrom = Math.max(0, latest - this.config.initialBlocksBack);
-        this.lastBlock.set(chainId, startFrom);
-        console.log(`[watcher] ${chainId} cold-start at block ${startFrom} (latest=${latest})`);
+        const chainCfg = SUPPORTED_CHAINS_MAP.get(chainId);
+        if (!chainCfg) {
+          console.error(`[watcher] unknown chain: ${chainId} — skipped`);
+          continue;
+        }
+        if (chainCfg.type === 'evm') {
+          const detector = this.registry.getDetector(chainId) as EvmSettlementDetector;
+          const latest = await detector.getLatestBlock();
+          const startFrom = Math.max(0, latest - this.config.initialBlocksBack);
+          this.lastBlock.set(chainId, startFrom);
+          console.log(`[watcher] ${chainId} (evm) cold-start at block ${startFrom} (latest=${latest})`);
+        } else if (chainCfg.type === 'solana') {
+          console.log(`[watcher] ${chainId} (solana) cold-start — will poll last ${this.config.solanaSigLimit} signatures per cycle (dedup via PaymentEvents UNIQUE)`);
+        }
       } catch (err) {
         console.error(`[watcher] ${chainId} cold-start failed:`, err);
       }
@@ -111,14 +130,26 @@ export class SettlementWatcher {
   }
 
   private async scanChain(chainId: string): Promise<void> {
-    const detector = this.registry.getDetector(chainId);
-    const latest = await detector.getLatestBlock();
-    const fromBlock = (this.lastBlock.get(chainId) ?? latest) + 1;
-    if (fromBlock > latest) return; // nothing new
+    const chainCfg = SUPPORTED_CHAINS_MAP.get(chainId);
+    if (!chainCfg) return;
 
-    const transfers = await detector.scanTransfersToAddress(this.config.sellerWallet, fromBlock, latest);
-    if (transfers.length > 0) {
-      console.log(`[watcher] ${chainId} ${fromBlock}..${latest} · ${transfers.length} transfer(s) to ${this.config.sellerWallet}`);
+    let transfers: Awaited<ReturnType<EvmSettlementDetector['scanTransfersToAddress']>> = [];
+
+    if (chainCfg.type === 'evm') {
+      const detector = this.registry.getDetector(chainId) as EvmSettlementDetector;
+      const latest = await detector.getLatestBlock();
+      const fromBlock = (this.lastBlock.get(chainId) ?? latest) + 1;
+      if (fromBlock > latest) return; // nothing new
+      transfers = await detector.scanTransfersToAddress(this.config.evmSellerWallet, fromBlock, latest);
+      if (transfers.length > 0) {
+        console.log(`[watcher] ${chainId} ${fromBlock}..${latest} · ${transfers.length} transfer(s) to ${this.config.evmSellerWallet}`);
+      }
+      this.lastBlock.set(chainId, latest);
+    } else if (chainCfg.type === 'solana') {
+      const detector = this.registry.getDetector(chainId) as SolanaSettlementDetector;
+      // No block-range — Solana detector polls the wallet's recent signatures.
+      // PaymentEvents UNIQUE(chain, txHash) dedups across cycles, so repolling is safe.
+      transfers = await detector.getRecentUsdcTransfers(this.config.solanaSellerWallet, this.config.solanaSigLimit);
     }
 
     for (const transfer of transfers) {
@@ -128,16 +159,17 @@ export class SettlementWatcher {
           this.matchesFound += 1;
           console.log(`[watcher] ✓ matched ${transfer.chain}:${transfer.txHash.slice(0, 12)}… → invoice #${result.invoiceNumber} (${result.invoiceId})`);
         } else if (result.duplicate) {
-          // already seen, fine
+          // already seen — Solana repolls the same recent window each cycle, so this is the steady state.
         } else {
-          console.log(`[watcher] · unmatched ${transfer.chain}:${transfer.txHash.slice(0, 12)}… (${result.reason})`);
+          // Skip noise for Solana — there will be many unmatched transfers on the wallet from other flows
+          if (chainCfg.type === 'evm') {
+            console.log(`[watcher] · unmatched ${transfer.chain}:${transfer.txHash.slice(0, 12)}… (${result.reason})`);
+          }
         }
       } catch (err) {
         console.error(`[watcher] auto-settle failed for ${transfer.chain}:${transfer.txHash}:`, err);
       }
     }
-
-    this.lastBlock.set(chainId, latest);
   }
 
   // Test hook

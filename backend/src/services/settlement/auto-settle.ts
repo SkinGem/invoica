@@ -50,14 +50,18 @@ export async function autoSettleFromTransfer(transfer: SettlementMatch): Promise
   if (!candidates || candidates.length === 0) return { matched: false, reason: 'no PENDING invoices on this chain' };
 
   const tolerance = Math.max(transfer.amount * AMOUNT_TOLERANCE_PCT, 0.01);
-  const recipientLower = transfer.to.toLowerCase();
+  // EVM hex addresses are case-insensitive; Solana base58 addresses are case-sensitive.
+  // Detect by 0x prefix.
+  const isEvm = transfer.to.startsWith('0x');
+  const norm = (s: string) => (isEvm ? s.toLowerCase() : s);
+  const recipientNorm = norm(transfer.to);
 
   // 2. Filter by amount + (optional) recipient address
   const matches = candidates.filter((inv: any) => {
     if (Math.abs(Number(inv.amount) - transfer.amount) > tolerance) return false;
     const pd = typeof inv.paymentDetails === 'string' ? JSON.parse(inv.paymentDetails) : inv.paymentDetails;
     if (pd?.paymentAddress) {
-      return String(pd.paymentAddress).toLowerCase() === recipientLower;
+      return norm(String(pd.paymentAddress)) === recipientNorm;
     }
     return true;
   });

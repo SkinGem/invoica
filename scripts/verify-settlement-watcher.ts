@@ -21,7 +21,10 @@ const API_URL = process.env.API_URL || 'https://api.invoica.ai';
 const KEY = process.env.INVOICA_KEY;
 if (!KEY) throw new Error('INVOICA_KEY required');
 
-const SELLER_WALLET = process.env.X402_SELLER_WALLET || '0x3e127c918C83714616CF2416f8A620F1340C19f1';
+const TEST_CHAIN = (process.env.TEST_CHAIN || 'skale').toLowerCase();
+const SELLER_WALLET = TEST_CHAIN === 'solana'
+  ? (process.env.X402_SOLANA_SELLER_WALLET || 'G21o7DdeBzqMDYswJzbsp2BZ6jGLxbvxDVvtmLvo4N8k')
+  : (process.env.X402_SELLER_WALLET || '0x3e127c918C83714616CF2416f8A620F1340C19f1');
 
 function sb() {
   return createClient(
@@ -37,7 +40,7 @@ async function main() {
   const uniqueAmount = Number((0.10 + Math.random() * 0.01).toFixed(6));
 
   // Step 1 — create PENDING invoice
-  console.log(`[1] creating PENDING SKALE invoice for ${uniqueAmount} USDC...`);
+  console.log(`[1] creating PENDING ${TEST_CHAIN.toUpperCase()} invoice for ${uniqueAmount} USDC...`);
   const createRes = await fetch(`${API_URL}/v1/invoices`, {
     method: 'POST',
     headers: { 'x-api-key': KEY!, 'content-type': 'application/json' },
@@ -46,7 +49,7 @@ async function main() {
       currency: 'USDC',
       customerEmail: 'watcher-verification@invoica.ai',
       customerName: 'Watcher verification test',
-      chain: 'skale',
+      chain: TEST_CHAIN,
     }),
   });
   if (!createRes.ok) throw new Error(`POST /v1/invoices failed ${createRes.status}: ${await createRes.text()}`);
@@ -58,16 +61,22 @@ async function main() {
 
   // Step 2 — synthesize a SettlementMatch as if the watcher observed an
   // on-chain transfer to the seller wallet for exactly this amount.
-  const fakeTxHash = '0x' + crypto.randomBytes(32).toString('hex');
+  // Solana tx signatures are base58, ~88 chars; we just need a unique opaque string for the test.
+  const fakeTxHash = TEST_CHAIN === 'solana'
+    ? crypto.randomBytes(32).toString('base64url')
+    : '0x' + crypto.randomBytes(32).toString('hex');
+  const fakeFrom = TEST_CHAIN === 'solana'
+    ? crypto.randomBytes(32).toString('base64url').slice(0, 44)
+    : '0x' + '11'.repeat(20);
   const transfer: SettlementMatch = {
     invoiceId: '',
     txHash: fakeTxHash,
     amount: uniqueAmount,
-    from: '0x' + '11'.repeat(20),
+    from: fakeFrom,
     to: paymentAddress || SELLER_WALLET,
     blockNumber: 1_900_000,
     timestamp: Math.floor(Date.now() / 1000),
-    chain: 'skale',
+    chain: TEST_CHAIN,
   };
   console.log(`[2] synthesizing SettlementMatch · txHash=${fakeTxHash.slice(0, 18)}…\n`);
 

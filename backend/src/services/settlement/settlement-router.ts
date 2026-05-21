@@ -52,14 +52,19 @@ export async function checkSettlement(
   }
 
   if (isEvmChain(chainId)) {
-    const detector = chainRegistry.getDetector(chainId);
+    const detector = chainRegistry.getDetector(chainId) as import('./evm-detector').EvmSettlementDetector;
     const fromBlock = options?.fromBlock ?? 'latest';
     return detector.scanTransfersToAddress(recipientAddress, fromBlock, 'latest');
   }
 
-  // For Solana and other non-EVM chains, we would implement similar detector pattern
-  // For now, throw error for non-EVM chains
-  throw new Error(`Non-EVM chain detection not yet implemented: ${chainId}`);
+  // Solana: signature-based recent-transfers lookup (no block range).
+  const chainCfg = chainRegistry.getChainConfig(chainId);
+  if (chainCfg.type === 'solana') {
+    const detector = chainRegistry.getDetector(chainId) as import('./solana-detector').SolanaSettlementDetector;
+    return detector.getRecentUsdcTransfers(recipientAddress, options?.limit ?? 20);
+  }
+
+  throw new Error(`Chain detection not implemented: ${chainId}`);
 }
 
 /**
