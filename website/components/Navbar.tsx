@@ -14,6 +14,9 @@ export default function Navbar() {
             <a href="https://invoica.mintlify.app" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
               Docs
             </a>
+            <a href="/clinpay" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
+              ClinPay
+            </a>
             <a href="#features" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
               Features
             </a>

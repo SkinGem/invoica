@@ -7,6 +7,7 @@ import CodeExample from '@/components/CodeExample';
 import McpIntegration from '@/components/McpIntegration';
 import PactDemo from '@/components/PactDemo';
 import Enterprise from '@/components/Enterprise';
+import Products from '@/components/Products';
 import SocialProof from '@/components/SocialProof';
 import BetaBanner from '@/components/BetaBanner';
 import Footer from '@/components/Footer';
@@ -57,6 +58,9 @@ export default function HomePage() {
 
         {/* 8. Enterprise value prop — RBAC, compliance, SLA */}
         <Enterprise />
+
+        {/* 8b. Vertical products — ClinPay (audit-grade research-panel payouts) */}
+        <Products />
 
         {/* 8. Social proof — stats + testimonials */}
         <SocialProof />
