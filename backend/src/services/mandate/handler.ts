@@ -11,7 +11,9 @@
 
 import { randomUUID } from 'crypto';
 import { nextState, type MandateAction, type MandateState } from './state-machine';
-import { computeMandateHash, verifyMandateSignature, type MandateSignable } from './sign';
+import { computeMandateHash, computeMandateSignature, verifyMandateSignature, type MandateSignable } from './sign';
+
+const CLINPAY_TREASURY_COUNTERPARTY = 'clinpay-treasury';
 import { anchorMandateState, type AnchorResult } from './anchor';
 import {
   createMandate,
@@ -123,6 +125,25 @@ export async function sign(id: string, input: SignInput): Promise<MandateRow> {
   await recordTransition(id, mandate.state, to, input.signer, anchor);
 
   fireWebhook(input.signer === 'proposer' ? 'mandate.signed_by_proposer' : 'mandate.signed_by_both', updated);
+
+  // ── Auto-countersign: ClinPay campaign mandates ─────────────────────────
+  // For mandates where the counterparty is the ClinPay treasury, the system
+  // immediately countersigns on the proposer's behalf so AsterPay's dashboard
+  // doesn't need a second human step. Same shared secret → same HMAC.
+  if (
+    input.signer === 'proposer' &&
+    updated.state === 'signed_by_proposer' &&
+    mandate.counterparty_agent_id === CLINPAY_TREASURY_COUNTERPARTY
+  ) {
+    try {
+      const treasurySignature = computeMandateSignature(signable);
+      return await sign(id, { signer: 'counterparty', signature: treasurySignature });
+    } catch (err) {
+      console.error(`[mandate] auto-countersign failed for ${id}:`, err);
+      // Don't fail the proposer's call — they signed correctly; treasury can retry.
+    }
+  }
+
   return updated;
 }
 

@@ -26,6 +26,7 @@ import invoiceDownloadRoutes from './routes/invoice-download';
 import pactSessionRoutes from './routes/pact-session';
 import mandateRoutes from './routes/mandates';
 import openapiRoutes from './routes/openapi';
+import clinpayDrsRoutes from './routes/clinpay-drs';
 import companyRoutes from './routes/company';
 import billingRoutes from './routes/billing';
 import { clinpayWebhookRouter, clinpayRouter } from './routes/clinpay';
@@ -104,6 +105,7 @@ app.use('/api/x402', x402InvoiceRoutes);  // public: standard x402 v2 via PayAI 
 app.use(authenticate, invoiceDownloadRoutes);
 app.use('/v1/pact', pactSessionRoutes);
 app.use(authenticate, mandateRoutes);  // /v1/mandates/* — PACT Mandate API v0.1 (Helixa Synagent)
+app.use(authenticate, clinpayDrsRoutes); // /v1/clinpay/drs/* — external DRS anchoring (AsterPay)
 app.use(authenticate, invoiceStatsRoutes);
 app.use(authenticate, invoiceExportRoutes);
 app.use(authenticate, invoiceRoutes);
