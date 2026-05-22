@@ -23,6 +23,7 @@ export default function Footer() {
             <h4 className="text-xs font-semibold text-invoica-gray-300 uppercase tracking-wider mb-5">Product</h4>
             <ul className="space-y-3">
               <li><a href="/clinpay" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">ClinPay</a></li>
+              <li><a href="/supported-chains" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Supported chains</a></li>
               <li><a href="https://invoica.mintlify.app" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Documentation</a></li>
               <li><a href="https://invoica.mintlify.app/api-reference/overview" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">API Reference</a></li>
               <li><a href="https://invoica.mintlify.app/sdk/overview" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">SDK</a></li>

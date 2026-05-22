@@ -1,0 +1,168 @@
+---
+title: Supported Chains
+description: "Invoica settles agent payments on Base, SKALE Base, Polygon, Arbitrum, and Solana. Multi-chain by default — every invoice carries its chain context and settles natively on the rail of your choice."
+---
+
+# Supported Chains
+
+Invoica is multi-chain by default. Every invoice carries its `chain` context, and the settlement
+watcher polls each chain's native rail to detect incoming USDC transfers and auto-flip invoice
+status. No manual settlement, no chain-specific glue code on the caller's side.
+
+<Note>
+  **Newest support: SKALE Base** — gasless USDC settlement, sub-second finality. Launched 2026-05-22.
+</Note>
+
+## All supported chains
+
+| Chain | Network ID | Type | Status | USDC contract |
+|---|---|---|---|---|
+| **Base** | `8453` | EVM | Live | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` |
+| **SKALE Base** | `1187947933` | EVM (gasless) | Live | `0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20` |
+| **Polygon** | `137` | EVM | Live | `0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359` |
+| **Arbitrum One** | `42161` | EVM | Live | `0xaf88d065e77c8cC2239327C5EDb3A432268e5831` |
+| **Solana** | `mainnet-beta` | Solana (SPL) | Live | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` |
+
+## How to specify a chain
+
+The `chain` field at the top level of the invoice body determines which rail handles settlement.
+The response back-fills `paymentDetails.paymentAddress` (the Invoica seller wallet on that chain)
+and `paymentDetails.usdcAddress` (the canonical USDC contract). No separate lookup needed.
+
+```bash
+curl -sX POST https://api.invoica.ai/v1/invoices \
+  -H "x-api-key: $INVOICA_KEY" \
+  -H "content-type: application/json" \
+  -d '{
+    "amount": 0.10,
+    "currency": "USDC",
+    "customerEmail": "agent@example.com",
+    "customerName": "agent-x402",
+    "chain": "skale"
+  }'
+```
+
+Response (201):
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "...",
+    "invoiceNumber": 1775224117,
+    "status": "PENDING",
+    "amount": 0.10,
+    "currency": "USDC",
+    "paymentDetails": {
+      "chain": "skale",
+      "paymentAddress": "0x3e127c918C83714616CF2416f8A620F1340C19f1",
+      "usdcAddress": "0x85889c8c714505E0c94b30fcfcF64fE3Ac8FCb20"
+    },
+    "createdAt": "..."
+  }
+}
+```
+
+The caller sends USDC to `paymentAddress` on the specified chain. The settlement watcher detects
+the transfer (typical latency 15-30 seconds) and flips the invoice to `SETTLED` automatically.
+A polling `GET /v1/invoices/{id}` is the recommended client UX.
+
+## Per-chain notes
+
+### Base — `chain: "base"`
+
+The default chain for production agent payments. Coinbase's L2, deep USDC liquidity,
+sub-second block times. Use Base for the broadest ecosystem compatibility.
+
+- **Explorer:** [basescan.org](https://basescan.org)
+- **Average settlement detection:** 15-25 seconds
+
+### SKALE Base — `chain: "skale"`
+
+EVM-compatible chain running on the SKALE Network's Base subnet. **Zero gas fees** —
+the chain pre-allocates compute credits, so USDC transfers cost the sender nothing in
+transaction fees. Best fit for high-frequency agent micropayments where per-tx gas would
+erode unit economics.
+
+- **Explorer:** [skale-base-explorer.skalenodes.com](https://skale-base-explorer.skalenodes.com)
+- **Chain ID:** `1187947933` (`0x46CEA59D`)
+- **Faucet (testnet):** Contact SKALE BD for production credits
+- **Average settlement detection:** 15-25 seconds
+
+<Tip>
+  SKALE Base is the recommended chain for agent-to-agent payments under $1.00 — gasless
+  micropayments without the on-chain fee tail.
+</Tip>
+
+### Polygon — `chain: "polygon"`
+
+High-throughput EVM L2. Useful for agent flows that originate or terminate in the broader
+Polygon ecosystem (PoS, ZK-EVM).
+
+- **Explorer:** [polygonscan.com](https://polygonscan.com)
+- **Average settlement detection:** 20-40 seconds (slower block times)
+
+### Arbitrum One — `chain: "arbitrum"`
+
+Arbitrum's optimistic rollup. Among the lowest fees of Ethereum L2s for high-frequency
+micropayments.
+
+- **Explorer:** [arbiscan.io](https://arbiscan.io)
+- **Average settlement detection:** 15-25 seconds
+
+### Solana — `chain: "solana"`
+
+Native Solana settlement via the [PayAI x402 facilitator](https://payai.network).
+SPL Token transfers carry a memo-based invoice reference; settlement detection uses
+signature polling on the seller wallet.
+
+- **Explorer:** [solscan.io](https://solscan.io)
+- **USDC mint:** `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v`
+- **Token program:** `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA`
+- **Average settlement detection:** depends on RPC tier (~30 seconds with authed RPC)
+
+<Warning>
+  Solana detection requires an authenticated RPC endpoint (public mainnet RPC is heavily
+  rate-limited). Set `SOLANA_RPC_URL` to your Helius / QuickNode / Triton endpoint when
+  self-hosting the settlement watcher.
+</Warning>
+
+## Settlement flow (all chains)
+
+The lifecycle is identical regardless of chain:
+
+```
+1. POST /v1/invoices       → invoice created, status=PENDING
+2. <caller transfers USDC> → on the chain specified, to paymentAddress
+3. <watcher detects>       → typically 15-30s after on-chain confirmation
+4. Auto-flip               → status=SETTLED, paymentDetails enriched with
+                              txHash + settlementBlockNumber +
+                              settlementSource='evm-detector' (or 'solana-detector')
+5. GET /v1/invoices/{id}   → client polls; webhook 'invoice.settled' also fires
+```
+
+The client never needs to PATCH the invoice status. Settlement is a system-detected event.
+
+## On-chain audit trail
+
+Every settled invoice produces a **DRS receipt** anchored on Base (mainnet for production
+invoices; Base Sepolia for v0.1 PACT Mandate API). The receipt hashes the mandate, settlement
+details, tax line, and payout breakdown into a single on-chain event that's verifiable years
+later via the chain's explorer.
+
+See [DRS receipts](/concepts/pact) for the protocol details.
+
+## Adding a new chain
+
+We add chains based on real customer pull. Two paths:
+
+1. **EVM chain** — if the chain has Coinbase CDP / Polymer / similar x402 facilitator support
+   AND a USDC contract address, integration is typically 2-5 business days.
+2. **Non-EVM chain** — requires a custom detector module. Solana took ~1 week. Other ecosystems
+   (Aptos, Sui, Tron) would be similar.
+
+To request a chain: email [support@invoica.ai](mailto:support@invoica.ai?subject=Chain%20support%20request) with your use case.
+
+---
+
+**Related:** [x402 Protocol](/concepts/x402-protocol) · [Invoice Middleware](/concepts/invoice-middleware) · [PACT](/concepts/pact)

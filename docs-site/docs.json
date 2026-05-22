@@ -43,7 +43,8 @@
             "pages": [
               "concepts/x402-protocol",
               "concepts/invoice-middleware",
-              "concepts/pact"
+              "concepts/pact",
+              "concepts/supported-chains"
             ]
           },
           {
