@@ -107,55 +107,60 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     usdcDecimals: 6,
   },
   {
-    // Base Sepolia testnet — used for PACT Mandate API v0.1 (Helixa Synagent).
-    // DRS receipts anchored via MandateAnchor.sol (contracts/MandateAnchor.sol).
-    // Chain ID 84532. Faucet: https://www.alchemy.com/faucets/base-sepolia
-    id: 'base-sepolia',
-    name: 'Base Sepolia',
-    rpcUrl: process.env.BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
-    usdcAddress: '0x036CbD53842c5426634e7929541eC2318f3dCd01',
-    explorerUrl: 'https://sepolia.basescan.org',
+    id: 'solana-devnet',
+    name: 'Solana Devnet',
+    rpcUrl: process.env.SOLANA_DEVNET_RPC_URL || 'https://api.devnet.solana.com',
+    usdcAddress: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    explorerUrl: 'https://solscan.io/?cluster=devnet',
     isTestnet: true,
-    type: 'evm',
+    type: 'solana',
     usdcDecimals: 6,
   },
 ];
 
 /**
- * Map for O(1) chain lookups by ID
+ * Map of chain IDs to their configurations for O(1) lookup
  */
-export const SUPPORTED_CHAINS_MAP: Map<string, ChainConfig> = new Map(
-  SUPPORTED_CHAINS.map(chain => [String(chain.id), chain])
+export const CHAIN_CONFIG_MAP: Map<string, ChainConfig> = new Map(
+  SUPPORTED_CHAINS.map((chain) => [String(chain.id), chain])
 );
 
 /**
- * Retrieves the configuration for a given chain
- * @param chainId - The chain identifier (e.g., 'base', 'polygon', 'arbitrum')
- * @returns The chain configuration
- * @throws {UnsupportedChainError} If the chain is not supported
- * @example
- *
- * const config = getChainConfig("base");
- * console.log(config.name); // "Base"
+ * Retrieves the configuration for a specific chain
+ * @param chainId - The chain identifier to look up
+ * @returns The chain configuration if found
+ * @throws UnsupportedChainError if the chain is not supported
  */
-export function getChainConfig(chainId: string): ChainConfig {
-  const config = SUPPORTED_CHAINS_MAP.get(chainId);
+export function getChainConfig(chainId: string | number): ChainConfig {
+  const config = CHAIN_CONFIG_MAP.get(String(chainId));
   if (!config) {
-    throw new UnsupportedChainError(chainId);
+    throw new UnsupportedChainError(String(chainId));
   }
   return config;
 }
 
 /**
- * Returns all supported chain identifiers
+ * Checks if a chain is supported by the system
+ * @param chainId - The chain identifier to check
+ * @returns True if the chain is supported, false otherwise
  */
-export function getSupportedChainIds(): string[] {
-  return Array.from(SUPPORTED_CHAINS_MAP.keys());
+export function isChainSupported(chainId: string | number): boolean {
+  return CHAIN_CONFIG_MAP.has(String(chainId));
 }
 
 /**
- * Checks whether a given chain ID is supported
+ * Returns all supported chain IDs
+ * @returns Array of supported chain identifiers
  */
-export function isChainSupported(chainId: string): boolean {
-  return SUPPORTED_CHAINS_MAP.has(chainId);
+export function getSupportedChainIds(): (string | number)[] {
+  return SUPPORTED_CHAINS.map((chain) => chain.id);
+}
+
+/**
+ * Returns chains filtered by type (evm or solana)
+ * @param type - The chain type to filter by
+ * @returns Array of chain configurations matching the type
+ */
+export function getChainsByType(type: 'evm' | 'solana'): ChainConfig[] {
+  return SUPPORTED_CHAINS.filter((chain) => chain.type === type);
 }
