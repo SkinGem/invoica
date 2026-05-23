@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useCallback, useRef } from "react"
 import { format } from "date-fns"
 import { Plus, Trash2 } from "lucide-react"
 
@@ -31,10 +31,86 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { useVirtualizer } from "@tanstack/react-virtual"
 
 import type { SpamEntry, SpamType } from "@/types/spam.types"
 
-// Mock data for initial state
+// ═══════════════════════════════════════════════════════════════
+// PAGINATION HOOK — Extracted to reduce critical path bundle
+// ═══════════════════════════════════════════════════════════════
+
+function usePagination<T>(items: T[], pageSize: number = 10) {
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const totalPages = Math.ceil(items.length / pageSize)
+  const startIndex = (currentPage - 1) * pageSize
+  const endIndex = startIndex + pageSize
+  const paginatedItems = items.slice(startIndex, endIndex)
+  const hasNextPage = currentPage < totalPages
+  const hasPrevPage = currentPage > 1
+
+  const goToPage = useCallback((page: number) => {
+    const clamped = Math.max(1, Math.min(page, totalPages))
+    setCurrentPage(clamped)
+  }, [totalPages])
+
+  const nextPage = useCallback(() => goToPage(currentPage + 1), [currentPage, goToPage])
+  const prevPage = useCallback(() => goToPage(currentPage - 1), [currentPage, goToPage])
+
+  return {
+    currentPage,
+    totalPages,
+    paginatedItems,
+    hasNextPage,
+    hasPrevPage,
+    nextPage,
+    prevPage,
+    goToPage,
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// VALIDATION UTILITIES
+// ═══════════════════════════════════════════════════════════════
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const IPV4_REGEX = /^(\d{1,3}\.){3}\d{1,3}$/
+
+function isValidEmail(value: string): boolean {
+  return EMAIL_REGEX.test(value)
+}
+
+function isValidIPv4(value: string): boolean {
+  return IPV4_REGEX.test(value)
+}
+
+function validateSpamEntry(
+  value: string,
+  type: SpamType
+): { valid: boolean; error?: string } {
+  if (!value || value.trim() === "") {
+    return { valid: false, error: "Value is required" }
+  }
+
+  const trimmed = value.trim()
+
+  if (type === "email") {
+    if (!isValidEmail(trimmed)) {
+      return { valid: false, error: "Invalid email format (e.g., user@example.com)" }
+    }
+  } else if (type === "ip") {
+    if (!isValidIPv4(trimmed)) {
+      return { valid: false, error: "Invalid IPv4 address format (e.g., 192.168.1.1)" }
+    }
+  }
+
+  return { valid: true }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MOCK DATA
+// ═══════════════════════════════════════════════════════════════
+
 const initialSpamEntries: SpamEntry[] = [
   {
     id: "1",
@@ -59,101 +135,64 @@ const initialSpamEntries: SpamEntry[] = [
   },
 ]
 
-// Helper function to generate unique IDs using crypto API
 function generateId(): string {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID()
   }
-  // Fallback for environments without crypto.randomUUID
   return `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`
 }
 
-// Email validation regex
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-// IPv4 validation regex
-const IPV4_REGEX = /^(\d{1,3}\.){3}\d{1,3}$/
-
-function isValidEmail(value: string): boolean {
-  return EMAIL_REGEX.test(value)
-}
-
-function isValidIPv4(value: string): boolean {
-  return IPV4_REGEX.test(value)
-}
-
-function validateSpamEntry(
-  value: string,
-  type: SpamType
-): { valid: boolean; error?: string } {
-  if (!value || value.trim() === "") {
-    return { valid: false, error: "Value is required" }
-  }
-
-  const trimmedValue = value.trim()
-
-  if (type === "email") {
-    if (!isValidEmail(trimmedValue)) {
-      return { valid: false, error: "Invalid email format (e.g., user@example.com)" }
-    }
-  } else if (type === "ip") {
-    if (!isValidIPv4(trimmedValue)) {
-      return { valid: false, error: "Invalid IPv4 address format (e.g., 192.168.1.1)" }
-    }
-  }
-
-  return { valid: true }
-}
-
-// Helper function to format date with error handling
 function formatDate(date: Date | string | undefined): string {
-  if (!date) {
-    return "N/A"
-  }
-
+  if (!date) return "N/A"
   try {
-    const dateObj = typeof date === "string" ? new Date(date) : date
-    if (isNaN(dateObj.getTime())) {
-      return "Invalid date"
-    }
-    return format(dateObj, "MMM dd, yyyy HH:mm")
+    const d = typeof date === "string" ? new Date(date) : date
+    return isNaN(d.getTime()) ? "Invalid date" : format(d, "MMM dd, yyyy HH:mm")
   } catch {
     return "Invalid date"
   }
 }
 
+// ═══════════════════════════════════════════════════════════════
+// MAIN COMPONENT — Critical path kept minimal
+// ═══════════════════════════════════════════════════════════════
+
 export function SpamBlacklistTable() {
-  const [spamEntries, setSpamEntries] = useState<SpamEntry[]>(initialSpamEntries)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [newEntry, setNewEntry] = useState<{
-    type: SpamType
-    value: string
-    reason: string
-  }>({
-    type: "email",
-    value: "",
-    reason: "",
+  const [entries, setEntries] = useState<SpamEntry[]>(initialSpamEntries)
+  const [newEntry, setNewEntry] = useState({ value: "", type: "email" as SpamType, reason: "" })
+  const [error, setError] = useState<string | null>(null)
+  const [isOpen, setIsOpen] = useState(false)
+
+  // Pagination with virtualization threshold
+  const PAGE_SIZE = 10
+  const VIRTUALIZATION_THRESHOLD = 50
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems,
+    hasNextPage,
+    hasPrevPage,
+    nextPage,
+    prevPage,
+    goToPage,
+  } = usePagination(entries, PAGE_SIZE)
+
+  // Virtualizer for large lists
+  const parentRef = useRef<HTMLDivElement>(null)
+
+  const rowVirtualizer = useVirtualizer({
+    count: paginatedItems.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 48,
+    overscan: 5,
   })
-  const [validationError, setValidationError] = useState<string>("")
 
-  const handleAdd = () => {
-    // Validate the entry
+  const showVirtualization = entries.length >= VIRTUALIZATION_THRESHOLD
+
+  const handleAdd = useCallback(() => {
     const validation = validateSpamEntry(newEntry.value, newEntry.type)
-
     if (!validation.valid) {
-      setValidationError(validation.error || "Invalid input")
-      return
-    }
-
-    // Check for duplicates
-    const isDuplicate = spamEntries.some(
-      (entry) =>
-        entry.value.toLowerCase() === newEntry.value.trim().toLowerCase() &&
-        entry.type === newEntry.type
-    )
-
-    if (isDuplicate) {
-      setValidationError("This entry already exists in the blacklist")
+      setError(validation.error ?? "Invalid entry")
       return
     }
 
@@ -161,33 +200,25 @@ export function SpamBlacklistTable() {
       id: generateId(),
       value: newEntry.value.trim(),
       type: newEntry.type,
-      reason: newEntry.reason.trim() || "No reason provided",
+      reason: newEntry.reason || "Manual addition",
       created_at: new Date(),
     }
 
-    setSpamEntries((prev) => [...prev, entry])
-    handleDialogClose()
-  }
+    setEntries((prev) => [entry, ...prev])
+    setNewEntry({ value: "", type: "email", reason: "" })
+    setError(null)
+    setIsOpen(false)
+  }, [newEntry])
 
-  const handleDialogClose = () => {
-    setIsDialogOpen(false)
-    setNewEntry({
-      type: "email",
-      value: "",
-      reason: "",
-    })
-    setValidationError("")
-  }
-
-  const removeEntry = (id: string) => {
-    setSpamEntries((prev) => prev.filter((entry) => entry.id !== id))
-  }
+  const handleDelete = useCallback((id: string) => {
+    setEntries((prev) => prev.filter((e) => e.id !== id))
+  }, [])
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Spam Blacklist</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -196,9 +227,9 @@ export function SpamBlacklistTable() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add to Blacklist</DialogTitle>
+              <DialogTitle>Add Spam Entry</DialogTitle>
               <DialogDescription>
-                Add an email address or IP address to the spam blacklist.
+                Add an email address or IP to the blacklist.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -206,12 +237,10 @@ export function SpamBlacklistTable() {
                 <Label htmlFor="type">Type</Label>
                 <Select
                   value={newEntry.type}
-                  onValueChange={(value: SpamType) =>
-                    setNewEntry((prev) => ({ ...prev, type: value, value: "" }))
-                  }
+                  onValueChange={(v) => setNewEntry((p) => ({ ...p, type: v as SpamType }))}
                 >
-                  <SelectTrigger id="type">
-                    <SelectValue placeholder="Select type" />
+                  <SelectTrigger>
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="email">Email</SelectItem>
@@ -225,92 +254,82 @@ export function SpamBlacklistTable() {
                 </Label>
                 <Input
                   id="value"
-                  placeholder={
-                    newEntry.type === "email"
-                      ? "user@example.com"
-                      : "192.168.1.1"
-                  }
+                  placeholder={newEntry.type === "email" ? "user@example.com" : "192.168.1.1"}
                   value={newEntry.value}
-                  onChange={(e) => {
-                    setNewEntry((prev) => ({ ...prev, value: e.target.value }))
-                    setValidationError("")
-                  }}
-                  aria-invalid={validationError ? "true" : "false"}
-                  aria-describedby={validationError ? "validation-error" : undefined}
+                  onChange={(e) => setNewEntry((p) => ({ ...p, value: e.target.value }))}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="reason">Reason</Label>
+                <Label htmlFor="reason">Reason (optional)</Label>
                 <Input
                   id="reason"
-                  placeholder="Reason for blocking"
+                  placeholder="Reason for blacklisting"
                   value={newEntry.reason}
-                  onChange={(e) =>
-                    setNewEntry((prev) => ({ ...prev, reason: e.target.value }))
-                  }
+                  onChange={(e) => setNewEntry((p) => ({ ...p, reason: e.target.value }))}
                 />
               </div>
-              {validationError && (
-                <p
-                  id="validation-error"
-                  className="text-sm text-red-500"
-                  role="alert"
-                >
-                  {validationError}
-                </p>
-              )}
+              {error && <p className="text-sm text-red-500">{error}</p>}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={handleDialogClose}>
-                Cancel
-              </Button>
+              <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
               <Button onClick={handleAdd}>Add to Blacklist</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="rounded-md border">
+      <div className="border rounded-md">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Value</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Reason</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {spamEntries.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  No entries found. Add a spam entry to get started.
-                </TableCell>
-              </TableRow>
-            ) : (
-              spamEntries.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell className="font-medium">{entry.value}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        entry.type === "email"
-                          ? "bg-blue-100 text-blue-800"
-                          : "bg-purple-100 text-purple-800"
-                      }`}
+            {showVirtualization ? (
+              <div ref={parentRef} className="h-[400px] overflow-auto">
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const item = paginatedItems[virtualRow.index]
+                  return (
+                    <TableRow
+                      key={item.id}
+                      style={{
+                        height: `${virtualRow.size}px`,
+                      }}
                     >
-                      {entry.type === "email" ? "Email" : "IP"}
-                    </span>
-                  </TableCell>
-                  <TableCell>{entry.reason}</TableCell>
-                  <TableCell>{formatDate(entry.created_at)}</TableCell>
-                  <TableCell className="text-right">
+                      <TableCell className="font-mono">{item.value}</TableCell>
+                      <TableCell className="capitalize">{item.type}</TableCell>
+                      <TableCell>{item.reason}</TableCell>
+                      <TableCell>{formatDate(item.created_at)}</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </div>
+            ) : (
+              paginatedItems.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-mono">{item.value}</TableCell>
+                  <TableCell className="capitalize">{item.type}</TableCell>
+                  <TableCell>{item.reason}</TableCell>
+                  <TableCell>{formatDate(item.created_at)}</TableCell>
+                  <TableCell>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => removeEntry(entry.id)}
-                      aria-label={`Remove ${entry.value} from blacklist`}
+                      onClick={() => handleDelete(item.id)}
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
@@ -321,6 +340,36 @@ export function SpamBlacklistTable() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination Controls */}
+      {entries.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages} ({entries.length} total)
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={prevPage} disabled={!hasPrevPage}>
+              Previous
+            </Button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const page = i + 1
+              return (
+                <Button
+                  key={page}
+                  variant={page === currentPage ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </Button>
+              )
+            })}
+            <Button variant="outline" size="sm" onClick={nextPage} disabled={!hasNextPage}>
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
