@@ -5,7 +5,7 @@
   "tasks": [
     {
       "id": "BUG-INV-NUM-20260528-01",
-      "agent": "backend-api",
+      "agent": "backend-core",
       "type": "bug",
       "priority": "critical",
       "dependencies": [],
@@ -27,7 +27,7 @@
     },
     {
       "id": "BUG-APIKEY-PERSIST-20260528-02",
-      "agent": "backend-api",
+      "agent": "backend-core",
       "type": "bug",
       "priority": "high",
       "dependencies": [],
@@ -50,7 +50,7 @@
     },
     {
       "id": "BUG-PHANTOM-WEBHOOKS-20260529-03",
-      "agent": "backend-api",
+      "agent": "backend-core",
       "type": "bug",
       "priority": "high",
       "dependencies": [],
