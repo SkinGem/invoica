@@ -27,6 +27,54 @@ export default function SwarmPage() {
           </p>
 
           <SwarmFeed />
+
+          {/* The "tease" — Invoica composes on open agent protocols */}
+          <section className="mt-24 pt-12 border-t border-white/10">
+            <p className="text-xs uppercase tracking-[0.2em] text-invoica-gray-500 mb-4">
+              Open Specs The Swarm Builds On
+            </p>
+            <p className="text-invoica-gray-300 leading-relaxed max-w-2xl mb-6">
+              The Invoica swarm composes on a family of open agent protocols.
+              The shipping ones are public; the rest are in active development.
+            </p>
+            <div className="flex flex-wrap gap-2 mb-6">
+              {[
+                { name: 'PACT',   note: 'signed mandates · live' },
+                { name: 'BOND',   note: 'recurring delegation · live' },
+                { name: 'SCORE',  note: 'agent reputation · live' },
+                { name: 'LAX',    note: 'agent discovery · live' },
+                { name: 'AMF',    note: 'memory format · live' },
+                { name: 'SIGNAL', note: 'event bus · live' },
+                { name: 'DRS',    note: 'on-chain receipts · live' },
+                { name: 'SOUL',   note: 'constitutional id · live' },
+              ].map((p) => (
+                <span
+                  key={p.name}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono ring-1 ring-invoica-purple/30 bg-invoica-purple/5 text-invoica-purple-light"
+                >
+                  <span className="font-semibold">{p.name}</span>
+                  <span className="text-invoica-gray-500">·</span>
+                  <span className="text-invoica-gray-400">{p.note}</span>
+                </span>
+              ))}
+            </div>
+            <p className="text-sm text-invoica-gray-400">
+              All under{' '}
+              <a
+                href="https://www.npmjs.com/org/godman-protocols"
+                className="text-invoica-purple-light hover:text-white transition-colors underline decoration-invoica-purple/50 underline-offset-4"
+              >
+                @godman-protocols
+              </a>{' '}
+              on npm · Apache-2.0 · spec sources at{' '}
+              <a
+                href="https://github.com/Godman-s"
+                className="text-invoica-purple-light hover:text-white transition-colors underline decoration-invoica-purple/50 underline-offset-4"
+              >
+                github.com/Godman-s
+              </a>
+            </p>
+          </section>
         </div>
       </main>
       <Footer />
