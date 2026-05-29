@@ -258,7 +258,17 @@ NEXT POSTING ACTIONS
   fs.writeFileSync(path.join(triageDir, `triage-${ts}.md`), `# Ship triage · ${ts}\n\n${out}\n`);
 }
 
+async function runCycle() {
+  console.log(`\n=== CMO daily cycle · ${new Date().toISOString()} ===\n`);
+  console.log('[1/2] Running ship triage…\n');
+  await runTriage();
+  console.log('\n[2/2] Drafting today\'s rotation post…\n');
+  await runDraft();
+  console.log('\n=== Cycle complete ===\n');
+}
+
 (async () => {
-  if (argFlag('triage')) await runTriage();
+  if (argFlag('cycle')) await runCycle();
+  else if (argFlag('triage')) await runTriage();
   else await runDraft();
 })();
