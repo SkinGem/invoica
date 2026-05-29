@@ -93,6 +93,26 @@ function recentGitLog(): string {
   } catch { return '(git log unavailable)'; }
 }
 
+// Concept slugs that have brand-consistent SVG diagrams available.
+// See reports/cmo/diagrams/educational/README.md for full inventory + brand specs.
+const EDUCATIONAL_DIAGRAMS: Record<string, string> = {
+  'signed-mandates':              'reports/cmo/diagrams/educational/signed-mandates.svg',
+  'composable-receipts':          'reports/cmo/diagrams/educational/composable-receipts.svg',
+  'agent-reputation-portability': 'reports/cmo/diagrams/educational/agent-reputation-portability.svg',
+  'gasless-microcommerce':        'reports/cmo/diagrams/educational/gasless-microcommerce.svg',
+  'discover-then-contract':       'reports/cmo/diagrams/educational/discover-then-contract.svg',
+};
+
+function detectDiagramFor(draftText: string): string | null {
+  for (const [slug, file] of Object.entries(EDUCATIONAL_DIAGRAMS)) {
+    if (draftText.toLowerCase().includes(slug)) return file;
+    // Also match the prose form: "signed-mandates" → "signed mandates"
+    const prose = slug.replace(/-/g, ' ');
+    if (draftText.toLowerCase().includes(prose)) return file;
+  }
+  return null;
+}
+
 function recentDrafts(): string {
   const dir = path.resolve(__dirname, '..', 'reports/cmo/drafts');
   try {
@@ -179,6 +199,12 @@ ${gitLog}
 ## Recent drafts (do NOT repeat these)
 ${drafts || '(none)'}
 
+${type === 'educational' ? `## Visual assets available for educational concepts
+These concept slugs have brand-consistent SVG diagrams ready. PREFER concepts that have a diagram:
+${Object.keys(EDUCATIONAL_DIAGRAMS).map(s => `- \`${s}\``).join('\n')}
+
+The runner will auto-attach the matching diagram to the saved draft.
+` : ''}
 # Output format
 
 If you can draft, respond as:
@@ -216,7 +242,20 @@ NO POST TODAY
   const draftsDir = path.resolve(__dirname, '..', 'reports/cmo/drafts');
   fs.mkdirSync(draftsDir, { recursive: true });
   const outFile = path.join(draftsDir, `draft-${ts}-${type}.md`);
-  fs.writeFileSync(outFile, `# Daily post draft · ${type} · ${ts}\n\n${draft}\n`);
+
+  // For educational drafts, detect which concept Grok used and pre-attach the matching diagram.
+  let attachment = '';
+  if (type === 'educational') {
+    const match = detectDiagramFor(draft);
+    if (match) {
+      attachment = `\n## Attached visual\n\n\`${match}\` — convert to PNG with \`rsvg-convert\` before posting.\n`;
+      console.log(`\n📎 Auto-attached diagram: ${match}`);
+    } else {
+      attachment = `\n## Attached visual\n\n_No matching SVG diagram found for this draft. Consider drafting a concept with an existing diagram (see reports/cmo/diagrams/educational/README.md)._\n`;
+    }
+  }
+
+  fs.writeFileSync(outFile, `# Daily post draft · ${type} · ${ts}\n\n${draft}\n${attachment}`);
   console.log(`\nSaved: ${outFile}\n`);
   return { draftOut: draft, type, draftFile: outFile };
 }
