@@ -1,0 +1,120 @@
+---
+title: "@invoica/webhooks-receiver"
+description: "Typed Invoica webhook receiver with HMAC verification and a 10-line Express integration. Skip building your own — npm install and ship."
+---
+
+# @invoica/webhooks-receiver
+
+A small TypeScript package that handles Invoica webhook delivery for you: HMAC signature verification, discriminated-union event types for every Invoica event, and an optional Express middleware. Apache-2.0.
+
+## Install
+
+```bash
+npm install @invoica/webhooks-receiver
+```
+
+ESM and CJS both supported. Strict TypeScript types. Express is an optional peer — the verifier works standalone with any framework.
+
+## The 10-line example
+
+```ts
+import express from 'express';
+import { invoicaWebhookHandler } from '@invoica/webhooks-receiver';
+
+const app = express();
+
+app.post(
+  '/webhooks/invoica',
+  express.raw({ type: 'application/json' }), // keep the bytes Invoica signed
+  invoicaWebhookHandler(process.env.INVOICA_WEBHOOK_SECRET!, {
+    'mandate.signed_by_both': async (event) => {
+      console.log('PACT mandate fully signed:', event.data.id, event.data.scope);
+    },
+    'invoice.settled': async (event) => {
+      console.log('Invoice paid:', event.data.id, event.data.amount, event.data.currency);
+    },
+  }),
+);
+
+app.listen(3000);
+```
+
+That's it. HMAC verified, event typed, handler dispatched.
+
+<Warning>
+  **Use `express.raw`, not `express.json`.** Invoica signs the raw request bytes. If you parse JSON first, the signature won't verify — the SDK warns loudly when this happens, but use `express.raw` as the default.
+</Warning>
+
+## Standalone verifier (no Express)
+
+If you're on Fastify, Hono, Cloudflare Workers, or anything else:
+
+```ts
+import { verifyWebhook } from '@invoica/webhooks-receiver';
+
+const result = verifyWebhook(
+  rawBodyBytes,                          // string | Buffer | Uint8Array
+  signatureHeader,                       // value of x-invoica-signature
+  process.env.INVOICA_WEBHOOK_SECRET!,
+);
+
+if (!result.valid) {
+  return new Response(result.error, { status: 401 });
+}
+
+// result.event is fully typed by event_type
+switch (result.event.type) {
+  case 'mandate.signed_by_both':
+    // result.event.data is MandatePayload, narrowed
+    break;
+  case 'invoice.settled':
+    // result.event.data is InvoicePayload, narrowed
+    break;
+}
+```
+
+`verifyWebhook` never throws. It returns `{ valid: true, event }` or `{ valid: false, error }`. Explicit failure modes for explicit error handling.
+
+## Event types supported
+
+Discriminated by `event.type`. All payloads strictly typed.
+
+### Mandate lifecycle
+
+- `mandate.proposed`
+- `mandate.signed_by_proposer`
+- `mandate.signed_by_both`
+- `mandate.completed`
+- `mandate.disputed`
+
+### Invoice lifecycle
+
+- `invoice.created`
+- `invoice.settled`
+
+## Event types not yet emitted
+
+The following are registered in `/v1/webhooks/events` but Invoica's backend does not currently fire them — partner code subscribing to these waits forever. Tracked as a bug, fix in flight:
+
+- `mandate.in_progress`
+- `mandate.expired`
+- `invoice.cancelled`
+- `invoice.refunded`
+- `agent.reputation_changed`
+- `settlement.confirmed`
+
+The SDK does not type these in v0.1 because they don't ship payloads we can promise. Types will land in v0.2 once the backend emits them.
+
+## Signature canonicalization
+
+For partners not using the SDK, the signing input is `JSON.stringify(event)` — the **whole envelope**, not just `event.data`. Header: `x-invoica-signature: sha256=<hex>`. HMAC-SHA256 with the secret you received during onboarding.
+
+Re-serializing the body (e.g., parsing then re-stringifying) will produce a different byte sequence and the signature will not verify. Always sign and verify against the raw bytes Invoica sent.
+
+## Repo
+
+[github.com/skingem/Invoica/sdk/webhooks-receiver](https://github.com/skingem/Invoica/tree/main/sdk/webhooks-receiver)
+
+## License
+
+Apache-2.0.

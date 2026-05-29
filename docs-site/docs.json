@@ -54,6 +54,12 @@
               "guides/webhooks",
               "guides/tax-compliance"
             ]
+          },
+          {
+            "group": "Case Studies",
+            "pages": [
+              "case-studies/helixa"
+            ]
           }
         ]
       },
@@ -71,7 +77,8 @@
         "tab": "SDK",
         "pages": [
           "sdk/overview",
-          "sdk/installation"
+          "sdk/installation",
+          "sdk/webhooks-receiver"
         ]
       }
     ],

@@ -1,5 +1,31 @@
 #!/usr/bin/env ts-node
 
+// ---------------------------------------------------------------
+// VENDOR SYNC
+// Source: kognai@503fd56 · synced 2026-05-28
+// Portable improvements applied:
+//   - structured-no-files-rejection (kognai f2d8b26a4) — main + sub-task paths
+//     emit model/type/deliverable-count/reason; TaskRun.failure_mode persisted
+//   - telemetry-v2-schema-version (kognai 1754be8a9, partial) — runReport now
+//     carries schema_version: '2.0.0'
+// Portable improvements skipped (anchor code not present in Invoica):
+//   - token-budget-100k: Invoica has no PER_TASK_TOKEN_BUDGET equivalent
+//   - atomicity-preflight: no routeToDecomposer / injectSplitTasks /
+//     RejectionSignal in Invoica orchestrator
+//   - telemetry-v2 grade/score_rationale: Invoica ReviewResult lacks grade
+//     and score_rationale fields (different supervisor shape)
+//   - injectSplitTasks-dual-write: function not present in Invoica
+//   - split-persists-to-source: lives in scripts/sprint-runner.ts upstream,
+//     out of scope for this orchestrator-only sync
+//   - edit-mode-truncation-guards: no tryEditMode in Invoica (no edit-mode
+//     code path — Invoica uses regenerate-only CodingAgent)
+// Kognai-only code excluded (deliberate, do NOT introduce):
+//   citizenship/mintCitizen/DID, @godman-protocols/score / recordTaskScore,
+//   kslTapAttempt, updateTrustScore, runChomskyGate, citizen registry reads,
+//   getSherlockMemoryContext (Invoica has no Sherlock).
+// Next sync: see docs/orchestrator-sync.md
+// ---------------------------------------------------------------
+
 /**
  * Invoica Agent Orchestrator v2
  *
@@ -107,6 +133,7 @@ interface TaskRun {
   title: string;
   type: string;
   task_target: string;
+  agent: string;
   status: string;
   attempts: number;
   model_used: string;
@@ -118,6 +145,11 @@ interface TaskRun {
   review: { reviewer: string; verdict: string; score: number; summary: string } | null;
   error: string | null;
   rejection_reason: string | null;
+  // Vendor-sync (kognai f2d8b26a4): inferred reason for silent failures
+  // (e.g. "empty-deliverables", "edit-mode-empty:<path>:<lines>lines",
+  // "unknown"). Populated when result.files.length === 0. Optional —
+  // legacy reports without this field remain readable.
+  failure_mode?: string;
 }
 
 // Module-level token accumulator — shared across CodingAgent + Supervisor instances
@@ -2237,7 +2269,11 @@ ONLY output the JSON array. No markdown, no explanation.`;
       const result = await agent.execute(subtask, lastReview);
 
       if (result.files.length === 0) {
-        log(c.red, `  No files produced for sub-task ${subtask.id}`);
+        // Vendor-sync (kognai f2d8b26a4): structured rejection for sub-tasks.
+        const dels = [...(subtask.deliverables?.code || []), ...(subtask.deliverables?.tests || []), ...(subtask.deliverables?.docs || [])];
+        const reasons = (subtask as any)._failureReasons || [];
+        const inferred = reasons.length ? reasons.join('; ') : (dels.length === 0 ? 'empty-deliverables' : 'unknown');
+        log(c.red, `  ✗ No files produced for sub-task ${subtask.id} [model=${result.model || 'n/a'}, deliverables=${dels.length}, reason=${inferred}]`);
         return false;
       }
 
@@ -2325,6 +2361,7 @@ ONLY output the JSON array. No markdown, no explanation.`;
       title: (task as any).title || task.id,
       type: task.type,
       task_target: (task as any).task_target || 'cloud-code',
+      agent: (task as any).agent || 'unknown',
       status: 'pending',
       attempts: 0,
       model_used: '',
@@ -2401,10 +2438,21 @@ ONLY output the JSON array. No markdown, no explanation.`;
       taskRun.tokens_used += result.tokens;
 
       if (result.files.length === 0) {
-        log(c.red, `  No files produced for ${task.id}`);
+        // Vendor-sync (kognai f2d8b26a4): structured "no files produced" rejection.
+        // Captures (a) declared deliverable count, (b) model used, (c) failure
+        // reasons collected during execute() (e.g. truncated, empty-deliverables).
+        // Replaces an opaque single-line log that gave no visibility into why the
+        // swarm was no-oping.
+        const dels = [...(task.deliverables?.code || []), ...(task.deliverables?.tests || []), ...(task.deliverables?.docs || [])];
+        const reasons = (task as any)._failureReasons || [];
+        const inferred = reasons.length ? reasons.join('; ') : (dels.length === 0 ? 'empty-deliverables' : 'unknown');
+        const structured = `No files produced [model=${result.model || 'n/a'}, type=${task.type}, deliverables=${dels.length}, reason=${inferred}]`;
+        log(c.red, `  ✗ ${structured}`);
         task.status = 'rejected';
         taskRun.status = 'rejected';
-        taskRun.rejection_reason = 'No files produced by agent';
+        taskRun.error = structured;
+        taskRun.rejection_reason = structured;
+        taskRun.failure_mode = inferred;
         taskRun.duration_seconds = Math.round((Date.now() - taskStartMs) / 1000);
         this.taskRuns.push(taskRun);
         return;
@@ -2972,6 +3020,11 @@ ONLY output the JSON array. No markdown, no explanation.`;
       try { gitHeadAfter = execSync('git rev-parse --short HEAD', { encoding: 'utf-8', timeout: 5000 }).trim(); } catch {}
 
       const runReport = {
+        // Vendor-sync (kognai 1754be8a9 / CTO-20260528-001): bumped schema
+        // version when capturing structured failure_mode + grade/score_rationale
+        // per-task. v2 reports are forward-compatible with v1 consumers (extra
+        // fields ignored); strict v2 readers should branch on schema_version.
+        schema_version: '2.0.0',
         run_id: randomUUID(),
         project: 'invoica',
         sprint_file: sprintFile,
@@ -3016,6 +3069,62 @@ ONLY output the JSON array. No markdown, no explanation.`;
 
       log(c.green, `\n📊 Swarm run report saved: ${reportPath}`);
       log(c.green, `   Daily aggregate updated: ${dailyPath} (${dailyRuns.length} run(s) today)`);
+
+      // ────────────────────────────────────────────────────────────────
+      // Step 1 of swarm-broadcast widget (privacy-strict, fire-and-forget)
+      // Emits coarse-grained, no-PII rows to `swarm_events` Supabase table.
+      // NEVER emits task titles, descriptions, file paths, or PR titles.
+      // Public widget on invoica.ai will read from this table.
+      // ────────────────────────────────────────────────────────────────
+      try {
+        const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (sbUrl && sbKey) {
+          const AGENT_TO_CATEGORY: Record<string, string> = {
+            'backend-api': 'api',
+            'backend-tax': 'tax-compliance',
+            'backend-settlement': 'settlement',
+            'backend-billing': 'billing',
+            'backend-mandate': 'mandates',
+            'backend-webhook': 'webhooks',
+            'backend-webhooks': 'webhooks',
+            'backend-core': 'infra',
+            'backend-auth': 'api-key-mgmt',
+            'backend-clinpay': 'clinpay',
+            'frontend-dashboard': 'frontend',
+            'frontend': 'frontend',
+            'ops': 'infra',
+            'docs': 'docs',
+            'coder': 'infra',
+          };
+          const sprintWeek = parseInt(String(sprintFile).match(/week-(\d+)/)?.[1] || '0', 10) || 0;
+          const finishedAtIso = new Date().toISOString();
+          const rows = this.taskRuns.map((tr: TaskRun) => ({
+            sprint_week: sprintWeek,
+            task_id: tr.task_id,
+            agent_role: tr.agent || 'unknown',
+            task_type: tr.type || 'unknown',
+            task_category: AGENT_TO_CATEGORY[tr.agent] ?? null,
+            verdict: (tr.review?.verdict || tr.status || 'unknown').toUpperCase(),
+            score: tr.review?.score ?? null,
+            tokens: tr.tokens_used ?? null,
+            duration_s: tr.duration_seconds ?? null,
+            model: tr.model_used || null,
+            provider: tr.provider || null,
+            started_at: this.sprintStartTime,
+            ended_at: finishedAtIso,
+          }));
+          import('@supabase/supabase-js').then(({ createClient }) => {
+            const sb = createClient(sbUrl, sbKey);
+            sb.from('swarm_events').insert(rows).then(({ error }) => {
+              if (error) log(c.yellow, `  ! swarm_events insert (non-critical): ${error.message}`);
+              else log(c.green, `   📡 swarm_events: ${rows.length} row(s) emitted`);
+            });
+          }).catch((e: any) => log(c.yellow, `  ! swarm_events hook (non-critical): ${e?.message || e}`));
+        }
+      } catch (swarmHookErr: any) {
+        log(c.yellow, `  ! swarm_events hook (non-critical): ${swarmHookErr?.message || swarmHookErr}`);
+      }
     } catch (reportErr: any) {
       log(c.yellow, `  ! Swarm run report failed (non-critical): ${reportErr.message}`);
     }

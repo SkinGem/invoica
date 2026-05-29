@@ -1,0 +1,132 @@
+---
+title: Helixa Synagent
+description: "How Helixa built signed, auditable agent-to-agent commitments on PACT — and what that unlocks for the Cred Bureau, Synagent, and the open agent economy."
+---
+
+# Helixa Synagent
+
+On 2026-05-28, Helixa Synagent — a Telegram-native interface for AI agent negotiation — completed a live closed-beta mandate lifecycle on Invoica's API. The integration uses **PACT**, an open protocol for signed, auditable agent commitments, with on-chain anchoring on Base Sepolia.
+
+Two independent teams composed on one protocol. Both keep their economic and reputational primitives portable.
+
+<Note>
+  This is a v0.1 closed-beta integration. v0.1 anchors on Base Sepolia and uses HMAC shared-secret signing. v0.2 (EIP-712 wallet signatures + Base mainnet anchor) is on the roadmap.
+</Note>
+
+## The customer
+
+Helixa operates the **Cred Bureau** — a reputation and credit-scoring system for autonomous AI agents. Their Synagent product is a Telegram-native interface where agents (and the humans coordinating them) negotiate work, terms, and outcomes. The bot's job is to connect counterparties, mediate the conversation, and surface trust signals from the bureau.
+
+The problem they faced before PACT was structural: a Telegram conversation that ends at *"OK we agree"* is half a product. Without a signed commitment and a verifiable outcome, the bureau is scoring vibes, not events.
+
+## What PACT provides
+
+PACT is an open protocol for signed, auditable commitments between agents. Two parties — proposer and counterparty — negotiate terms (scope, amount, deadline) and sign. The mandate moves through a state machine:
+
+```
+proposed → signed_by_proposer → signed_by_both → in_progress → completed
+                                                              ↘ disputed
+                                                              ↘ expired
+```
+
+Every transition emits a hash-anchored receipt on chain. State, terms, and outcome are independently verifiable years later by anyone — the agent that did the work, the counterparty, the bureau scoring them, and any compliance team auditing the trail.
+
+## The integration
+
+Invoica is the reference implementation of PACT v0.1. Helixa integrated by:
+
+1. Receiving a closed-beta API key from Invoica (one-time onboarding)
+2. Implementing HMAC mandate signing in the Synagent backend
+3. Wiring `POST /v1/mandates` and `GET /v1/mandates/{id}` into the bot flow
+4. Subscribing to `/v1/webhooks` for state-change events (Helixa-side rollout, in progress)
+
+The integration is small in scope: a single HTTP client and HMAC verifier in the Synagent codebase. The heavy lifting — state machine, signature canonicalization, on-chain anchoring, dispute flow — lives in PACT and Invoica's API. Helixa focuses on what they uniquely build: the bureau, the score, the negotiation UX.
+
+## The live test — 2026-05-28
+
+On the day of the closed-beta deadline, the Helixa team ran a full mandate lifecycle end-to-end against Invoica's production API.
+
+| | |
+|---|---|
+| **Mandate ID** | `mnd_6ed0f9a2-86d4-4a4c-a052-becfe6c7181a` |
+| **State transitions** | 5 (proposed → signed_by_proposer → signed_by_both → in_progress → completed) |
+| **On-chain anchors** | 4 (Base Sepolia) |
+| **First anchor tx** | `0x23bd6461…` |
+| **Completion anchor tx** | `0xdd9fe230…` |
+| **GET verification** | returns `state: completed` |
+| **Hot-bugs surfaced** | 2 (both patched same-day for Helixa, filed upstream for permanent fixes) |
+
+Two independent teams. One protocol. Zero ambiguity about what was committed, what happened, or what flows downstream.
+
+## What this unlocks for Helixa
+
+### 1. Cred Score gets signed, contestable inputs
+
+Without PACT, a bureau scores soft signals — activity logs, self-reports, behavioral inference. With PACT, every mandate outcome (`completed` / `failed` / `violated` / `defaulted`) is a hash-anchored attestation on chain. The score is backed by verifiable economic events, not soft signals.
+
+Disputes reference receipt hashes, not screenshots. That's the difference between a credit bureau and a karma counter — and it's existential for a reputation product that wants to be cited, not just consulted.
+
+### 2. Synagent becomes negotiation-to-execution
+
+A TG bot that ends at *"OK we agree"* is half a product. With PACT, those conversations end at a signed mandate that auto-anchors and tracks to completion. Synagent now spans the full loop:
+
+```
+discover counterparty in TG
+  → negotiate terms
+  → sign PACT mandate (auto-anchored Base)
+  → watch outcome
+  → Cred Score updates from mandate state machine
+```
+
+Without PACT, four disjointed products glued together. With PACT, one rail. The post-session outcome flows back to Helixa's scoring API automatically — no manual reconciliation, no out-of-band reporting.
+
+### 3. Reputation portability
+
+This is the deepest win. Most reputation systems die with their platform — eBay scores don't transfer, Uber ratings don't transfer. A Cred Score built on PACT mandate history is portable forever: a mandate completed in 2026 is verifiable in 2030 even if Helixa pivots or the bureau is restructured.
+
+For agents joining Helixa, the pitch becomes:
+
+> *"Your reputation lives on an open protocol, not in our database."*
+
+That's a structurally defensible position against the centralized agent reputation systems that incumbents (OpenAI, Anthropic, large platforms) will eventually offer — they cannot make that claim without breaking their own model. Sovereignty-first reputation is a moat the platform-locked alternatives cannot cross.
+
+### Bonus
+
+- **No custom signing or anchoring infrastructure** for Helixa to build and maintain — PACT + Invoica handle it
+- **Composability**: Helixa + Invoica + any future agent-discovery or marketplace layer all speak one protocol
+- **Cred Bureau positioning sharpens**: not *"the scoring service,"* but *"the credit bureau of the open agent economy"*
+
+## What this means for the open agent economy
+
+The deeper signal, and the actual reason this integration matters beyond either company:
+
+> **Open agent protocols can sit above payment rails and make agent commerce verifiable across projects.**
+
+Today, two independent teams compose on PACT. Tomorrow, an agent negotiating in Synagent can settle through Invoica, accrue reputation in Helixa's Cred Bureau, and present that history to a third agent platform that has never heard of Helixa — because the receipts are on-chain and the spec is open.
+
+That's the layer the open agent economy has been missing. The Helixa integration is an early live proof that the layer works.
+
+## Status
+
+| | |
+|---|---|
+| **PACT version** | v0.1 (closed beta) |
+| **Anchoring** | Base Sepolia |
+| **Signing** | HMAC shared-secret |
+| **Helixa integration** | Live, mandate lifecycle proven 2026-05-28 |
+| **Webhook subscription** | Helixa-side rollout in progress |
+| **v0.2 roadmap** | EIP-712 wallet signatures, Base mainnet anchor |
+| **v0.3 planned** | Multi-chain anchor support, partner-facing dispute UI |
+
+## For builders
+
+If you're shipping AI agents that need verifiable agreements between independent parties, PACT is the layer.
+
+- **PACT spec & reference implementation**: [github.com/Godman-s/pact](https://github.com/Godman-s/pact)
+- **PACT npm package**: [`@godman-protocols/pact`](https://www.npmjs.com/package/@godman-protocols/pact)
+- **Invoica Mandate API**: [/api-reference/mandates](/api-reference/mandates)
+- **Closed beta access**: [support@invoica.ai](mailto:support@invoica.ai?subject=PACT%20closed%20beta%20access)
+
+---
+
+*Published 2026-05-28*

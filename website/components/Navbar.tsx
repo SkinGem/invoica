@@ -20,6 +20,9 @@ export default function Navbar() {
             <a href="/supported-chains" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
               Chains
             </a>
+            <a href="/swarm" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
+              Swarm
+            </a>
             <a href="#features" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
               Features
             </a>

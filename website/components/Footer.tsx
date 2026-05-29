@@ -24,6 +24,7 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><a href="/clinpay" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">ClinPay</a></li>
               <li><a href="/supported-chains" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Supported chains</a></li>
+              <li><a href="/swarm" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Swarm activity</a></li>
               <li><a href="https://invoica.mintlify.app" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Documentation</a></li>
               <li><a href="https://invoica.mintlify.app/api-reference/overview" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">API Reference</a></li>
               <li><a href="https://invoica.mintlify.app/sdk/overview" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">SDK</a></li>
@@ -37,6 +38,7 @@ export default function Footer() {
               <li><a href="https://invoica.mintlify.app/quickstart" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Quickstart</a></li>
               <li><a href="https://invoica.mintlify.app/guides/create-invoice" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Guides</a></li>
               <li><a href="https://invoica.mintlify.app/concepts/x402-protocol" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">x402 Protocol</a></li>
+              <li><a href="https://invoica.mintlify.app/sdk/webhooks-receiver" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">Webhooks SDK</a></li>
               <li><a href="https://github.com/SkinGem/invoica" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">GitHub</a></li>
               <li><a href="/status" className="text-sm text-invoica-gray-400 hover:text-white transition-colors duration-200">System Status</a></li>
             </ul>

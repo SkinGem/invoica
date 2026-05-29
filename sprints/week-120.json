@@ -1,0 +1,77 @@
+{
+  "week": 120,
+  "created": "2026-05-28",
+  "notes": "Hot-fixes from PACT-Helixa partner validation 2026-05-28. (1) POST /v1/invoices crashes with INV-000001 type error. (2) api-keys persist failure on customer creation, leaving dangling FKs that broke POST /v1/mandates for Quigley (already hot-patched by direct Customer-row insert). Both are upstream data-integrity bugs that should be solved before the next partner onboarding.",
+  "tasks": [
+    {
+      "id": "BUG-INV-NUM-20260528-01",
+      "agent": "backend-api",
+      "type": "bug",
+      "priority": "critical",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Fix POST /v1/invoices crash: PostgreSQL rejects 'INV-000001' as integer column value",
+      "context": "## Symptom\n\nLive backend log on 2026-05-28 12:40:12 UTC after POST /v1/invoices with chain=skale:\n\n```\nUnhandled error: invalid input syntax for type integer: \"INV-000001\"\n```\n\nReturned to caller as 500 INTERNAL_ERROR. Blocked the PACT-Helixa SKALE happy-path demo with the partner (Helixa Synagent / Quigley) and required a direct-DB workaround (scripts/skale-direct-create-and-poll.ts) to ship the capture.\n\n## What we know\n\n- The Invoice.invoiceNumber column is `Int @unique` per backend/prisma/schema.prisma:23.\n- Live DB top-10 by invoiceNumber DESC are all clean integers (max = 1775224119 as of 2026-05-28). No corrupted string rows in that range.\n- The obvious POST handler at backend/src/routes/invoices.ts:598 (mounted via app.ts) computes `nextNumber = ((maxData?.invoiceNumber as number) || 0) + 1` and inserts an integer — this code path alone does not produce 'INV-000001'.\n- A legacy file backend/routes/invoice-routes.ts:110 DOES generate `INV-${nextNumber.toString().padStart(6, '0')}` via `prisma.invoice.create(...)` — but it is NOT imported by backend/src/app.ts. Confirm with grep that nothing mounts it (initial check found no imports outside scripts/generate-docs.ts).\n- backend/src/api/invoices-create.ts:206 uses 'INV-' + invoice.invoiceNumber but only in the RESPONSE, not the DB write. Likely not the cause unless this file is also mounted somewhere.\n- The 6-digit padded format ('INV-000001') is consistent with `String(n).padStart(6, '0')`. Find every occurrence of this pattern across backend/ + scripts/ + queue workers.\n\n## Investigation tasks\n\n1. Diff backend/routes/invoice-routes.ts against backend/src/routes/invoices.ts. Determine if the legacy file is reachable at runtime via any include/require/mount path (including dynamic imports, server.ts, anywhere outside docs scripts).\n2. Inspect backend/src/queue/invoice.queue.ts consumers — does any worker insert an Invoice row with a formatted string?\n3. Inspect every middleware in the POST /v1/invoices chain (api-key auth, helixa trust gate, body parsers, request loggers) for code that writes to ANY integer column with a formatted string. The error message does NOT confirm which column — only that an integer column rejected 'INV-000001'.\n4. Check for any Postgres trigger or function on the Invoice table that could transform inserts.\n5. If still not found after the above: add a debug logger inside the error handler that prints the failing SQL statement / Supabase request body before re-throwing. Reproduce the error and capture the actual write that failed.\n\n## Fix scope\n\nOnce the source is identified:\n- If it's a formatter writing to an Int column: switch to write the raw integer and only format in responses.\n- If it's the legacy invoice-routes.ts being reachable: remove it from the build (or delete entirely if confirmed dead).\n- Add a defensive cast in backend/src/routes/invoices.ts:767 and :1099: `const nextNumber = (typeof maxData?.invoiceNumber === 'number' ? maxData.invoiceNumber : 0) + 1;` (the existing `as number` cast is a TypeScript fiction, does nothing at runtime).\n\n## Reproduction\n\n```bash\nINVOICA_KEY=<live key> curl -sX POST https://api.invoica.ai/v1/invoices \\\n  -H \"x-api-key: $INVOICA_KEY\" \\\n  -H \"content-type: application/json\" \\\n  -d '{\"amount\": 0.10, \"currency\": \"USDC\", \"customerEmail\": \"test@test.com\", \"customerName\": \"test\", \"chain\": \"skale\"}'\n```\n\nExpected: 201 with UUID + paymentAddress. Actual (as of 2026-05-28): 500 INTERNAL_ERROR with the integer syntax error in backend logs.\n\n## Out of scope (separate tickets, do NOT bundle)\n\n- Recurring `[api-keys] Supabase persist failed: malformed array literal: \"[]\"` — different bug, file separately.\n- `[settlement-fee] outstanding ... NO_PAYMENT_METHOD` — different feature gap.\n- Base/Arbitrum RPC 503/timeout flapping — different infra issue.",
+      "deliverables": {
+        "code": [
+          "backend/src/routes/invoices.ts"
+        ],
+        "tests": [
+          "backend/src/routes/__tests__/invoices-create-skale.test.ts"
+        ],
+        "docs": []
+      },
+      "needs_refinement": false,
+      "source_briefing": "PACT-Helixa happy-path validation 2026-05-28",
+      "acceptance": "POST /v1/invoices with body {amount: 0.10, currency: 'USDC', customerEmail, customerName, chain: 'skale'} returns HTTP 201 with a UUID and a paymentDetails.paymentAddress matching the live X402_SELLER_WALLET. Backend error log shows zero 'invalid input syntax for type integer' entries during the test request. A unit test covers the happy path for chain=skale and chain=base. The root-cause source location and the fix applied are documented in the PR description."
+    },
+    {
+      "id": "BUG-APIKEY-PERSIST-20260528-02",
+      "agent": "backend-api",
+      "type": "bug",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Fix api-keys Supabase persist: 'malformed array literal: \"[]\"' on key creation; backfill missing Customer rows.",
+      "context": "## Symptom\n\nRecurring backend error since 2026-05-06, fires on every new API key creation:\n\n```\n[api-keys] Supabase persist failed: malformed array literal: \"[]\"\n```\n\nLog samples (representative, not exhaustive): 2026-05-06 14:58, 15:04 · 2026-05-07 13:03 · 2026-05-10 17:12 · 2026-05-13 08:58 · 2026-05-15 10:25–10:44 (5 within 20 min) · 2026-05-18 09:25, 09:51 · 2026-05-19 13:50 · 2026-05-22 07:33 · 2026-05-28 12:39.\n\n## Downstream impact (discovered 2026-05-28)\n\nWhen the api-keys persist fails, the Customer row backfill driven by migration 012_billing_credits.sql NEVER runs for the new customerId, leaving a dangling FK. Subsequent INSERTs into Mandate (and likely Invoice on the issuer_customer_id path) violate the foreign key constraint:\n\n```\nUnhandled error: insert or update on table \"Mandate\" violates foreign key constraint \"Mandate_issuer_customer_id_fkey\"\n```\n\nThis blocked the Helixa Synagent (Quigley) from creating his first mandate today during PACT-Helixa partner validation. Hot-patched at 2026-05-28 15:11 UTC by `scripts/fix-helixa-customer-row.ts` — direct INSERT of the missing Customer + Credit rows. The fix is data-only; the underlying api-keys bug remains.\n\n## Root-cause hypothesis\n\nThe error 'malformed array literal: \"[]\"' is Postgres rejecting the literal string '[]' on an array-typed column. Most likely `ApiKey.permissions text[]` — the code is sending `JSON.stringify(permissions)` (the string '[]') instead of passing the JS array directly. Supabase's PostgREST client serializes JS arrays correctly to Postgres array literals; this only fires if someone explicitly stringified first.\n\nFile to inspect: `backend/src/services/api-keys.ts` (the createApiKey path + the persist call to `supabase.from('ApiKey').insert(...)`). Look for any `JSON.stringify` on permissions/scopes/array fields.\n\n## Investigation + fix\n\n1. Identify which column is rejecting '[]'. Likely `ApiKey.permissions` (text[]). Confirm by enabling a debug log of the row payload right before the failing insert.\n2. Remove the stringify — pass JS arrays directly to Supabase.\n3. Backfill: scan ApiKey rows that have NO matching Customer row and INSERT the missing Customer + Credit rows (idempotent: `ON CONFLICT (id) DO NOTHING`). Re-use the backfill SQL from migration 012 verbatim.\n4. Add a post-create assertion in createApiKey that verifies the Customer row was created (or pre-exists). If not, log a structured warning so the next dangling FK is caught immediately, not on the partner's first write.\n5. Add a unit test that creates an ApiKey with a non-empty permissions array, fetches it, and asserts the array round-trips correctly.\n\n## Reproduction\n\nCreate a new API key via the dashboard or the createApiKey service. Watch `pm2 logs backend --err` for `[api-keys] Supabase persist failed: malformed array literal: \"[]\"`. Then query `SELECT 1 FROM \"Customer\" WHERE id = '<new-customerId>'` and confirm no row exists.\n\n## Out of scope (separate tickets)\n\n- The INV-000001 POST /v1/invoices bug — already filed as BUG-INV-NUM-20260528-01 in this sprint.\n- Stripe / billing wiring for new customers — different feature.",
+      "deliverables": {
+        "code": [
+          "backend/src/services/api-keys.ts",
+          "supabase/migrations/017_customer_backfill.sql"
+        ],
+        "tests": [
+          "backend/src/services/__tests__/api-keys-persist.test.ts"
+        ],
+        "docs": []
+      },
+      "needs_refinement": false,
+      "source_briefing": "PACT-Helixa happy-path validation 2026-05-28",
+      "acceptance": "(1) Creating a new API key via createApiKey() with a non-empty permissions array no longer produces 'malformed array literal' errors in backend logs, and the permissions round-trip correctly on read. (2) Every successful createApiKey() leaves both an ApiKey row AND a matching Customer row (verified by a post-create assertion). (3) Migration 017 backfills missing Customer rows for all existing ApiKey records whose customerId has no Customer match. (4) A unit test covers the array-permissions round-trip. (5) PR description documents the failing column and the root-cause line."
+    },
+    {
+      "id": "BUG-PHANTOM-WEBHOOKS-20260529-03",
+      "agent": "backend-api",
+      "type": "bug",
+      "priority": "high",
+      "dependencies": [],
+      "status": "pending",
+      "description": "Six webhook event types are registered in /v1/webhooks/events but never fire — partners polling see them advertised but never receive them.",
+      "context": "## Symptom\n\nDiscovered 2026-05-29 while building the @invoica/webhooks-receiver SDK. The route `/v1/webhooks/events` advertises a set of event types to subscribers, but six of them have no `fireWebhook()` call anywhere in the backend codebase. Partners that subscribe and wait for these events wait forever.\n\n## Missing events — two patterns\n\n### Pattern 1: state-machine transitions that don't fire on dispatch\n\nThese states exist in the Mandate / Invoice state machines but the code path that transitions through them does not call `dispatch()` / `fireWebhook()`:\n\n- `mandate.in_progress` — `backend/src/services/mandate/handler.ts:complete()` advances `signed_by_both → in_progress → completed` in one call and only fires `mandate.completed`. The implicit `in_progress` start transition never emits a webhook.\n- `mandate.expired` — the `expire` action exists in `backend/src/services/mandate/state-machine.ts` but no caller wires it to the webhook dispatcher.\n- `invoice.cancelled`, `invoice.refunded` — `CANCELLED` and `REFUNDED` are valid Prisma InvoiceStatus values (see `backend/src/routes/invoices.ts` VALID_TRANSITIONS) but the invoice service does NOT call `dispatch()` on those transitions. Invoice events go to a Redis pub/sub (`backend/src/events/invoiceEvents.ts`), separate from the webhook dispatcher — neither bridges.\n\n### Pattern 2: phantom events advertised with no implementation\n\nThese are registered as valid types in the events route but no code anywhere fires them:\n\n- `agent.reputation_changed`\n- `settlement.confirmed`\n\n## Why this matters now\n\nThe @invoica/webhooks-receiver SDK (shipped 2026-05-29) intentionally only types event shapes that production actually emits. That means partners using the SDK get tight, honest types — but anyone reading our `/v1/webhooks/events` docs will see six event types listed that they cannot rely on. Same pattern as INV-000001 and the api-keys persist bug: the documented surface diverges from what the code actually does.\n\n## Investigation + fix\n\n1. For each of the 4 state-machine-transition events: add the missing `fireWebhook(eventType, payload)` call at the transition point. Ensure the payload shape matches what the SDK expects (read `sdk/webhooks-receiver/src/types.ts` once it's published, or use the existing `mandate.signed_by_both` / `invoice.settled` payloads as the template).\n2. For each of the 2 phantom events: either implement the code path that should emit them (if there's a clear business need) OR remove them from `/v1/webhooks/events` registry. Don't ship marketing-shape events.\n3. Add a smoke test that subscribes to all advertised event types and exercises each transition. Test FAILS if any subscribed event type is not received.\n\n## Out of scope (already filed)\n\n- BUG-INV-NUM-20260528-01 (POST /v1/invoices integer type error)\n- BUG-APIKEY-PERSIST-20260528-02 (api-keys persist + Customer FK backfill)\n\n## Reference\n\nFull finding context surfaced by the webhook SDK build agent on 2026-05-29 — see the SDK README's 'Event types not yet emitted' section for the partner-facing version of this same gap.",
+      "deliverables": {
+        "code": [
+          "backend/src/services/mandate/handler.ts",
+          "backend/src/services/mandate/state-machine.ts",
+          "backend/src/routes/invoices.ts",
+          "backend/src/routes/webhooks.ts"
+        ],
+        "tests": [
+          "backend/src/services/__tests__/webhook-dispatch-coverage.test.ts"
+        ],
+        "docs": []
+      },
+      "needs_refinement": false,
+      "source_briefing": "@invoica/webhooks-receiver SDK build, 2026-05-29",
+      "acceptance": "Every event type registered in /v1/webhooks/events is either (a) fired by at least one code path with a smoke test that proves it, OR (b) removed from the registry. The new smoke test subscribes to all advertised types, drives each state transition, and asserts receipt of every event."
+    }
+  ]
+}
