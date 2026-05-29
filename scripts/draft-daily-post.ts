@@ -104,6 +104,24 @@ function recentDrafts(): string {
   } catch { return '(no recent drafts)'; }
 }
 
+async function notifyTelegram(message: string): Promise<boolean> {
+  const token = process.env.CEO_TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+  const chat = process.env.OWNER_TELEGRAM_CHAT_ID || process.env.CEO_TELEGRAM_CHAT_ID;
+  if (!token || !chat) {
+    console.warn('[cmo-cycle] no Telegram creds — skipping notification (set CEO_TELEGRAM_BOT_TOKEN + OWNER_TELEGRAM_CHAT_ID)');
+    return false;
+  }
+  try {
+    const params = new URLSearchParams({ chat_id: chat, text: message, disable_web_page_preview: 'true' });
+    const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', body: params });
+    if (!r.ok) console.warn(`[cmo-cycle] Telegram send failed: HTTP ${r.status}`);
+    return r.ok;
+  } catch (err) {
+    console.warn(`[cmo-cycle] Telegram send failed: ${(err as Error).message}`);
+    return false;
+  }
+}
+
 async function callGrok(messages: Array<{role: string; content: string}>): Promise<string> {
   const res = await fetch(`${XAI_BASE}/chat/completions`, {
     method: 'POST',
@@ -200,6 +218,7 @@ NO POST TODAY
   const outFile = path.join(draftsDir, `draft-${ts}-${type}.md`);
   fs.writeFileSync(outFile, `# Daily post draft · ${type} · ${ts}\n\n${draft}\n`);
   console.log(`\nSaved: ${outFile}\n`);
+  return { draftOut: draft, type, draftFile: outFile };
 }
 
 async function runTriage() {
@@ -256,15 +275,50 @@ NEXT POSTING ACTIONS
   const triageDir = path.resolve(__dirname, '..', 'reports/cmo/triage');
   fs.mkdirSync(triageDir, { recursive: true });
   fs.writeFileSync(path.join(triageDir, `triage-${ts}.md`), `# Ship triage · ${ts}\n\n${out}\n`);
+  return out;
 }
 
 async function runCycle() {
   console.log(`\n=== CMO daily cycle · ${new Date().toISOString()} ===\n`);
   console.log('[1/2] Running ship triage…\n');
-  await runTriage();
+  const triageOut = await runTriage();
   console.log('\n[2/2] Drafting today\'s rotation post…\n');
-  await runDraft();
+  const { draftOut, type, draftFile } = await runDraft();
   console.log('\n=== Cycle complete ===\n');
+
+  // Decide whether anything actionable came out of this cycle.
+  // Actionable = at least one COMMUNICATE in triage OR a real draft (not NO POST TODAY).
+  const triageCommunicateCount = (triageOut.match(/COMMUNICATE/g) || []).length;
+  const triageFounderDecideCount = (triageOut.match(/FOUNDER-DECIDE/g) || []).length;
+  const draftIsActionable = !draftOut.includes('NO POST TODAY');
+
+  if (triageCommunicateCount === 0 && triageFounderDecideCount === 0 && !draftIsActionable) {
+    console.log('[cmo-cycle] no actionable items — skipping Telegram notification.');
+    return;
+  }
+
+  // Compose a tight TG message.
+  const lines: string[] = [];
+  lines.push(`🧭 Invoica CMO daily cycle · ${new Date().toUTCString().slice(0, 22)}`);
+  lines.push('');
+  if (triageCommunicateCount > 0) {
+    lines.push(`📣 ${triageCommunicateCount} ship(s) recommended for comms (COMMUNICATE)`);
+  }
+  if (triageFounderDecideCount > 0) {
+    lines.push(`🤔 ${triageFounderDecideCount} ship(s) need founder decision (FOUNDER-DECIDE)`);
+  }
+  if (draftIsActionable) {
+    // First non-empty line from the POST DRAFT section
+    const draftMatch = draftOut.match(/POST DRAFT\s*[\r\n-]+\s*([\s\S]*?)(?:\n\s*CITATION|\n\s*RATIONALE|$)/);
+    const draftPreview = (draftMatch?.[1] || '').trim().split('\n')[0]?.slice(0, 140) || '(draft saved)';
+    lines.push(`✏️ Today's ${type} draft: "${draftPreview}…"`);
+  }
+  lines.push('');
+  lines.push(`Review: reports/cmo/triage/ and reports/cmo/drafts/`);
+  if (draftFile) lines.push(`Draft file: ${draftFile.split('/').slice(-3).join('/')}`);
+
+  const ok = await notifyTelegram(lines.join('\n'));
+  if (ok) console.log('[cmo-cycle] Telegram notification sent.');
 }
 
 (async () => {
