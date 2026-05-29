@@ -1,0 +1,7 @@
+2026-05-29T11:00:00Z  agent.provider-swap     cmo                       prev_llm=manus/manus-1.6  new_llm=xai/grok-4-latest  authority=founder-directive  reason="Strategy shift: CMO + X agent unified on Grok-4 for voice consistency and same X-API context. Manus retired."
+2026-05-29T11:00:00Z  agent.retired           x-admin                   reason="Claude-powered X agent fired; superseded by invoica-x-admin (Grok-4)."  config_preserved=true  pm2_deleted=true
+2026-05-29T11:00:00Z  pm2.delete              x-admin-post              authority=founder-directive
+2026-05-29T11:00:00Z  pm2.delete              x-dm-outreach             authority=founder-directive  reason="DM outreach paused under new strategy; founder handles DMs directly."
+2026-05-29T11:00:00Z  pm2.delete              cmo-daily-watch           authority=founder-directive  reason="Old Manus-CMO scheduled daily watch; will be rebuilt under new comms plan."
+2026-05-29T11:00:00Z  pm2.delete              cmo-weekly-content-plan   authority=founder-directive  reason="Old Manus-CMO weekly content plan; superseded by reports/cmo/communication-plan.md."
+2026-05-29T11:00:00Z  spec.published          reports/cmo/communication-plan.md  authority=founder-directive  effective_date=2026-05-29  summary="New Invoica X strategy: daily varied posts, ship-day tech+marketing combo, brand discipline, CT-education + project-highlighting + godman-protocols advocacy."

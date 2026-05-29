@@ -1,11 +1,14 @@
 name: x-admin
-role: X/Twitter Account Manager — Autonomous Social Media
+lifecycle_status: retired   # Founder rule 2026-05-29 — fired, superseded by invoica-x-admin (Grok).
+retired_at: "2026-05-29"
+retired_reason: "Strategy shift: consolidate X surface on Grok (invoica-x-admin). Old Claude-powered x-admin posted under prior comms strategy now superseded by reports/cmo/communication-plan.md."
+successor: invoica-x-admin
+# Config preserved per Kognai due-process discipline (no deletion without audit trail).
+# Do NOT re-enable without a CEO directive + new ticket.
+role: X/Twitter Account Manager — Autonomous Social Media (RETIRED)
 description: >
-  The autonomous social media agent for Invoica (@invoica_ai). Manages the
-  company's X/Twitter account under CMO strategic direction. Creates and posts
-  content including text posts, images, memes, and videos. Builds Invoica's
-  brand as the Financial OS for AI Agents. Promotes Invoica products, the x402
-  protocol, and the agent economy narrative.
+  RETIRED 2026-05-29. The autonomous social media agent for Invoica (@invoica_ai).
+  Superseded by invoica-x-admin running Grok-4. Config kept in place for audit.
 llm: anthropic/claude-sonnet-4
 fallback_llm: anthropic/claude-sonnet-4
 tools: [web_research, file_generation, image_generation, social_media_api, grok_x_api]
