@@ -10,34 +10,38 @@ When the calendar runs out of items for the day's post type, the CMO outputs `NO
 
 ## Active items
 
-### Spotlights (projects to highlight)
+> Founder review needed on items marked `[verify URL]` — the CMO will use the URL exactly as written. Confirm or replace before the CMO runs.
 
-<!-- Format: `- URL · one-line context · suggested angle` -->
-<!-- Examples (replace with real items): -->
-<!-- - https://github.com/payai-network/payai-mcp · PayAI's MCP server for x402-powered agent commerce · spotlight the gasless settlement angle -->
-<!-- - https://x.com/somebuilder/status/xxx · Builder shipped a PACT integration for their TG bot · spotlight the composability -->
+### Spotlights (projects shipping in agent payments / x402 / @godman-protocols)
 
-_(empty — add items)_
+- https://payai.network · PayAI Network — x402 facilitator on Solana, shipped /api/x402/{invoice,settle,tax} integration · angle: gasless Solana settlement under x402
+- https://docs.invoica.ai/case-studies/helixa · Helixa Synagent ran a PACT mandate lifecycle on Invoica's API on 2026-05-28 · angle: first non-self proof of an open agent-mandate protocol
+- [verify URL] Coinbase Agentic.Market launch · 480K+ agents, 165M+ transactions, opened ~2026-04-20 per CEO 2026-05-29 report · angle: surface area of agent commerce already real on Coinbase rails
+- [verify URL] AWS AgentCore · Amazon's agent payments substrate (per CEO 2026-05-29 report) · angle: convergence of cloud incumbents toward agent-native commerce
+- [verify URL] Circle Nanopayments · Circle's USDC nanopayment positioning (per CEO 2026-05-29 report) · angle: sub-cent settlement Invoica also enables
+- [verify URL] Stripe MPP (Multi-Party Payments) · per CEO 2026-05-29 report on x402 ecosystem maturity · angle: adjacent infrastructure for agent commerce
 
 ### Articles to comment on
 
-<!-- Format: `- URL · one-line summary · the insight to add` -->
+- [verify URL] Stripe Press essays on payment infrastructure · evergreen · insight: parallels between programmable payments and signed agent mandates
+- [verify URL] a16z agent-economy posts · whenever new ones drop · insight: x402-first composability vs vendor-locked agent stores
+- [verify URL] Coinbase Engineering blog on x402 / Agentic.Market · insight: where on-chain receipts beat off-chain attestations for agent commerce
 
-_(empty — add items)_
+### Tweets to QT (handles real — paste a current tweet URL when ready to post)
 
-### Tweets to QT
-
-<!-- Format: `- URL · who · what they said · what we'd add` -->
-
-_(empty — add items)_
+- @cuyhsheffield (Visa, Head of Crypto) — has publicly described "cards-front / stablecoins-back" for agent payments (per memory: 2026-05-19 endorsement) · angle: cite the framing, extend with the audit-trail layer
+- @AnthropicAI dev account on MCP / Claude Code updates · angle: builder-mode reactions to agent infrastructure decisions
+- @coinbase / @coinbase_devx on x402 + Agentic.Market · angle: respectful spotlight of incumbents shipping the rails
+- [verify URL] PayAI Network founder account · angle: builder-mode reaction to facilitator updates
+- [verify URL] Tempo Labs + Merit Systems (AgentCash discovery IETF draft authors, 2026-05-18) · angle: PACT × AgentCash composability — discover with AgentCash, contract with PACT
 
 ### Educational concepts (lead-tweet drafts for threads)
 
-<!-- Format: `- concept-slug · one-paragraph on the concept · target audience` -->
-<!-- - signed-mandates · How PACT mandates are HMAC-signed in v0.1 and EIP-712 in v0.2 · agent-payments devs -->
-<!-- - composable-receipts · How DRS on-chain receipts compose across protocols · CT skeptics -->
-
-_(empty — add items)_
+- signed-mandates · How PACT mandates are HMAC-signed in v0.1 and EIP-712 in v0.2; why the upgrade matters for agent-to-agent commerce · target: agent-payments devs
+- composable-receipts · How DRS on-chain receipts compose across PACT mandates, BOND subscriptions, and partner reputation systems · target: CT skeptics
+- agent-reputation-portability · Why reputation built on open protocols (SCORE + DRS) survives platform pivots, vs walled-garden bureau scores · target: agent builders worried about lock-in
+- gasless-microcommerce · The economics of agent micropayments on gasless rails (SKALE Base: 1-second flip, ~$0 fees) · target: x402 ecosystem devs
+- discover-then-contract · Why agent-discovery (AgentCash) and agent-contracts (PACT) are complementary stack layers, not competing standards · target: protocol-curious builders
 
 ---
 

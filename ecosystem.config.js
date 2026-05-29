@@ -165,14 +165,37 @@ module.exports = {
       log_date_format: "YYYY-MM-DD HH:mm:ss Z"
     },
     {
-      name: "cmo-daily-watch",
+      // Daily 08:00 UTC — Grok-CMO cycle: ship triage + day's rotation draft.
+      // Outputs to reports/cmo/triage/ and reports/cmo/drafts/ for founder review.
+      // Does NOT post autonomously — review-then-publish until trust is established.
+      name: "cmo-daily-cycle",
+      script: "./scripts/draft-daily-post.ts",
+      interpreter: "node",
+      interpreter_args: "--import tsx",
+      cwd: "/home/invoica/apps/Invoica",
+      autorestart: false,
+      watch: false,
+      cron_restart: "0 8 * * *",
+      args: "--cycle",
+      kill_timeout: 90000,
+      env: {
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_PROJECT: "/home/invoica/apps/Invoica/tsconfig.json",
+      },
+      error_file: "/home/invoica/apps/Invoica/logs/cmo-daily-cycle-error.log",
+      out_file: "/home/invoica/apps/Invoica/logs/cmo-daily-cycle-out.log",
+      log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+    },
+    {
+      // RETIRED 2026-05-29 — superseded by cmo-daily-cycle above. Kept for rollback only.
+      name: "cmo-daily-watch-RETIRED",
       script: "./scripts/run-cmo-fixed.ts",
       interpreter: "node",
       interpreter_args: "-r ts-node/register",
       cwd: "/home/invoica/apps/Invoica",
       autorestart: false,
       watch: false,
-      cron_restart: "0 8 * * *",
+      // cron_restart removed (was "0 8 * * *")
       args: "market-watch",
       kill_timeout: 30000,     // 30s: daily market watch — force-kill if Grok API hangs
       env: {
