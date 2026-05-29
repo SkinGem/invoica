@@ -86,3 +86,12 @@ backend/pnpm-lock.yaml
 
 # Pre-flight validator (generated)
 agents/pre-flight-validator/
+
+# Local env backups — never commit
+.env.bak*
+*.env.bak
+*.env.bak-*
+
+# Local env backups
+.env.bak
+.env.bak-*
