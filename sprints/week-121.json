@@ -5,7 +5,7 @@
   "tasks": [
     {
       "id": "AIAX-SURFACE-20260523-01",
-      "agent": "backend-api",
+      "agent": "backend-core",
       "type": "feature",
       "priority": "high",
       "dependencies": [],
@@ -48,7 +48,7 @@
     },
     {
       "id": "AIAX-MCP-BENCHMARK-20260523-02",
-      "agent": "backend-api",
+      "agent": "backend-core",
       "type": "feature",
       "priority": "high",
       "dependencies": ["AIAX-SURFACE-20260523-01"],
