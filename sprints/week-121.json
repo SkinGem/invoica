@@ -13,7 +13,6 @@
         "code": [
           "backend/src/aiax/static-server.ts",
           "backend/src/routes/public-mandates.ts",
-          "backend/src/aiax/trust-signals-builder.ts",
           "backend/src/app.ts",
           "backend/public/.well-known/aiax.json"
         ],
