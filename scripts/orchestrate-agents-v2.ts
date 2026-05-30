@@ -202,7 +202,7 @@ async function callLLM(
       { role: 'user', content: userPrompt },
     ],
     temperature: 0.3,
-    max_tokens: 16000,
+    max_tokens: 32000,
   });
   return httpPost('https://api.minimax.io/v1/chat/completions', {
     'Content-Type': 'application/json',
@@ -1626,7 +1626,10 @@ class CodingAgent {
       const priorCtx = createdFiles.length > 0
         ? '\n## Already Generated Files (last 3 for context)\n' + createdFiles.slice(-3).map(f => `### ${f.path}\n\`\`\`${_getLang(f.path)}\n${f.content.substring(0, 1000)}\n\`\`\``).join('\n\n') + '\n'
         : '';
-      const fileList = deliverables.map((f, idx) => `${idx + 1}. ${f}${f === filepath ? ' ← THIS ONE' : ''}`).join('\n');
+      // Show only current file + nearby context — not the full list of 20.
+      // Showing all 20 causes the model to self-budget and truncate each file.
+      const currentIdx = deliverables.indexOf(filepath);
+      const fileList = `Generating file ${currentIdx + 1} of ${deliverables.length}: ${filepath}\n(Other files in this task are handled separately)`;
 
       const isTestFile = filepath.includes('test') || filepath.includes('spec');
       const existingContent = existsSync(filepath)
@@ -1660,7 +1663,8 @@ Write ONLY the content for "${filepath}". Format rules:
 - Production quality, no TODOs, no placeholders
 - Include all imports, types, error handling
 - If this file depends on others above, import from them correctly
-- No explanatory text outside the code block`;
+- No explanatory text outside the code block
+- IMPORTANT: Write the COMPLETE file. Do NOT stop early. Do NOT use "// ...rest of implementation" or similar abbreviations. The file must be fully runnable as delivered.`;
       try {
         const startTime = Date.now();
         let response: any;
