@@ -1379,7 +1379,8 @@ function assessTaskComplexity(
   }
 
   // Legacy: complex → Claude, simple → MiniMax
-  if (deliverables.length > 2) {
+  // Always use Claude for feature tasks — MiniMax generates tool-call XML for complex code
+  if (deliverables.length >= 1 && (taskType === "feature" || taskType === "bugfix" || taskType === "test")) {
     return { provider: 'anthropic', model: 'claude-sonnet-4-20250514', routingReason: `${deliverables.length} deliverables → complex` };
   }
   return { provider: 'minimax', model: 'MiniMax-M2.5', routingReason: 'fallback-legacy' };
