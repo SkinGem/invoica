@@ -34,6 +34,8 @@ import x402InvoiceRoutes from './routes/x402-invoice';
 import stripeWebhookRoutes from './routes/webhooks-stripe';
 import billingPayAsYouGoRoutes from './routes/billing-pay-as-you-go';
 import clinpayReportsRoutes from './routes/clinpay-reports';
+import publicMandatesRoutes from './routes/public-mandates';
+import aiaxStaticRouter from './aiax/static-server';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -68,69 +70,92 @@ app.use(cors({
   credentials: true,
   maxAge: 86400,
 }));
+
 // AsterPay webhook needs raw body for HMAC verification — must run BEFORE express.json.
 app.use(clinpayWebhookRouter);
-// Stripe webhook also needs raw body for HMAC verification.
+
+// Stripe webhook needs raw body for signature verification — must run BEFORE express.json.
 app.use(stripeWebhookRoutes);
 
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.use((req, _res, next) => {
-  const start = Date.now();
-  _res.on('finish', () => {
-    const duration = Date.now() - start;
-    if (process.env.NODE_ENV !== 'test') {
-      console.log(`${req.method} ${req.path} ${_res.statusCode} ${duration}ms`);
+// Public routes (no authentication required)
+app.use('/health', healthRoutes);
+app.use('/.well-known', wellKnownRoutes);
+
+// AIAX static server - public routes for agent discovery
+app.use('/aiax', aiaxStaticRouter);
+
+// Public mandates endpoint - redacted view for AIAX
+app.use('/v1/public', publicMandatesRoutes);
+
+// Apply authentication middleware to all routes below this point
+app.use(authenticate);
+
+// Protected API routes
+app.use('/v1/invoices', invoiceRoutes);
+app.use('/v1/invoice-stats', invoiceStatsRoutes);
+app.use('/v1/invoices-export', invoiceExportRoutes);
+app.use('/v1/api-keys', apiKeyRoutes);
+app.use('/v1/webhooks', webhookRoutes);
+app.use('/v1/settlement-summary', settlementSummaryRoutes);
+app.use('/v1/settlements', settlementRoutes);
+app.use('/v1/ai-inference', aiInferenceRoutes);
+app.use('/v1/ledger', ledgerRoutes);
+app.use('/v1/admin', adminRoutes);
+app.use('/v1/gas-backstop', gasBackstopRouter);
+app.use('/v1/reputation-leaderboard', reputationLeaderboardRoutes);
+app.use('/v1/reputation', reputationRoutes);
+app.use('/v1/reputation-history', reputationHistoryRoutes);
+app.use('/v1/metrics', metricsRoutes);
+app.use('/v1/tax', taxRoutes);
+app.use('/v1/agents', agentRoutes);
+app.use('/v1/sap', sapRoutes);
+app.use('/v1/sap-execute', sapExecuteRoutes);
+app.use('/v1/invoice-download', invoiceDownloadRoutes);
+app.use('/v1/pact-session', pactSessionRoutes);
+app.use('/v1/mandates', mandateRoutes);
+app.use('/v1/openapi', openapiRoutes);
+app.use('/v1/clinpay-drs', clinpayDrsRoutes);
+app.use('/v1/company', companyRoutes);
+app.use('/v1/billing', billingRoutes);
+app.use('/v1/clinpay', clinpayRouter);
+app.use('/v1/x402-invoice', x402InvoiceRoutes);
+app.use('/v1/billing-pay-as-you-go', billingPayAsYouGoRoutes);
+app.use('/v1/clinpay-reports', clinpayReportsRoutes);
+
+// Global error handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Unhandled error:', err);
+  
+  if (res.headersSent) {
+    return next(err);
+  }
+  
+  const status = err.status || err.statusCode || 500;
+  const message = process.env.NODE_ENV === 'production' 
+    ? 'Internal server error' 
+    : err.message || 'Something went wrong';
+    
+  res.status(status).json({
+    error: {
+      message,
+      status,
+      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
     }
   });
-  next();
 });
 
-// Public routes (explicit allowlist — all other data routes require auth).
-app.use(healthRoutes);
-app.use('/.well-known', wellKnownRoutes);
-app.use(openapiRoutes);  // public: /openapi.json + /.well-known/openapi.json — discovery for AgentCash / x402scan / IETF crawlers
-
-// M1-SEC-01 (plan §3.1): authenticate all read-side routes that expose platform data.
-app.use(companyRoutes);
-app.use(billingRoutes);
-app.use(billingPayAsYouGoRoutes);  // /v1/billing/topup, /v1/billing/balance — must be ABOVE authenticate-mounted routes (does its own dual auth)
-app.use(clinpayReportsRoutes);     // /v1/clinpay/reports/rollup — same dual-auth pattern
-app.use(clinpayRouter);
-app.use(apiKeyRoutes);   // public: dashboard creates first key with no api-key header (chicken-and-egg)
-app.use(webhookRoutes);  // public: receive-side path used by external webhooks
-app.use('/api/sap', sapExecuteRoutes);  // public: x402 paywall endpoint — must return 402 not 401
-app.use('/api/x402', x402InvoiceRoutes);  // public: standard x402 v2 via PayAI facilitator (pay.sh probes this)
-app.use(authenticate, invoiceDownloadRoutes);
-app.use('/v1/pact', pactSessionRoutes);
-app.use(authenticate, mandateRoutes);  // /v1/mandates/* — PACT Mandate API v0.1 (Helixa Synagent)
-app.use(authenticate, clinpayDrsRoutes); // /v1/clinpay/drs/* — external DRS anchoring (AsterPay)
-app.use(authenticate, invoiceStatsRoutes);
-app.use(authenticate, invoiceExportRoutes);
-app.use(authenticate, invoiceRoutes);
-app.use(authenticate, settlementSummaryRoutes);
-app.use(authenticate, settlementRoutes);
-app.use(authenticate, aiInferenceRoutes);
-app.use(authenticate, ledgerRoutes);
-app.use(authenticate, adminRoutes);
-app.use(gasBackstopRouter);
-app.use(authenticate, reputationLeaderboardRoutes);
-app.use(authenticate, reputationRoutes);
-app.use(authenticate, reputationHistoryRoutes);
-app.use(authenticate, metricsRoutes);
-app.use(authenticate, taxRoutes);
-app.use(authenticate, agentRoutes);
-app.use('/v1/sap', authenticate, sapRoutes);
-
-app.use((_req, res) => {
-  res.status(404).json({ success: false, error: { message: 'Not found', code: 'NOT_FOUND' } });
+// 404 handler for unmatched routes
+app.use('*', (req: express.Request, res: express.Response) => {
+  res.status(404).json({
+    error: {
+      message: 'Route not found',
+      status: 404,
+      path: req.originalUrl
+    }
+  });
 });
 
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Unhandled error:', err.message);
-  res.status(500).json({ success: false, error: { message: 'Internal server error', code: 'INTERNAL_ERROR' } });
-});
-
-export { app };
 export default app;
