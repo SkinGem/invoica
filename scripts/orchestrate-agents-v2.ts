@@ -1620,8 +1620,9 @@ class CodingAgent {
 
     for (let i = 0; i < deliverables.length; i++) {
       const filepath = deliverables[i];
-      log(c.gray, `  -> Generating file ${i + 1}/${deliverables.length}: ${filepath}`);      const priorCtx = createdFiles.length > 0
-        ? '\n## Already Generated Files\n' + createdFiles.map(f => `### ${f.path}\n\`\`\`typescript\n${f.content.substring(0, 2000)}\n\`\`\``).join('\n\n') + '\n'
+      log(c.gray, `  -> Generating file ${i + 1}/${deliverables.length}: ${filepath}`);      const _getLang = (p: string) => p.endsWith('.json') ? 'json' : (p.endsWith('.md') || p.endsWith('.mdx')) ? 'markdown' : p.endsWith('.sql') ? 'sql' : p.endsWith('.sh') ? 'bash' : 'typescript';
+      const priorCtx = createdFiles.length > 0
+        ? '\n## Already Generated Files (last 3 for context)\n' + createdFiles.slice(-3).map(f => `### ${f.path}\n\`\`\`${_getLang(f.path)}\n${f.content.substring(0, 1000)}\n\`\`\``).join('\n\n') + '\n'
         : '';
       const fileList = deliverables.map((f, idx) => `${idx + 1}. ${f}${f === filepath ? ' ← THIS ONE' : ''}`).join('\n');
 
@@ -1650,11 +1651,13 @@ ${fileList}
 
 ## Generate ONLY: ${filepath}
 ${existingContent}${priorCtx}${testConstraint}
-Write ONLY the content for "${filepath}". Rules:
-- Output a single fenced code block with the COMPLETE file content
-- Production quality, no TODOs or placeholders
+Write ONLY the content for "${filepath}". Format rules:
+- .json files: output a single \`\`\`json code block containing ONLY valid JSON — no TypeScript syntax, no nested fences, no JS comments
+- .md/.mdx files: output a single \`\`\`markdown code block with raw markdown content
+- All other files: output a single \`\`\`typescript code block with the complete file
+- Production quality, no TODOs, no placeholders
 - Include all imports, types, error handling
-- If this file depends on others listed above, import from them correctly
+- If this file depends on others above, import from them correctly
 - No explanatory text outside the code block`;
       try {
         const startTime = Date.now();
@@ -1698,9 +1701,17 @@ Write ONLY the content for "${filepath}". Rules:
         // CTO-005: Final fence sanitization BEFORE adding to createdFiles
         // CEO condition: stripping must happen BEFORE file is written to disk
         fileContent = this.stripResidualFences(fileContent);
-        // Check if any fences remain after stripping (should be impossible, but log it)
+        // Check if any fences remain after stripping — if so, nuclear-strip all fence lines
         if (/^\s*```/m.test(fileContent)) {
-          log(c.yellow, `  ! WARNING: Residual code fences detected in ${filepath} after stripping`);
+          log(c.yellow, `  ! WARNING: Residual code fences in ${filepath} — nuclear strip`);
+          fileContent = fileContent.split('\n').filter((ln: string) => !/^\s*```/.test(ln)).join('\n').trim();
+        }
+        // For .json files: verify parse-ability; if invalid, try to extract the first JSON object/array
+        if (filepath.endsWith('.json')) {
+          try { JSON.parse(fileContent); } catch {
+            const m = fileContent.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+            if (m) { try { JSON.parse(m[1]); fileContent = m[1]; log(c.yellow, `  ! JSON body extracted for ${filepath}`); } catch {} }
+          }
         }
 
         // TRUNCATION PRE-CHECK: Detect if MiniMax cut off output mid-function
