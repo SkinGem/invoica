@@ -313,15 +313,16 @@ class SupervisorAgent {
 
   async reviewTask(task: AgentTask, files: string[]): Promise<ReviewResult> {
     log(c.magenta, `\n[supervisor] Reviewing: ${task.id}`);
+    const _supLang = (p: string) => p.endsWith('.json') ? 'json' : (p.endsWith('.md') || p.endsWith('.mdx')) ? 'markdown' : p.endsWith('.sql') ? 'sql' : p.endsWith('.sh') ? 'bash' : p.endsWith('.yml') || p.endsWith('.yaml') ? 'yaml' : 'typescript';
     const fileContents = files.map((filepath) => {
       const content = existsSync(filepath) ? readFileSync(filepath, 'utf-8') : '';
-      return `### ${filepath}\n\`\`\`typescript\n${content.substring(0, 4000)}\n\`\`\``;
+      return `### ${filepath}\n\`\`\`${_supLang(filepath)}\n${content.substring(0, 4000)}\n\`\`\``;
     }).join('\n\n');
     // CTO-005: Add fence detection to supervisor review checklist
     const integrityContext = (task as any)._integrityFailed
       ? `\n\n## ⚠️ INTEGRITY ALERT\n${(task as any)._integrityDetails}\nThis file was flagged for destructive rewrite. The original was preserved. REJECT this task.\n`
       : '';
-    const userPrompt = `Review the following code generated for task ${task.id}.\n\n## Task Spec\n${task.context}\n\n## Generated Files (${files.length})\n${fileContents}${integrityContext}\n\n## Instructions\nCRITICAL CHECK: Does ANY file start with a markdown code fence (\`\`\`tsx, \`\`\`typescript, etc.)? If YES, auto-REJECT — code fences in source files are invalid syntax.\nAlso check: Did the file lose existing functionality? If a file shrank significantly, REJECT.\n\nRespond with a JSON object:\n{\n  "verdict": "APPROVED" or "REJECTED",\n  "score": 0-100,\n  "summary": "brief review summary",\n  "issues": [{"severity": "critical|high|medium|low", "file": "path", "description": "..."}],\n  "strengths": ["..."]\n}`;
+    const userPrompt = `Review the following code generated for task ${task.id}.\n\n## Task Spec\n${task.context}\n\n## Generated Files (${files.length})\n${fileContents}${integrityContext}\n\n## Instructions\nCRITICAL CHECK: Does any TypeScript/JavaScript source file (.ts, .tsx, .js) have actual content starting with a markdown code fence (\`\`\`tsx, \`\`\`typescript, etc.) inside the file body? If YES, auto-REJECT — code fences in source files are invalid syntax. NOTE: .json and .md files shown above are wrapped in code blocks for display purposes only — do NOT reject based on the outer display wrapper.\nAlso check: Did the file lose existing functionality? If a file shrank significantly, REJECT.\n\nRespond with a JSON object:\n{\n  "verdict": "APPROVED" or "REJECTED",\n  "score": 0-100,\n  "summary": "brief review summary",\n  "issues": [{"severity": "critical|high|medium|low", "file": "path", "description": "..."}],\n  "strengths": ["..."]\n}`;
     const startTime = Date.now();
     log(c.gray, '  -> Sending to Claude (Anthropic API, cached system prompt)...');
     try {
@@ -363,15 +364,16 @@ class Supervisor2Agent {
 
   async reviewTask(task: AgentTask, files: string[]): Promise<ReviewResult> {
     log(c.magenta, `\n[supervisor-2/codex] Reviewing: ${task.id}`);
+    const _supLang2 = (p: string) => p.endsWith('.json') ? 'json' : (p.endsWith('.md') || p.endsWith('.mdx')) ? 'markdown' : p.endsWith('.sql') ? 'sql' : p.endsWith('.sh') ? 'bash' : p.endsWith('.yml') || p.endsWith('.yaml') ? 'yaml' : 'typescript';
     const fileContents = files.map((filepath) => {
       const content = existsSync(filepath) ? readFileSync(filepath, 'utf-8') : '';
-      return `### ${filepath}\n\`\`\`typescript\n${content.substring(0, 4000)}\n\`\`\``;
+      return `### ${filepath}\n\`\`\`${_supLang2(filepath)}\n${content.substring(0, 4000)}\n\`\`\``;
     }).join('\n\n');
     // CTO-005: Add fence detection to Codex supervisor review checklist
     const integrityContext2 = (task as any)._integrityFailed
       ? `\n\n## ⚠️ INTEGRITY ALERT\n${(task as any)._integrityDetails}\nThis file was flagged for destructive rewrite. The original was preserved. REJECT this task.\n`
       : '';
-    const userPrompt = `Review the following code generated for task ${task.id}.\n\n## Task Spec\n${task.context}\n\n## Generated Files (${files.length})\n${fileContents}${integrityContext2}\n\n## Instructions\nCRITICAL CHECK: Does ANY file start with a markdown code fence (\`\`\`tsx, \`\`\`typescript, etc.)? If YES, auto-REJECT — code fences in source files are invalid syntax.\nAlso check: Did the file lose existing functionality? If a file shrank significantly, REJECT.\n\nRespond with a JSON object:\n{\n  "verdict": "APPROVED" or "REJECTED",\n  "score": 0-100,\n  "summary": "brief review summary",\n  "issues": [{"severity": "critical|high|medium|low", "file": "path", "description": "..."}],\n  "strengths": ["..."]\n}`;
+    const userPrompt = `Review the following code generated for task ${task.id}.\n\n## Task Spec\n${task.context}\n\n## Generated Files (${files.length})\n${fileContents}${integrityContext2}\n\n## Instructions\nCRITICAL CHECK: Does any TypeScript/JavaScript source file (.ts, .tsx, .js) have actual content starting with a markdown code fence (\`\`\`tsx, \`\`\`typescript, etc.) inside the file body? If YES, auto-REJECT — code fences in source files are invalid syntax. NOTE: .json and .md files shown above are wrapped in code blocks for display purposes only — do NOT reject based on the outer display wrapper.\nAlso check: Did the file lose existing functionality? If a file shrank significantly, REJECT.\n\nRespond with a JSON object:\n{\n  "verdict": "APPROVED" or "REJECTED",\n  "score": 0-100,\n  "summary": "brief review summary",\n  "issues": [{"severity": "critical|high|medium|low", "file": "path", "description": "..."}],\n  "strengths": ["..."]\n}`;
     const startTime = Date.now();
     log(c.gray, '  -> Sending to OpenAI Codex...');
     try {
