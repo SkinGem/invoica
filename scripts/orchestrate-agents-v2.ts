@@ -1378,9 +1378,12 @@ function assessTaskComplexity(
     return { provider: 'clawrouter', model, routingReason: `clawrouter → ${model}` };
   }
 
-  // Legacy: complex → Claude, simple → MiniMax
-  // Always use Claude for feature tasks — MiniMax generates tool-call XML for complex code
-  if (deliverables.length >= 1 && (taskType === "feature" || taskType === "bugfix" || taskType === "test")) {
+  // Always use Claude for feature/bugfix/test — MiniMax generates XML tool-calls instead of TypeScript code
+  if (task.type === 'feature' || task.type === 'bugfix' || task.type === 'test') {
+    return { provider: 'anthropic', model: 'claude-sonnet-4-20250514', routingReason: `task.type=${task.type} → always Claude` };
+  }
+  // Fallback: complex → Claude, simple → MiniMax
+  if (deliverables.length > 2) {
     return { provider: 'anthropic', model: 'claude-sonnet-4-20250514', routingReason: `${deliverables.length} deliverables → complex` };
   }
   return { provider: 'minimax', model: 'MiniMax-M2.5', routingReason: 'fallback-legacy' };
