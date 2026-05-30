@@ -42,5 +42,54 @@
         "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: INVALID_PATH: \".github/workflows/ci.yml\" is not in a recognized project directory"
       }
     ]
+  },
+  {
+    "schema_version": "2.0.0",
+    "run_id": "2a15e137-589f-4118-a265-d5c7f7667354",
+    "project": "invoica",
+    "sprint_file": "sprints/week-121.json",
+    "started_at": "2026-05-30T11:36:32.436Z",
+    "finished_at": "2026-05-30T12:11:49.495Z",
+    "duration_seconds": 2117,
+    "git_branch": "main",
+    "git_head_before": "afd30fed4",
+    "git_head_after": "afd30fed4",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $50 budget (0.0%) | 271 cloud calls this month",
+    "summary": {
+      "total_tasks": 2,
+      "done": 0,
+      "rejected": 1,
+      "skipped": 1,
+      "human_pending": 0,
+      "approval_rate": 0.1,
+      "total_tokens": 653020
+    },
+    "tasks": [
+      {
+        "task_id": "AIAX-SURFACE-20260523-01",
+        "title": "AIAX-SURFACE-20260523-01",
+        "type": "feature",
+        "task_target": "cloud-code",
+        "agent": "backend-core",
+        "status": "rejected",
+        "attempts": 4,
+        "model_used": "claude-sonnet-4-20250514",
+        "provider": "anthropic",
+        "routing_reason": "20 deliverables → complex",
+        "tokens_used": 519882,
+        "duration_seconds": 2113,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "Multiple critical issues: incomplete file generation, missing required functionality, schema validation failures, and architectural violations"
+        },
+        "error": null,
+        "rejection_reason": "Multiple critical issues: incomplete file generation, missing required functionality, schema validation failures, and architectural violations"
+      }
+    ]
   }
 ]

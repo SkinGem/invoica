@@ -1,0 +1,114 @@
+{
+  "tasks": [
+    {
+      "id": "DEFECT-001",
+      "agent": "backend-core",
+      "type": "bugfix",
+      "priority": "critical",
+      "dependencies": [],
+      "description": "Rollback migration 008 in production database",
+      "context": "Migration 008 live with zero writes and 4 design flaws per DIR-011. Generate rollback migration reversing schema changes. Target backend/prisma/migrations/ — create new migration folder with down.sql that drops tables/columns added in 008. Test locally before prod deploy.",
+      "deliverables": {
+        "code": [
+          "backend/prisma/migrations/20250116_rollback_008/migration.sql"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "DEFECT-002",
+      "agent": "backend-ledger",
+      "type": "bugfix",
+      "priority": "critical",
+      "dependencies": [
+        "DEFECT-001"
+      ],
+      "description": "Implement atomic commit pattern in orchestrator",
+      "context": "Orchestrator lacks atomic transaction boundary causing partial state on failure. Add transaction wrapper in backend/src/lib/orchestrator.ts wrapping all DB writes in single Prisma transaction. Rollback on any step failure. Preserve existing event emission after commit.",
+      "deliverables": {
+        "code": [
+          "backend/src/lib/orchestrator.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "REFACTOR-001",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [
+        "DEFECT-002"
+      ],
+      "description": "Extract payment processing from invoices.ts to dedicated service",
+      "context": "M3-CQ-03-A blocked 5 times. Split payment logic from backend/src/routes/invoices.ts into new backend/src/services/payment-processor.ts. Move POST /invoices/:id/pay handler logic to service. Keep route as thin controller calling service. Enables M1-MONEY-05/06 unblock.",
+      "deliverables": {
+        "code": [
+          "backend/src/services/payment-processor.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "REFACTOR-002",
+      "agent": "backend-core",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [
+        "REFACTOR-001"
+      ],
+      "description": "Refactor invoices.ts route handlers to use payment-processor service",
+      "context": "Update backend/src/routes/invoices.ts to consume new payment-processor service from REFACTOR-001. Replace inline payment logic with service calls. Maintain existing API contract. Remove duplicated validation now handled in service layer. Completes M3-CQ-03-A unblock.",
+      "deliverables": {
+        "code": [
+          "backend/src/routes/invoices.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "SECURITY-001",
+      "agent": "devops",
+      "type": "feature",
+      "priority": "high",
+      "dependencies": [],
+      "description": "Upgrade OpenClaw dependencies to latest stable version",
+      "context": "OpenClaw 3 months outdated with critical security patches. Update backend/package.json openclaw client to latest 2.x version. Run npm audit fix. Verify compatibility with existing backend/src/lib/clawrouter-client.ts integration. Apply breaking change migrations if needed in same file.",
+      "deliverables": {
+        "code": [
+          "backend/package.json"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    },
+    {
+      "id": "SECURITY-002",
+      "agent": "backend-core",
+      "type": "bugfix",
+      "priority": "medium",
+      "dependencies": [
+        "SECURITY-001"
+      ],
+      "description": "Update clawrouter-client to handle OpenClaw API changes",
+      "context": "Post-upgrade compatibility fix for backend/src/lib/clawrouter-client.ts. Address any breaking changes from OpenClaw 2.x upgrade in SECURITY-001. Update method signatures, response parsing, error handling to match new client API. Preserve existing route logic in consuming files.",
+      "deliverables": {
+        "code": [
+          "backend/src/lib/clawrouter-client.ts"
+        ],
+        "tests": [],
+        "docs": []
+      },
+      "status": "pending"
+    }
+  ]
+}
