@@ -1,0 +1,46 @@
+[
+  {
+    "schema_version": "2.0.0",
+    "run_id": "8210ffd2-c77c-4f84-9f62-95f98d60a2bf",
+    "project": "invoica",
+    "sprint_file": "sprints/week-121.json",
+    "started_at": "2026-05-30T07:31:53.383Z",
+    "finished_at": "2026-05-30T07:31:57.963Z",
+    "duration_seconds": 5,
+    "git_branch": "main",
+    "git_head_before": "8d07395bb",
+    "git_head_after": "8d07395bb",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $50 budget (0.0%) | 266 cloud calls this month",
+    "summary": {
+      "total_tasks": 2,
+      "done": 0,
+      "rejected": 0,
+      "skipped": 0,
+      "human_pending": 0,
+      "approval_rate": 0,
+      "total_tokens": 0
+    },
+    "tasks": [
+      {
+        "task_id": "AIAX-SURFACE-20260523-01",
+        "title": "AIAX-SURFACE-20260523-01",
+        "type": "feature",
+        "task_target": "cloud-code",
+        "agent": "backend-core",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "",
+        "provider": "",
+        "routing_reason": "",
+        "tokens_used": 0,
+        "duration_seconds": 0,
+        "files_written": [],
+        "review": null,
+        "error": "INVALID_PATH: \".github/workflows/ci.yml\" is not in a recognized project directory",
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: INVALID_PATH: \".github/workflows/ci.yml\" is not in a recognized project directory"
+      }
+    ]
+  }
+]
