@@ -91,5 +91,30 @@
         "rejection_reason": "Multiple critical issues: incomplete file generation, missing required functionality, schema validation failures, and architectural violations"
       }
     ]
+  },
+  {
+    "schema_version": "2.0.0",
+    "run_id": "4763cfeb-d62b-4ea7-bcd4-ac081e70fb7c",
+    "project": "invoica",
+    "sprint_file": "sprints/week-121.json",
+    "started_at": "2026-05-30T13:45:21.582Z",
+    "finished_at": "2026-05-30T13:45:24.671Z",
+    "duration_seconds": 3,
+    "git_branch": "main",
+    "git_head_before": "a556ed7a2",
+    "git_head_after": "a556ed7a2",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $50 budget (0.0%) | 272 cloud calls this month",
+    "summary": {
+      "total_tasks": 2,
+      "done": 0,
+      "rejected": 1,
+      "skipped": 1,
+      "human_pending": 0,
+      "approval_rate": 0,
+      "total_tokens": 0
+    },
+    "tasks": []
   }
 ]
