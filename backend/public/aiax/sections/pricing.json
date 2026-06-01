@@ -1,7 +1,7 @@
 {
   "section_id": "pricing",
   "version": "0.1",
-  "description": "Invoica agent pricing model. Machine-payable capabilities use x402 USDC micro-payments. Standard API calls use API-key auth at no per-call cost (subscription or free tier).",
+  "description": "Invoica agent pricing model (beta preview). x402 micro-payment amounts are live and charged per call. Platform subscription pricing TBD post-beta.",
   "tools": [
     {
       "name": "invoica_get_pricing",
@@ -93,5 +93,7 @@
       "description": "Agent creates an invoice by paying 0.01 USDC via x402",
       "flow": "POST /api/x402/invoice \u2192 402 challenge \u2192 attach X-PAYMENT header \u2192 POST again with payment \u2192 200 invoice created"
     }
-  ]
+  ],
+  "pricing_status": "beta_preview",
+  "pricing_note": "Prices shown are the current x402 challenge amounts active in beta. Formal pricing schedule will be published post-beta. Beta users pay no additional platform fee beyond the x402 micro-payment itself."
 }
