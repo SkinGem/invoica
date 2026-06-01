@@ -1,6 +1,9 @@
 // well-known.ts — SAP/x402 discovery manifest
 // No auth required — public endpoint for agent auto-discovery
 import { Router, Request, Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
 
 const router = Router();
 
@@ -31,6 +34,23 @@ router.get('/x402', (_req: Request, res: Response) => {
     networks: ['solana-mainnet', 'base-mainnet', 'polygon-mainnet', 'arbitrum-mainnet', 'skale-base-mainnet'],
     programId: 'SAPpUhsWLJG1FfkGRcXagEDMrMsWGjbky7AyhGpFETZ'
   });
+});
+
+
+// AIAX v0.1 manifest — canonical discovery URL for agent auto-discovery
+router.get('/aiax.json', (req: Request, res: Response) => {
+  const filePath = path.join(__dirname, '../../public/.well-known/aiax.json');
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const etag = '"' + crypto.createHash('md5').update(content).digest('hex').substring(0, 16) + '"';
+  if (req.headers['if-none-match'] === etag) { res.status(304).end(); return; }
+  res.set('Cache-Control', 'public, max-age=300');
+  res.set('ETag', etag);
+  res.set('Content-Type', 'application/json');
+  res.send(content);
 });
 
 export default router;
