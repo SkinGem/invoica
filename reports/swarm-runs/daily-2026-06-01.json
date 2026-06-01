@@ -1,0 +1,51 @@
+[
+  {
+    "schema_version": "2.0.0",
+    "run_id": "63083ee4-58c7-40ef-a0bc-3a1270fd5aad",
+    "project": "invoica",
+    "sprint_file": "sprints/week-121.json",
+    "started_at": "2026-06-01T08:17:20.620Z",
+    "finished_at": "2026-06-01T08:28:35.230Z",
+    "duration_seconds": 675,
+    "git_branch": "main",
+    "git_head_before": "4624b98f2",
+    "git_head_after": "4624b98f2",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $50 budget (0.0%) | 1 cloud calls this month",
+    "summary": {
+      "total_tasks": 5,
+      "done": 3,
+      "rejected": 0,
+      "skipped": 0,
+      "human_pending": 0,
+      "approval_rate": 0,
+      "total_tokens": 148046
+    },
+    "tasks": [
+      {
+        "task_id": "AIAX-SURFACE-A4",
+        "title": "AIAX-SURFACE-A4",
+        "type": "feature",
+        "task_target": "cloud-code",
+        "agent": "backend-core",
+        "status": "suspended",
+        "attempts": 5,
+        "model_used": "claude-sonnet-4-20250514",
+        "provider": "anthropic",
+        "routing_reason": "task.type=feature → always Claude",
+        "tokens_used": 123090,
+        "duration_seconds": 671,
+        "files_written": [],
+        "review": {
+          "reviewer": "dual-supervisor",
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "Incomplete deliverables with critical missing components and truncated documentation"
+        },
+        "error": null,
+        "rejection_reason": "Auto-suspended: 5 consecutive failures. Last rejection: Incomplete deliverables with critical missing components and truncated documentation"
+      }
+    ]
+  }
+]
