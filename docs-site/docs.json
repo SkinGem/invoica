@@ -48,6 +48,15 @@
             ]
           },
           {
+            "group": "AIAX",
+            "pages": [
+              "concepts/aiax",
+              "guides/aiax-discovery",
+              "api-reference/aiax-mcp",
+              "case-studies/aiax-benchmark"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "guides/create-invoice",

@@ -1,0 +1,54 @@
+---
+title: AIAX
+description: "Invoica's machine-readable agent discovery surface — how autonomous agents find and call Invoica capabilities without human setup."
+---
+
+# AIAX — Agent Interaction & eXchange
+
+**AIAX** is Invoica's machine-readable discovery surface. A compliant agent can start from a single URL
+(`/.well-known/aiax.json`) and — without any human configuration — discover what Invoica can do, what
+each capability costs, and how to call it. The design goal: an agent that has never seen Invoica before
+can issue its first invoice in under 60 seconds.
+
+## Three-tier structure
+
+| Tier | File | What it contains |
+|------|------|-----------------|
+| 0 — Manifest | `/.well-known/aiax.json` | List of all sections + reference URLs |
+| 1 — Sections | `/aiax/sections/<name>.json` | Tool schemas, input/output types, pricing, examples |
+| 3 — Reference | `/aiax/reference/*` | State machines, deep-dive docs |
+
+Agents start at Tier 0, fetch only the sections they need, and never have to read human docs.
+
+## Composition with PACT
+
+AIAX sections wire directly into Invoica's PACT mandate layer:
+
+- **`query_mandate`** section maps to `GET /v1/public/mandates/:id` — unauthenticated, redacted state + hashes
+- **`dispute_flow`** section maps to `POST /v1/mandates/:id/dispute` — requires API key, opens a dispute
+
+An agent can verify a counterparty's mandate state before paying an invoice, entirely through AIAX-described endpoints.
+
+## Three-step discovery
+
+```bash
+# 1. Discover what Invoica exposes
+curl https://api.invoica.ai/.well-known/aiax.json
+
+# 2. Fetch the section you need
+curl https://api.invoica.ai/aiax/sections/create_invoice.json
+
+# 3. Call the tool (x402 — attach payment header)
+curl -X POST https://api.invoica.ai/api/x402/invoice \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <base64-payment>" \
+  -d '{"issuer":"my-agent","amount":5,"currency":"USDC"}'
+```
+
+All static AIAX responses carry `Cache-Control: public, max-age=300` and an ETag for efficient polling.
+
+## See Also
+
+- [AIAX Discovery Guide](/guides/aiax-discovery) — step-by-step walkthrough
+- [PACT Mandates](/concepts/pact) — the trust layer AIAX builds on
+- [x402 Protocol](/concepts/x402-protocol) — the payment mechanism used by AIAX tools

@@ -1,0 +1,56 @@
+---
+title: Agent Discovery with AIAX
+description: "How an autonomous agent discovers and calls Invoica capabilities using the AIAX surface."
+---
+
+# Agent Discovery with AIAX
+
+This guide walks through the exact steps an autonomous agent takes to discover Invoica and issue its first invoice.
+No pre-configuration required — the agent only needs the base URL.
+
+## Step 1: Fetch the manifest
+
+```bash
+curl https://api.invoica.ai/.well-known/aiax.json
+```
+
+The manifest lists every available section. Pick the one you need, e.g. `create_invoice`.
+
+## Step 2: Fetch the section
+
+```bash
+curl https://api.invoica.ai/aiax/sections/create_invoice.json
+```
+
+The section returns the tool name, endpoint, method, input/output schema, and a worked example. No human docs needed.
+
+## Step 3: Call the tool
+
+The `create_invoice` tool uses x402 — the payment **is** the credential.
+
+```bash
+# First call — server responds 402 with payment requirements
+curl -X POST https://api.invoica.ai/api/x402/invoice \
+  -H "Content-Type: application/json" \
+  -d '{"issuer":"my-agent","recipient":"client-co","amount":5,"currency":"USDC"}'
+
+# Second call — attach the payment header and retry
+curl -X POST https://api.invoica.ai/api/x402/invoice \
+  -H "Content-Type: application/json" \
+  -H "X-PAYMENT: <base64-encoded-payment>" \
+  -d '{"issuer":"my-agent","recipient":"client-co","amount":5,"currency":"USDC"}'
+```
+
+On success: `{ "success": true, "capability": "invoice", "result": { "id": "...", "status": "PENDING" } }`.
+
+## x402 payment flow
+
+x402 is a standard micro-payment protocol on Solana. Agents pay **0.01 USDC** per invoice creation
+via the PayAI facilitator — atomic with the invoice write, no separate settlement step needed.
+
+For mandate queries (`query_mandate` section), no payment is required — that endpoint is public and free.
+
+## See Also
+
+- [AIAX Concepts](/concepts/aiax)
+- [x402 Protocol](/concepts/x402-protocol)
