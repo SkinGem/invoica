@@ -5,7 +5,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-const OUTPUT_PATH = path.join(__dirname, '../../public/aiax/sections/trust_signals.json');
+const OUTPUT_PATH = path.join(__dirname, '../../public/aiax/trust_signals.json');
 
 const PARTNERSHIPS = [
   { name: 'Helixa', role: 'First PACT-integrated partner', since: '2026-05-28' },

@@ -38,10 +38,11 @@ router.get('/manifest.json', (req, res) => {
   serveJson(path.join(PUBLIC_DIR, '.well-known', 'aiax.json'), req, res);
 });
 
-// Tier 1 sections
-router.get('/sections/:name.json', (req, res) => {
+// Tier 1 sections — flat path per AIAX SPEC v0.1: /aiax/<section_id>.json
+// Defined after /manifest.json so the manifest route is not shadowed.
+router.get('/:name.json', (req, res) => {
   const name = req.params.name.replace(/[^a-z0-9_-]/gi, '');
-  serveJson(path.join(PUBLIC_DIR, 'aiax', 'sections', `${name}.json`), req, res);
+  serveJson(path.join(PUBLIC_DIR, 'aiax', `${name}.json`), req, res);
 });
 
 // Tier 3 reference
