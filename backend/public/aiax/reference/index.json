@@ -22,33 +22,33 @@
       "title": "AIAX Section Schema (Tier 1)",
       "url": "https://raw.githubusercontent.com/godman-protocols/aiax/main/schemas/section.schema.json",
       "format": "json_schema",
-      "description": "JSON Schema that every /aiax/*.json file must validate against."
+      "description": "JSON Schema that every /aiax/sections/*.json file must validate against."
     }
   ],
   "sections": [
     {
       "id": "create_invoice",
-      "url": "https://api.invoica.ai/aiax/create_invoice.json"
+      "url": "https://api.invoica.ai/aiax/sections/create_invoice.json"
     },
     {
       "id": "settle_invoice",
-      "url": "https://api.invoica.ai/aiax/settle_invoice.json"
+      "url": "https://api.invoica.ai/aiax/sections/settle_invoice.json"
     },
     {
       "id": "query_mandate",
-      "url": "https://api.invoica.ai/aiax/query_mandate.json"
+      "url": "https://api.invoica.ai/aiax/sections/query_mandate.json"
     },
     {
       "id": "dispute_flow",
-      "url": "https://api.invoica.ai/aiax/dispute_flow.json"
+      "url": "https://api.invoica.ai/aiax/sections/dispute_flow.json"
     },
     {
       "id": "pricing",
-      "url": "https://api.invoica.ai/aiax/pricing.json"
+      "url": "https://api.invoica.ai/aiax/sections/pricing.json"
     },
     {
       "id": "trust_signals",
-      "url": "https://api.invoica.ai/aiax/trust_signals.json"
+      "url": "https://api.invoica.ai/aiax/sections/trust_signals.json"
     }
   ]
 }

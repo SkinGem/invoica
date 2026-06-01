@@ -7,12 +7,12 @@
     "discovery_url": "https://api.invoica.ai/.well-known/aiax.json"
   },
   "sections": [
-    { "id": "create_invoice",  "url": "https://api.invoica.ai/aiax/create_invoice.json" },
-    { "id": "settle_invoice",  "url": "https://api.invoica.ai/aiax/settle_invoice.json" },
-    { "id": "query_mandate",   "url": "https://api.invoica.ai/aiax/query_mandate.json" },
-    { "id": "dispute_flow",    "url": "https://api.invoica.ai/aiax/dispute_flow.json" },
-    { "id": "pricing",         "url": "https://api.invoica.ai/aiax/pricing.json" },
-    { "id": "trust_signals",   "url": "https://api.invoica.ai/aiax/trust_signals.json" }
+    { "id": "create_invoice",  "url": "https://api.invoica.ai/aiax/sections/create_invoice.json" },
+    { "id": "settle_invoice",  "url": "https://api.invoica.ai/aiax/sections/settle_invoice.json" },
+    { "id": "query_mandate",   "url": "https://api.invoica.ai/aiax/sections/query_mandate.json" },
+    { "id": "dispute_flow",    "url": "https://api.invoica.ai/aiax/sections/dispute_flow.json" },
+    { "id": "pricing",         "url": "https://api.invoica.ai/aiax/sections/pricing.json" },
+    { "id": "trust_signals",   "url": "https://api.invoica.ai/aiax/sections/trust_signals.json" }
   ],
   "reference": {
     "index": "https://api.invoica.ai/aiax/reference/index.json",
@@ -20,7 +20,7 @@
   },
   "trust_signals": {
     "pact_endpoint": "https://api.invoica.ai/v1/mandates",
-    "trust_signals_url": "https://api.invoica.ai/aiax/trust_signals.json"
+    "trust_signals_url": "https://api.invoica.ai/aiax/sections/trust_signals.json"
   },
   "spec_url": "https://kognai.ai/aiax/spec/v0.1",
   "license": "Apache-2.0"

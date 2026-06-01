@@ -78,14 +78,14 @@ export async function disputeOpen(args: Record<string, unknown>): Promise<CallTo
 
 export async function getPricing(_args: Record<string, unknown>): Promise<CallToolResult> {
   try {
-    const data = await fetchJson(`${API_BASE}/aiax/pricing.json`, { method: "GET" });
+    const data = await fetchJson(`${API_BASE}/aiax/sections/pricing.json`, { method: "GET" });
     return ok(JSON.stringify(data, null, 2));
   } catch (e) { return err(String(e)); }
 }
 
 export async function getTrustSignals(_args: Record<string, unknown>): Promise<CallToolResult> {
   try {
-    const data = await fetchJson(`${API_BASE}/aiax/trust_signals.json`, { method: "GET" });
+    const data = await fetchJson(`${API_BASE}/aiax/sections/trust_signals.json`, { method: "GET" });
     return ok(JSON.stringify(data, null, 2));
   } catch (e) { return err(String(e)); }
 }

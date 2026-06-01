@@ -26,7 +26,7 @@
     {
       "name": "invoica_get_trust_signals",
       "description": "Fetch live trust signals (DRS receipts, mandates anchored, invoices settled, partnerships).",
-      "endpoint": "https://api.invoica.ai/aiax/trust_signals.json",
+      "endpoint": "https://api.invoica.ai/aiax/sections/trust_signals.json",
       "method": "GET",
       "auth": "none",
       "input_schema": {

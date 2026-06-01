@@ -6,7 +6,7 @@
     {
       "name": "invoica_get_pricing",
       "description": "Returns current pricing schedule for all Invoica capabilities.",
-      "endpoint": "https://api.invoica.ai/aiax/pricing.json",
+      "endpoint": "https://api.invoica.ai/aiax/sections/pricing.json",
       "method": "GET",
       "auth": "none",
       "input_schema": {
@@ -81,7 +81,7 @@
       "auth": "none",
       "endpoints": [
         "GET /api/x402/.well-known/aiax.json",
-        "GET /aiax/:name.json",
+        "GET /aiax/sections/:name.json",
         "GET /aiax/reference/:file",
         "GET /v1/public/mandates/:id"
       ],

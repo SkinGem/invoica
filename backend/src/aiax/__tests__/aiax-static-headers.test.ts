@@ -11,7 +11,7 @@ app.use("/aiax", aiaxRouter);
 
 const ENDPOINTS = [
   "/aiax/manifest.json",
-  "/aiax/create_invoice.json",
+  "/aiax/sections/create_invoice.json",
   "/aiax/reference/index.json",
 ];
 

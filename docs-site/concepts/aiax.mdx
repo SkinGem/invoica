@@ -15,7 +15,7 @@ can issue its first invoice in under 60 seconds.
 | Tier | File | What it contains |
 |------|------|-----------------|
 | 0 — Manifest | `/.well-known/aiax.json` | List of all sections + reference URLs |
-| 1 — Sections | `/aiax/<name>.json` | Tool schemas, input/output types, pricing, examples |
+| 1 — Sections | `/aiax/sections/<name>.json` | Tool schemas, input/output types, pricing, examples |
 | 3 — Reference | `/aiax/reference/*` | State machines, deep-dive docs |
 
 Agents start at Tier 0, fetch only the sections they need, and never have to read human docs.
@@ -36,7 +36,7 @@ An agent can verify a counterparty's mandate state before paying an invoice, ent
 curl https://api.invoica.ai/.well-known/aiax.json
 
 # 2. Fetch the section you need
-curl https://api.invoica.ai/aiax/create_invoice.json
+curl https://api.invoica.ai/aiax/sections/create_invoice.json
 
 # 3. Call the tool (x402 — attach payment header)
 curl -X POST https://api.invoica.ai/api/x402/invoice \
