@@ -1,0 +1,91 @@
+{
+  "section_id": "trust_signals",
+  "version": "0.1",
+  "generated_at": "2026-06-01T00:00:00.000Z",
+  "description": "Live trust metrics for the Invoica AIAX surface. Rebuilt nightly by the aiax-trust-signals-builder PM2 cron (03:00 UTC).",
+  "metrics": {
+    "drs_receipts_issued": 0,
+    "mandates_anchored": 0,
+    "invoices_settled": 0
+  },
+  "partnerships": [
+    {
+      "name": "Helixa",
+      "role": "First PACT-integrated partner",
+      "since": "2026-05-28"
+    },
+    {
+      "name": "ClinPay / AsterPay",
+      "role": "Clinical trial payment rail",
+      "since": "2026-05-22"
+    }
+  ],
+  "pact_endpoint": "https://api.invoica.ai/v1/mandates",
+  "spec_url": "https://kognai.ai/aiax/spec/v0.1",
+  "tools": [
+    {
+      "name": "invoica_get_trust_signals",
+      "description": "Fetch live trust signals (DRS receipts, mandates anchored, invoices settled, partnerships).",
+      "endpoint": "https://api.invoica.ai/aiax/sections/trust_signals.json",
+      "method": "GET",
+      "auth": "none",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "section_id": {
+            "type": "string"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "drs_receipts_issued": {
+                "type": "integer"
+              },
+              "mandates_anchored": {
+                "type": "integer"
+              },
+              "invoices_settled": {
+                "type": "integer"
+              }
+            }
+          },
+          "partnerships": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "since": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "pact_endpoint": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "description": "Fetch trust signals to verify Invoica reliability before integrating",
+      "response_summary": "Returns live metrics rebuilt nightly from SCORE table and DRS receipts"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "section_id": "dispute_flow",
+  "version": "0.1",
+  "description": "Open a dispute on a signed mandate. Requires authenticated API key. The mandate must be in signed_by_both or in_progress state.",
+  "tools": [
+    {
+      "name": "invoica_dispute_mandate",
+      "description": "Open a dispute on a mandate (requires API key auth). Transitions mandate to disputed state and records the reason.",
+      "endpoint": "https://api.invoica.ai/v1/mandates/{mandate_id}/dispute",
+      "method": "POST",
+      "auth": "api_key",
+      "auth_header": "x-api-key",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "mandate_id": {
+            "type": "string",
+            "description": "Mandate UUID (path parameter)"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 10,
+            "description": "Human-readable dispute reason"
+          }
+        },
+        "required": [
+          "mandate_id",
+          "reason"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "mandate_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "disputed"
+                ]
+              },
+              "disputed_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "mandate_id",
+              "status"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ]
+      }
+    }
+  ],
+  "state_transitions": {
+    "valid_from": [
+      "signed_by_both",
+      "in_progress"
+    ],
+    "transitions_to": "disputed"
+  },
+  "examples": [
+    {
+      "description": "Dispute a mandate for non-delivery",
+      "request": {
+        "mandate_id": "m9x8y7z6-a1b2-c3d4-e5f6-789012345678",
+        "reason": "Counterparty failed to deliver the agreed API integration within the SLA window."
+      },
+      "response": {
+        "success": true,
+        "data": {
+          "mandate_id": "m9x8y7z6-a1b2-c3d4-e5f6-789012345678",
+          "status": "disputed",
+          "disputed_at": "2026-06-01T15:00:00.000Z"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "aiax_version": "0.1",
+  "reference_version": "0.1",
+  "description": "Invoica AIAX Tier 3 reference index. Links to all canonical reference documents.",
+  "documents": [
+    {
+      "id": "dispute_state_machine",
+      "title": "Mandate Dispute State Machine",
+      "url": "https://api.invoica.ai/aiax/reference/dispute-state-machine.md",
+      "format": "markdown",
+      "description": "All valid mandate states and transitions, including dispute resolution flow."
+    },
+    {
+      "id": "aiax_manifest_schema",
+      "title": "AIAX Manifest Schema (Tier 0)",
+      "url": "https://raw.githubusercontent.com/godman-protocols/aiax/main/schemas/manifest.schema.json",
+      "format": "json_schema",
+      "description": "JSON Schema for the /.well-known/aiax.json manifest."
+    },
+    {
+      "id": "aiax_section_schema",
+      "title": "AIAX Section Schema (Tier 1)",
+      "url": "https://raw.githubusercontent.com/godman-protocols/aiax/main/schemas/section.schema.json",
+      "format": "json_schema",
+      "description": "JSON Schema that every /aiax/sections/*.json file must validate against."
+    }
+  ],
+  "sections": [
+    {
+      "id": "create_invoice",
+      "url": "https://api.invoica.ai/aiax/sections/create_invoice.json"
+    },
+    {
+      "id": "settle_invoice",
+      "url": "https://api.invoica.ai/aiax/sections/settle_invoice.json"
+    },
+    {
+      "id": "query_mandate",
+      "url": "https://api.invoica.ai/aiax/sections/query_mandate.json"
+    },
+    {
+      "id": "dispute_flow",
+      "url": "https://api.invoica.ai/aiax/sections/dispute_flow.json"
+    },
+    {
+      "id": "pricing",
+      "url": "https://api.invoica.ai/aiax/sections/pricing.json"
+    },
+    {
+      "id": "trust_signals",
+      "url": "https://api.invoica.ai/aiax/sections/trust_signals.json"
+    }
+  ]
+}

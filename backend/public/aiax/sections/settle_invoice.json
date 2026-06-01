@@ -1,0 +1,118 @@
+{
+  "section_id": "settle_invoice",
+  "version": "0.1",
+  "description": "Query settlement state of an existing invoice via x402 micro-payment (0.005 USDC). Returns current status and payment details.",
+  "tools": [
+    {
+      "name": "invoica_settle_invoice",
+      "description": "Check settlement state of an invoice via x402 (0.005 USDC). Pass the invoice UUID in the body.",
+      "endpoint": "https://api.invoica.ai/api/x402/settle",
+      "method": "POST",
+      "auth": "x402",
+      "x402_price_usdc": "0.005",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "invoiceId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Invoice UUID to check"
+          }
+        },
+        "required": [
+          "invoiceId"
+        ]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "capability": {
+            "type": "string",
+            "enum": [
+              "settle"
+            ]
+          },
+          "result": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PAID",
+                  "SETTLED",
+                  "COMPLETED",
+                  "CANCELLED"
+                ]
+              },
+              "amount": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string"
+              },
+              "network": {
+                "type": "string"
+              },
+              "settledAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "status",
+              "amount",
+              "currency"
+            ]
+          }
+        },
+        "required": [
+          "success",
+          "capability",
+          "result"
+        ]
+      }
+    }
+  ],
+  "examples": [
+    {
+      "description": "Check settlement state of an invoice",
+      "request": {
+        "invoiceId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      },
+      "response": {
+        "success": true,
+        "capability": "settle",
+        "result": {
+          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "status": "SETTLED",
+          "amount": 5,
+          "currency": "USDC",
+          "network": "solana-mainnet",
+          "settledAt": "2026-06-01T14:22:00.000Z",
+          "createdAt": "2026-06-01T12:00:00.000Z",
+          "updatedAt": "2026-06-01T14:22:00.000Z"
+        }
+      }
+    }
+  ]
+}

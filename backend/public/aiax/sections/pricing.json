@@ -1,0 +1,97 @@
+{
+  "section_id": "pricing",
+  "version": "0.1",
+  "description": "Invoica agent pricing model. Machine-payable capabilities use x402 USDC micro-payments. Standard API calls use API-key auth at no per-call cost (subscription or free tier).",
+  "tools": [
+    {
+      "name": "invoica_get_pricing",
+      "description": "Returns current pricing schedule for all Invoica capabilities.",
+      "endpoint": "https://api.invoica.ai/aiax/sections/pricing.json",
+      "method": "GET",
+      "auth": "none",
+      "input_schema": {
+        "type": "object",
+        "properties": {}
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "section_id": {
+            "type": "string"
+          },
+          "model": {
+            "type": "string"
+          },
+          "tiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "auth": {
+                  "type": "string"
+                },
+                "price_usdc": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "endpoints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "model": "x402_micropayment_plus_api_key",
+  "tiers": [
+    {
+      "name": "x402 capabilities",
+      "auth": "x402 USDC on Solana",
+      "endpoints": [
+        "POST /api/x402/invoice \u2014 0.01 USDC",
+        "POST /api/x402/settle  \u2014 0.005 USDC",
+        "POST /api/x402/tax     \u2014 0.02 USDC"
+      ],
+      "note": "Payment IS the credential. No API key required. Facilitator: payai.network."
+    },
+    {
+      "name": "PACT mandate API",
+      "auth": "x-api-key header",
+      "endpoints": [
+        "POST /v1/mandates",
+        "POST /v1/mandates/:id/sign",
+        "GET  /v1/mandates/:id",
+        "POST /v1/mandates/:id/complete",
+        "POST /v1/mandates/:id/dispute"
+      ],
+      "note": "API key issued via Invoica dashboard. No per-call fee."
+    },
+    {
+      "name": "Public discovery",
+      "auth": "none",
+      "endpoints": [
+        "GET /api/x402/.well-known/aiax.json",
+        "GET /aiax/sections/:name.json",
+        "GET /aiax/reference/:file",
+        "GET /v1/public/mandates/:id"
+      ],
+      "note": "Free. No auth. Cache-Control: public, max-age=300."
+    }
+  ],
+  "examples": [
+    {
+      "description": "Agent creates an invoice by paying 0.01 USDC via x402",
+      "flow": "POST /api/x402/invoice \u2192 402 challenge \u2192 attach X-PAYMENT header \u2192 POST again with payment \u2192 200 invoice created"
+    }
+  ]
+}
