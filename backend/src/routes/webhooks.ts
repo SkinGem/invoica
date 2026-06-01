@@ -71,6 +71,7 @@ const WEBHOOK_EVENT_TYPES = [
   'invoice.completed',
   'settlement.confirmed',
   'agent.reputation_changed',
+  'aiax.benchmark.published',
 ];
 router.get('/v1/webhooks/events', (_req: Request, res: Response) => {
   res.json({ success: true, data: WEBHOOK_EVENT_TYPES });

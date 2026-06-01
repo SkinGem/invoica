@@ -1,6 +1,118 @@
 ---
-title: MCP Server
-description: "Coming in v0.1"
+title: AIAX MCP Server
+description: "HTTP MCP server exposing 6 Invoica tools for autonomous agents."
 ---
 
-Coming in AIAX v0.1.
+# AIAX MCP Server
+
+The AIAX HTTP MCP server exposes 6 Invoica capabilities as Model Context Protocol tools.
+Connect any MCP-compatible agent framework to `POST /aiax/mcp`.
+
+**Endpoint:** `POST https://api.invoica.ai/aiax/mcp`
+**Transport:** Streamable HTTP (stateless mode — no session IDs)
+**Protocol:** MCP v1 (JSON-RPC 2.0)
+
+---
+
+## Tools
+
+### `invoica_create_invoice`
+
+Create a machine-payable invoice via x402 (0.01 USDC on Solana).
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `issuer` | string | No | Seller name or agent id |
+| `recipient` | string | No | Buyer name or agent id |
+| `email` | string (email) | No | Buyer email |
+| `amount` | number | No | Amount in currency (default 0.01) |
+| `currency` | string | No | Currency code (default USDC) |
+| `description` | string | No | Service description |
+| `x_payment` | string | No | Base64 x402 payment proof |
+
+**Wrapped endpoint:** `POST /api/x402/invoice`
+
+---
+
+### `invoica_settle_invoice`
+
+Check settlement state of an invoice (0.005 USDC).
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `invoice_id` | string (UUID) | Yes | Invoice UUID |
+| `x_payment` | string | No | Base64 x402 payment proof |
+
+**Wrapped endpoint:** `POST /api/x402/settle`
+
+---
+
+### `invoica_query_mandate`
+
+Fetch the public redacted view of a PACT mandate. No auth required.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `mandate_id` | string | Yes | Mandate UUID |
+
+**Wrapped endpoint:** `GET /v1/public/mandates/:id`
+
+**Returns:** `id`, `state`, `mandate_hash`, `anchor_tx_hash`, `created_at`, `parties[]`
+
+---
+
+### `invoica_dispute_open`
+
+Open a dispute on a PACT mandate. Requires API key.
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `mandate_id` | string | Yes | Mandate UUID |
+| `reason` | string (min 10 chars) | Yes | Dispute reason |
+| `api_key` | string | Yes | Invoica API key |
+
+**Wrapped endpoint:** `POST /v1/mandates/:id/dispute`
+
+**Valid mandate states:** `signed_by_both`, `in_progress`
+
+---
+
+### `invoica_get_pricing`
+
+Fetch the current pricing schedule for all Invoica capabilities. No auth.
+
+**Returns:** Section JSON with `model`, `tiers[]`, `tools[]`
+
+**Wrapped endpoint:** `GET /aiax/sections/pricing.json`
+
+---
+
+### `invoica_get_trust_signals`
+
+Fetch live trust signals (rebuilt nightly). No auth.
+
+**Returns:** `metrics.drs_receipts_issued`, `mandates_anchored`, `invoices_settled`, `partnerships[]`
+
+**Wrapped endpoint:** `GET /aiax/sections/trust_signals.json`
+
+---
+
+## Quick start
+
+```bash
+# List tools
+curl -X POST https://api.invoica.ai/aiax/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}'
+
+# Call invoica_get_pricing
+curl -X POST https://api.invoica.ai/aiax/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"invoica_get_pricing","arguments":{}}}'
+```
+
+## See Also
+
+- [AIAX Concepts](/concepts/aiax)
+- [AIAX Discovery Guide](/guides/aiax-discovery)
+- [AIAX Benchmark](/case-studies/aiax-benchmark)

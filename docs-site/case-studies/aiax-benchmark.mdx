@@ -1,6 +1,69 @@
 ---
 title: AIAX Benchmark
-description: "Coming in v0.1"
+description: "Invoica ATRR benchmark results — how reliably autonomous agents can complete tasks using the AIAX discovery surface."
 ---
 
-Coming in AIAX v0.1.
+# AIAX Benchmark
+
+<Note>
+  Benchmark numbers are populated automatically when the Kognai harness runs.
+  The placeholder values below will be replaced on first harness publish.
+</Note>
+
+## What is ATRR?
+
+**ATRR (Agent Task Resolution Rate)** measures the fraction of standardised agent tasks that complete
+successfully end-to-end using only AIAX-described tool calls — no human intervention, no out-of-band
+documentation.
+
+A score of 1.0 means every task resolved on the first attempt. The publishable floor for Invoica v0.1 is **0.80**.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Median ATRR | _pending first harness run_ |
+| Mean ATRR | _pending_ |
+| P10 ATRR | _pending_ |
+| P90 ATRR | _pending_ |
+| Total calls measured | _pending_ |
+
+## Task coverage
+
+The harness runs 18 LLM calls across the following task classes:
+
+| Task class | Tools exercised |
+|------------|----------------|
+| Invoice creation | `invoica_create_invoice` |
+| Settlement query | `invoica_settle_invoice` |
+| Mandate verification | `invoica_query_mandate` |
+| Dispute initiation | `invoica_dispute_open` |
+| Pricing discovery | `invoica_get_pricing` |
+| Trust signal check | `invoica_get_trust_signals` |
+
+## Reproducibility
+
+Raw logs and per-call traces are published to S3 alongside each benchmark run.
+The `reproducibility.raw_logs_url` field in `/aiax/benchmark.json` links directly to the latest archive.
+
+```bash
+curl https://api.invoica.ai/aiax/benchmark.json | jq .reproducibility
+```
+
+## Updating results
+
+The Kognai benchmark harness posts results via:
+
+```bash
+curl -X POST https://api.invoica.ai/aiax/benchmark/publish \
+  -H "x-admin-key: $ADMIN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @benchmark.json
+```
+
+This fires an `aiax.benchmark.published` webhook event to all registered subscribers.
+
+## See Also
+
+- [AIAX Discovery Guide](/guides/aiax-discovery)
+- [MCP Server Reference](/api-reference/aiax-mcp)

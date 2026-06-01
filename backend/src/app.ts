@@ -36,6 +36,8 @@ import billingPayAsYouGoRoutes from './routes/billing-pay-as-you-go';
 import clinpayReportsRoutes from './routes/clinpay-reports';
 import publicMandatesRoutes from './routes/public-mandates';
 import aiaxStaticRouter from './aiax/static-server';
+import { createAiaxMcpRouter } from './aiax/mcp-server';
+import aiaxBenchmarkPublishRoute from './routes/aiax-benchmark-publish';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -86,6 +88,8 @@ app.use('/.well-known', wellKnownRoutes);
 
 // AIAX static server - public routes for agent discovery
 app.use('/aiax', aiaxStaticRouter);
+app.use('/aiax/mcp', createAiaxMcpRouter());
+app.use('/aiax/benchmark/publish', aiaxBenchmarkPublishRoute);
 
 // Public mandates endpoint - redacted view for AIAX
 app.use('/v1/public', publicMandatesRoutes);

@@ -1,0 +1,19 @@
+{
+  "aiax_version": "0.1",
+  "benchmark_version": "0.1",
+  "published_at": null,
+  "summary": {
+    "median_atrr": null,
+    "mean_atrr": null,
+    "p10_atrr": null,
+    "p90_atrr": null,
+    "total_calls": null,
+    "publishable": false
+  },
+  "reproducibility": {
+    "raw_logs_url": null,
+    "harness_version": null,
+    "model": null
+  },
+  "note": "Placeholder \u2014 overwritten by Kognai benchmark harness via POST /aiax/benchmark/publish"
+}
