@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 const RPC_URL = process.env.RPC_URL || 'https://mainnet.base.org';
 const USDC_CONTRACT_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
-const TREASURY_ADDRESS = '0x9E0e342e4E2Df813B27F078AD0119eD6c289643f';
+const TREASURY_ADDRESS = '0x260E18591371A6E7A3da0AC5f9d47Ff06508B61F';
 
 const USDC_ABI = [
   'function transfer(address to, uint256 amount) returns (bool)',
