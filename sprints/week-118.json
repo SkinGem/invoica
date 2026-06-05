@@ -1,7 +1,4 @@
 {
-  "week": 118,
-  "created": "2026-04-21",
-  "notes": "Post-M1 sprint. Starts 2026-04-25 (after M1 gate close on 04-24). Two-front focus: (1) refactor invoices.ts to unblock the deferred money-safety tasks M1-MONEY-05/06 that the swarm couldn't touch because of file size, (2) ship the deferred WS-2 security tasks that don't touch invoices.ts. Pre-requisite for M2 WS-3 Stripe billing wire-up. Scope matches plan §2 and §3 deferred work per DIR-005.",
   "tasks": [
     {
       "id": "M3-CQ-03-A",
@@ -9,7 +6,7 @@
       "type": "refactor",
       "priority": "critical",
       "dependencies": [],
-      "status": "pending",
+      "status": "suspended",
       "description": "Split backend/src/routes/invoices.ts into focused modules (pulled forward from plan §7)",
       "context": "File: backend/src/routes/invoices.ts (1173 lines, plan §M3-CQ-03 target ≤300)\n\nThis refactor is a PREREQUISITE for M1-MONEY-05 and M1-MONEY-06, both of which need surgical edits to invoices.ts that MiniMax cannot produce reliably on a file this size (confirmed: 3 destructive-rewrite attempts across sessions).\n\nExtract to:\n  - services/invoice-query.ts  (list/search/stats endpoint handlers)\n  - services/invoice-mapper.ts  (mapInvoice helper + SELECT_FIELDS constant)\n  - services/invoice-validator.ts  (paymentDetails schema, chain validation)\n  - services/invoice-state-machine.ts  (VALID_TRANSITIONS map + transition-handler with PaymentEvent recording from M1-MONEY-02)\n  - routes/invoices.ts  (wire-up only, ≤300 lines)\n\nBehavior must be identical — supervisor rejects any endpoint shape change. Existing tests must pass unchanged.\n\nAcceptance: backend/src/routes/invoices.ts ≤ 300 lines. All existing tests PASS. One new test file services/__tests__/invoice-state-machine-unit.test.ts exercises the extracted state-machine in isolation.",
       "deliverables": {
@@ -20,7 +17,9 @@
           "backend/src/services/invoice-validator.ts",
           "backend/src/services/invoice-state-machine.ts"
         ],
-        "tests": ["backend/src/services/__tests__/invoice-state-machine-unit.test.ts"],
+        "tests": [
+          "backend/src/services/__tests__/invoice-state-machine-unit.test.ts"
+        ],
         "docs": []
       }
     },
@@ -29,7 +28,9 @@
       "agent": "backend-ledger",
       "type": "feature",
       "priority": "critical",
-      "dependencies": ["M3-CQ-03-A"],
+      "dependencies": [
+        "M3-CQ-03-A"
+      ],
       "status": "pending",
       "description": "InvoiceAudit table — make paymentDetails merge audit-traceable (resumed from week-115)",
       "context": "DEFERRED from week-115 per DIR-005 because invoices.ts was too big for agents to surgically edit. Unblocked by M3-CQ-03-A above.\n\nFile: backend/src/services/invoice-state-machine.ts (post-refactor) + supabase/migrations/005_invoice_audit.sql\n\nChange: On every metadata write (PATCH /:id/metadata), append to a new InvoiceAudit table (invoiceId, actor apiKeyId, beforeJson, afterJson, changedAt). Reject keys that start with 'tax', 'settlement', 'txHash', 'paidBy' — those are system-owned.\n\nAcceptance: Test confirms protected keys return 400; every accepted PATCH produces exactly one InvoiceAudit row.",
@@ -38,7 +39,9 @@
           "supabase/migrations/005_invoice_audit.sql",
           "backend/src/services/invoice-state-machine.ts"
         ],
-        "tests": ["backend/src/services/__tests__/invoice-metadata-audit.test.ts"],
+        "tests": [
+          "backend/src/services/__tests__/invoice-metadata-audit.test.ts"
+        ],
         "docs": []
       }
     },
@@ -47,7 +50,9 @@
       "agent": "backend-ledger",
       "type": "feature",
       "priority": "critical",
-      "dependencies": ["M3-CQ-03-A"],
+      "dependencies": [
+        "M3-CQ-03-A"
+      ],
       "status": "pending",
       "description": "Idempotency-Key on POST /v1/invoices (resumed from week-115)",
       "context": "DEFERRED from week-115 per DIR-005. Unblocked by M3-CQ-03-A above.\n\nFiles: backend/src/services/invoice-validator.ts (post-refactor) + supabase/migrations/006_idempotency_keys.sql + backend/src/routes/invoices.ts wire-up\n\nChange: Require Idempotency-Key header on POST /v1/invoices. First write stores {key, apiKeyId, invoiceId, responseBody} in a new IdempotencyKey table (24-hour TTL). Second write with same key returns the stored response.\n\nAcceptance: Test: same key + same body returns identical response; same key + different body returns 409 IDEMPOTENCY_CONFLICT.",
@@ -57,7 +62,9 @@
           "backend/src/services/invoice-validator.ts",
           "backend/src/routes/invoices.ts"
         ],
-        "tests": ["backend/src/routes/__tests__/invoice-idempotency.test.ts"],
+        "tests": [
+          "backend/src/routes/__tests__/invoice-idempotency.test.ts"
+        ],
         "docs": []
       }
     },
@@ -67,7 +74,7 @@
       "type": "feature",
       "priority": "high",
       "dependencies": [],
-      "status": "pending",
+      "status": "rejected",
       "description": "Webhook HMAC verification on delivery (resumed from week-116)",
       "context": "DEFERRED from week-116 per DIR-005. New-file task, agent-tractable.\n\nFiles: backend/src/routes/webhooks.ts, backend/src/services/webhook-dispatcher.ts (new)\n\nChange: On outbound delivery, compute HMAC-SHA256(secret, body) and send as X-Invoica-Signature: t=<ts>,v1=<hex>. On POST /v1/webhooks/:id/test receive-path, verify signature using crypto.timingSafeEqual. Document in docs-site/webhook-signatures.md.\n\nAcceptance: Tampered body fails verification; replayed timestamp older than 5 min fails.",
       "deliverables": {
@@ -75,8 +82,76 @@
           "backend/src/routes/webhooks.ts",
           "backend/src/services/webhook-dispatcher.ts"
         ],
-        "tests": ["backend/src/services/__tests__/webhook-hmac.test.ts"],
-        "docs": ["docs-site/webhook-signatures.md"]
+        "tests": [
+          "backend/src/services/__tests__/webhook-hmac.test.ts"
+        ],
+        "docs": [
+          "docs-site/webhook-signatures.md"
+        ]
+      },
+      "output": {
+        "files": [
+          "backend/src/routes/webhooks.ts",
+          "backend/src/services/webhook-dispatcher.ts",
+          "backend/src/services/__tests__/webhook-hmac.test.ts",
+          "docs-site/webhook-signatures.md"
+        ],
+        "commit": "",
+        "model": "claude-sonnet-4-20250514",
+        "review": {
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "Multiple critical issues: incomplete files, missing implementation, no signature verification in test endpoint, and missing Zod validation",
+          "issues": [
+            {
+              "severity": "critical",
+              "file": "backend/src/routes/webhooks.ts",
+              "description": "File is incomplete - cuts off mid-function in the stats endpoint implementation"
+            },
+            {
+              "severity": "critical",
+              "file": "backend/src/services/webhook-dispatcher.ts",
+              "description": "File is incomplete - missing generateSignature method, sanitizeUrl method, calculateDelay method, and delay method that are referenced but not implemented"
+            },
+            {
+              "severity": "critical",
+              "file": "backend/src/routes/webhooks.ts",
+              "description": "Missing the required POST /v1/webhooks/:id/test endpoint that should verify signatures using crypto.timingSafeEqual as specified in task"
+            },
+            {
+              "severity": "high",
+              "file": "backend/src/routes/webhooks.ts",
+              "description": "No Zod validation on API inputs - using manual validation instead of proper schema validation"
+            },
+            {
+              "severity": "high",
+              "file": "backend/src/services/webhook-dispatcher.ts",
+              "description": "Missing proper error handling - no custom error types, generic catch blocks"
+            },
+            {
+              "severity": "medium",
+              "file": "backend/src/services/__tests__/webhook-hmac.test.ts",
+              "description": "Test doesn't actually verify signature verification logic - only tests that signature header is present with correct format"
+            },
+            {
+              "severity": "medium",
+              "file": "docs-site/webhook-signatures.md",
+              "description": "Documentation is incomplete - cuts off mid-sentence and doesn't provide implementation examples"
+            },
+            {
+              "severity": "low",
+              "file": "backend/src/routes/webhooks.ts",
+              "description": "WebhookRepository import assumes it exists but may not be implemented yet"
+            }
+          ],
+          "strengths": [
+            "Correct HMAC-SHA256 signature verification logic in verifyWebhookSignature function",
+            "Proper use of crypto.timingSafeEqual for timing-safe comparison",
+            "Timestamp tolerance check to prevent replay attacks",
+            "Proper error handling in signature verification with try-catch",
+            "Good HTTP status codes and error response format"
+          ]
+        }
       }
     },
     {
@@ -85,13 +160,72 @@
       "type": "feature",
       "priority": "high",
       "dependencies": [],
-      "status": "pending",
+      "status": "suspended",
       "description": "Log redactor — introduce backend/src/lib/logger.ts, replace raw console.* (resumed from week-116)",
       "context": "DEFERRED from week-116. New-file task, agent-tractable but large (touches many backend files).\n\nChange: Introduce backend/src/lib/logger.ts that redacts email, apiKey (4-char prefix only), paymentAddress, txHash (4-char prefix only), Authorization header. Replace all raw console.log/error/warn/debug in backend/src/ with the logger.\n\nAcceptance: Grep for 'console\\.' in backend/src/ returns 0 hits. Log-redactor test asserts redaction on every field.",
       "deliverables": {
-        "code": ["backend/src/lib/logger.ts"],
-        "tests": ["backend/src/lib/__tests__/logger-redactor.test.ts"],
+        "code": [
+          "backend/src/lib/logger.ts"
+        ],
+        "tests": [
+          "backend/src/lib/__tests__/logger-redactor.test.ts"
+        ],
         "docs": []
+      },
+      "output": {
+        "files": [
+          "backend/src/lib/logger.ts",
+          "backend/src/lib/__tests__/logger-redactor.test.ts"
+        ],
+        "commit": "",
+        "model": "claude-sonnet-4-20250514",
+        "review": {
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "Logger implementation is incomplete (truncated mid-function), has critical bugs in redaction logic, and test file is missing the actual logger export. The code appears to be cut off during generation.",
+          "issues": [
+            {
+              "severity": "critical",
+              "file": "backend/src/lib/logger.ts",
+              "description": "File is truncated - ends mid-function in emit() with incomplete 'isProd' reference and no logger export"
+            },
+            {
+              "severity": "critical",
+              "file": "backend/src/lib/logger.ts",
+              "description": "Email redaction logic is broken - returns '***@example.com' instead of 'user***' (4-char prefix requirement)"
+            },
+            {
+              "severity": "critical",
+              "file": "backend/src/lib/__tests__/logger-redactor.test.ts",
+              "description": "Test imports 'logger' from '../logger' but logger.ts doesn't export a logger instance"
+            },
+            {
+              "severity": "high",
+              "file": "backend/src/lib/logger.ts",
+              "description": "Authorization header redaction returns 'Bear***' instead of 'Beartoken***' (should show 4-char prefix of actual token)"
+            },
+            {
+              "severity": "high",
+              "file": "backend/src/lib/__tests__/logger-redactor.test.ts",
+              "description": "Tests expect wrong redaction format - email test expects '***@example.com' but task spec requires 4-char prefix only"
+            },
+            {
+              "severity": "medium",
+              "file": "backend/src/lib/logger.ts",
+              "description": "Missing JSDoc documentation on main logger functions and export"
+            },
+            {
+              "severity": "medium",
+              "file": "backend/src/lib/logger.ts",
+              "description": "No validation that console.log/error/warn/debug were actually replaced across backend/src/"
+            }
+          ],
+          "strengths": [
+            "Good TypeScript typing with LogLevel and LogMeta interfaces",
+            "Comprehensive redaction function that handles nested objects and arrays",
+            "Test structure follows Jest best practices with proper mocking"
+          ]
+        }
       }
     },
     {
@@ -100,7 +234,7 @@
       "type": "feature",
       "priority": "high",
       "dependencies": [],
-      "status": "pending",
+      "status": "suspended",
       "description": "Split metrics into internal/external — public surface shows only real customers",
       "context": "Plan §6.1. Critical prerequisite for any public-facing metrics display: today's dashboard/website number would leak self-dealing if exposed. Invoice triage 2026-04-21 confirmed all 13 existing invoices are internal test data.\n\nApproach: use the isTest flag added by the invoice-cleanup migration (migration 007, applied 2026-04-25). Update backend/src/routes/metrics.ts, invoice-stats.ts, settlement-summary.ts to accept an ?includeTest=true query param (default false). Public dashboard calls with default; internal 'system health' admin panel calls with includeTest=true.\n\nAcceptance: GET /v1/metrics returns only external customer data by default. GET /v1/metrics?includeTest=true returns everything. Test covers both branches.",
       "deliverables": {
@@ -109,9 +243,13 @@
           "backend/src/routes/invoice-stats.ts",
           "backend/src/routes/settlement-summary.ts"
         ],
-        "tests": ["backend/src/routes/__tests__/metrics-external-only.test.ts"],
+        "tests": [
+          "backend/src/routes/__tests__/metrics-external-only.test.ts"
+        ],
         "docs": []
-      }
+      },
+      "_integrityFailed": true,
+      "_integrityDetails": "File backend/src/routes/metrics.ts shrank from 676 to 135 lines (20%). Possible destructive rewrite."
     },
     {
       "id": "TAX-VAT-EVIDENCE-PERSIST",
@@ -119,7 +257,7 @@
       "type": "feature",
       "priority": "high",
       "dependencies": [],
-      "status": "pending",
+      "status": "rejected",
       "description": "Persist VAT validation evidence to Supabase — EU 7-year retention compliance",
       "context": "External audit 2026-04-24 flagged: backend/src/services/tax/vat-validator.ts stores validation evidence in an in-memory Map (line 46, `private evidenceStore: Map<string, TaxEvidence>`). Evidence is wiped on every PM2 restart. The store method has a commented-out line 162: `// await this.saveEvidenceToDatabase(evidence);`.\n\nEU VAT legal retention is typically 7 years. For any real EU customer this is a compliance blocker. Not acute today (zero EU customers per invoice triage) but required before M2 gate.\n\nChange: create Supabase migration 008_vat_evidence.sql with a VatEvidence table (id uuid PK, invoiceId text FK, vatNumber text, countryCode text, isValid bool, validatedAt timestamptz, evidenceJson jsonb, createdAt timestamptz DEFAULT now()). Wire the existing `storeEvidence()` method to INSERT into it. Keep the in-memory Map as an L1 cache if desired, but the source of truth must be Supabase.\n\nAcceptance: backend restart does not lose any evidence row. Test covers: store → restart simulation (new VatValidator instance) → retrieve evidence → present.",
       "deliverables": {
@@ -127,8 +265,63 @@
           "supabase/migrations/008_vat_evidence.sql",
           "backend/src/services/tax/vat-validator.ts"
         ],
-        "tests": ["backend/src/services/tax/__tests__/vat-evidence-persistence.test.ts"],
+        "tests": [
+          "backend/src/services/tax/__tests__/vat-evidence-persistence.test.ts"
+        ],
         "docs": []
+      },
+      "output": {
+        "files": [
+          "supabase/migrations/008_vat_evidence.sql",
+          "backend/src/services/tax/vat-validator.ts",
+          "backend/src/services/tax/__tests__/vat-evidence-persistence.test.ts"
+        ],
+        "commit": "",
+        "model": "claude-sonnet-4-20250514",
+        "review": {
+          "verdict": "REJECTED",
+          "score": 25,
+          "summary": "Critical implementation incomplete - VatValidator file is truncated mid-function, missing core persistence methods, and lacks proper error handling. Migration and tests are well-structured but cannot function without complete service implementation.",
+          "issues": [
+            {
+              "severity": "critical",
+              "file": "backend/src/services/tax/vat-validator.ts",
+              "description": "File is truncated at line 148 inside normalizeVatNumber method - missing storeEvidence(), getEvidence(), and other core methods required by the task spec and tests"
+            },
+            {
+              "severity": "critical",
+              "file": "backend/src/services/tax/vat-validator.ts",
+              "description": "Missing storeEvidence() method implementation that should INSERT into vat_evidence table - this is the core requirement of the task"
+            },
+            {
+              "severity": "critical",
+              "file": "backend/src/services/tax/vat-validator.ts",
+              "description": "Missing getEvidence() method that tests expect to exist for evidence retrieval"
+            },
+            {
+              "severity": "high",
+              "file": "backend/src/services/tax/vat-validator.ts",
+              "description": "Supabase client initialization lacks proper error handling - should throw or log meaningful errors when credentials missing"
+            },
+            {
+              "severity": "medium",
+              "file": "supabase/migrations/008_vat_evidence.sql",
+              "description": "References system_logs table in cleanup function without ensuring it exists - could cause migration failure"
+            },
+            {
+              "severity": "low",
+              "file": "backend/src/services/tax/__tests__/vat-evidence-persistence.test.ts",
+              "description": "Tests mock Supabase but don't verify the actual SQL schema matches the expected interface"
+            }
+          ],
+          "strengths": [
+            "Migration SQL is well-structured with proper indexes, comments, and RLS policies",
+            "Includes 7-year retention logic as required by EU VAT compliance",
+            "Test cases cover the key scenarios including restart simulation",
+            "Good separation of concerns with dedicated test file",
+            "Migration includes helpful cleanup function for retention management"
+          ]
+        }
       }
     },
     {
@@ -137,14 +330,20 @@
       "type": "test",
       "priority": "high",
       "dependencies": [],
-      "status": "pending",
+      "status": "suspended",
       "description": "Live on-chain Skale Base integration test (Scope 2 follow-up to 2026-04-22 API-layer smoke test)",
       "context": "Scope 1 (API-layer smoke test) passed 2026-04-22: invoice creation with chain='skale', DE VAT 19% applied, PaymentEvents UNIQUE gate blocks replay. Mock txHash only.\n\nScope 2 (this task): real USDC transfer on Skale Base (mainnet 1187947933 or testnet-Sepolia 324705682), scanned by the EVM settlement detector, invoice auto-transitions to SETTLED via the real on-chain event.\n\nFiles to create:\n  - scripts/test-skale-onchain.ts — test harness that:\n      * reads 2 wallet private keys from .env (TEST_WALLET_A_PK, TEST_WALLET_B_PK) — owner funds these before running\n      * creates an invoice via API with Wallet B's address as paymentAddress\n      * signs and submits a USDC transfer from Wallet A to Wallet B on Skale Base\n      * calls the settlement detector programmatically (or waits for PM2 settlement-poller) to confirm detection\n      * verifies PaymentEvents row is written with the REAL on-chain txHash (not mock)\n      * verifies Invoice.status transitions to SETTLED\n  - docs/engineering/skale-onchain-test-setup.md — owner-facing runbook:\n      * how to generate 2 fresh wallets (viem or ethers)\n      * how to fund them with gasless compute credits on Skale Base (pre-paid compute credits per Skale docs)\n      * how to acquire USDC on Skale Base (bridge from Base via Skale portal, or use Skale Base Sepolia testnet USDC faucet for first run)\n      * how to run the harness and interpret output\n\nAcceptance: one clean run (testnet OR mainnet) where a real on-chain USDC transfer on Skale Base is detected by Invoica's settlement detector and auto-marks an invoice SETTLED. Attach the txHash + block explorer link to the task note on completion.\n\nDependencies: none (chain config for Skale Base already live in main per commit 8c3ea35). Ideal to run BEFORE any marketing with Skale (for truth-in-capability).",
       "deliverables": {
-        "code": ["scripts/test-skale-onchain.ts"],
+        "code": [
+          "scripts/test-skale-onchain.ts"
+        ],
         "tests": [],
-        "docs": ["docs/engineering/skale-onchain-test-setup.md"]
-      }
+        "docs": [
+          "docs/engineering/skale-onchain-test-setup.md"
+        ]
+      },
+      "_integrityFailed": true,
+      "_integrityDetails": "File docs/engineering/skale-onchain-test-setup.md shrank from 58 to 17 lines (29%). Possible destructive rewrite."
     }
   ]
 }
