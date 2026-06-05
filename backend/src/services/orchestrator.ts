@@ -7,6 +7,7 @@ interface TaskInput {
   description?: string;
   context?: string;
   agentName: string;
+  deliverableFiles?: string[];
 }
 
 interface TaskResult {
@@ -76,6 +77,55 @@ export class Orchestrator extends EventEmitter {
   }
 
   /**
+   * Validates task input to prevent DIR-011 violations
+   * Rejects tasks with suffix-split deliverable file paths
+   * @param taskInput - Task input to validate
+   * @throws Error if task contains multi-file patterns
+   */
+  validateTaskInput(taskInput: TaskInput): void {
+    if (!taskInput.deliverableFiles || taskInput.deliverableFiles.length === 0) {
+      return; // No deliverable files specified, validation passes
+    }
+
+    // Check for suffix-split patterns in deliverable file paths
+    const suffixSplitPattern = /-\d{3,}\.(ts|js|tsx|jsx|json|md|mdx|py|go|rs|java|cpp|c|h)$/i;
+    
+    for (const filePath of taskInput.deliverableFiles) {
+      if (suffixSplitPattern.test(filePath)) {
+        const error = new Error(
+          `Task rejected: Deliverable file path '${filePath}' contains suffix split pattern. ` +
+          `Single deliverable = single commit. Multi-file patterns violate DIR-011.`
+        );
+        this.logger.error('Task validation failed - suffix split detected', {
+          filePath,
+          agentName: taskInput.agentName,
+          deliverableFiles: taskInput.deliverableFiles
+        });
+        throw error;
+      }
+    }
+
+    // Additional check for multiple files with similar base names
+    const basePaths = new Set<string>();
+    for (const filePath of taskInput.deliverableFiles) {
+      const basePath = filePath.replace(/-\d{3,}\.(ts|js|tsx|jsx|json|md|mdx|py|go|rs|java|cpp|c|h)$/i, '');
+      if (basePaths.has(basePath) && basePath !== filePath.replace(/\.[^.]+$/, '')) {
+        const error = new Error(
+          `Task rejected: Multiple deliverable files detected with similar base paths. ` +
+          `This suggests a multi-file pattern that violates DIR-011.`
+        );
+        this.logger.error('Task validation failed - multi-file pattern detected', {
+          basePath,
+          agentName: taskInput.agentName,
+          deliverableFiles: taskInput.deliverableFiles
+        });
+        throw error;
+      }
+      basePaths.add(basePath);
+    }
+  }
+
+  /**
    * Processes task result and checks for rejection patterns
    * Emits warnings and pauses agents that exceed failure threshold
    */
@@ -105,176 +155,155 @@ export class Orchestrator extends EventEmitter {
   }
 
   /**
-   * Validates task quality without causing cascade rejections
-   * Marks only the specific failing task as rejected, not subsequent tasks
-   */
-  async validateTaskQuality(tasks: Array<{ taskId: string; agentId: string; content: any }>): Promise<QualityCheckResult[]> {
-    const results: QualityCheckResult[] = [];
-
-    for (const task of tasks) {
-      try {
-        // Basic validation - check if content exists and has required fields
-        if (!task.content || typeof task.content !== 'object') {
-          results.push({
-            taskId: task.taskId,
-            passed: false,
-            reason: 'Task content is missing or invalid'
-          });
-          continue;
-        }
-
-        // Check if agent is currently paused
-        const rejectionState = this.rejectionStates.get(task.agentId);
-        if (rejectionState?.isPaused && rejectionState.pausedUntil && new Date() < rejectionState.pausedUntil) {
-          results.push({
-            taskId: task.taskId,
-            passed: false,
-            reason: `Agent ${task.agentId} is temporarily paused due to consecutive failures`
-          });
-          continue;
-        }
-
-        // Task passes validation
-        results.push({
-          taskId: task.taskId,
-          passed: true
-        });
-      } catch (error) {
-        this.logger.error('Error validating task quality', {
-          taskId: task.taskId,
-          agentId: task.agentId,
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-        
-        results.push({
-          taskId: task.taskId,
-          passed: false,
-          reason: 'Validation error occurred'
-        });
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * Validates task input and normalizes agent name format
-   */
-  async validateTask(input: TaskInput): Promise<boolean> {
-    try {
-      if (!input.agentName || typeof input.agentName !== 'string') {
-        return false;
-      }
-
-      // Normalize agent name to handle both formats
-      const normalized = this.normalizeAgentName(input.agentName);
-      
-      // Check if agent exists in either format
-      const agentExists = await this.checkAgentExists(normalized.camelCase) || 
-                         await this.checkAgentExists(normalized.kebabCase);
-
-      return agentExists;
-    } catch (error) {
-      this.logger.error('Error validating task', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        input
-      });
-      return false;
-    }
-  }
-
-  /**
-   * Checks if an agent exists in the system
-   */
-  private async checkAgentExists(agentName: string): Promise<boolean> {
-    try {
-      const exists = await (this.redis as any).exists(`agent:${agentName}`);
-      return exists === 1;
-    } catch (error) {
-      this.logger.error('Error checking agent existence', {
-        agentName,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-      return false;
-    }
-  }
-
-  /**
-   * Handles successful task completion
-   * Resets consecutive failure count for the agent
-   */
-  private async handleSuccess(agentId: string): Promise<void> {
-    const state = this.rejectionStates.get(agentId);
-    if (state) {
-      // Reset failure count on success
-      state.consecutiveFailures = 0;
-      state.isPaused = false;
-      state.pausedUntil = undefined;
-      
-      this.logger.info('Agent failure count reset after success', { agentId });
-    }
-  }
-
-  /**
-   * Handles task rejection and implements cascade failure prevention
-   * Pauses agents that exceed the rejection threshold
+   * Handles agent rejection by tracking consecutive failures
+   * Pauses agent if threshold exceeded
    */
   private async handleRejection(result: TaskResult): Promise<void> {
     const agentId = result.agentId;
-    let state = this.rejectionStates.get(agentId);
+    const currentState = this.rejectionStates.get(agentId) || {
+      consecutiveFailures: 0,
+      lastFailureTime: new Date(),
+      isPaused: false
+    };
 
-    if (!state) {
-      state = {
-        consecutiveFailures: 0,
-        lastFailureTime: new Date(),
-        isPaused: false
-      };
-      this.rejectionStates.set(agentId, state);
-    }
+    currentState.consecutiveFailures += 1;
+    currentState.lastFailureTime = new Date();
 
-    state.consecutiveFailures++;
-    state.lastFailureTime = new Date();
-
-    this.logger.warn('Agent task rejected', {
-      agentId,
-      consecutiveFailures: state.consecutiveFailures,
-      taskId: result.taskId,
-      error: result.error
-    });
-
-    // Check if agent should be paused
-    if (state.consecutiveFailures >= this.REJECTION_THRESHOLD) {
-      state.isPaused = true;
-      state.pausedUntil = new Date(Date.now() + this.PAUSE_DURATION_MS);
-
-      this.logger.error('Agent paused due to consecutive failures', {
+    if (currentState.consecutiveFailures >= this.REJECTION_THRESHOLD) {
+      currentState.isPaused = true;
+      currentState.pausedUntil = new Date(Date.now() + this.PAUSE_DURATION_MS);
+      
+      this.logger.warn('Agent paused due to consecutive rejections', {
         agentId,
-        consecutiveFailures: state.consecutiveFailures,
-        pausedUntil: state.pausedUntil
+        consecutiveFailures: currentState.consecutiveFailures,
+        pausedUntil: currentState.pausedUntil
       });
 
-      // Emit warning for monitoring systems
       this.emit('agentPaused', {
         agentId,
-        consecutiveFailures: state.consecutiveFailures,
-        pausedUntil: state.pausedUntil
+        reason: 'consecutive_rejections',
+        pausedUntil: currentState.pausedUntil
+      });
+    }
+
+    this.rejectionStates.set(agentId, currentState);
+  }
+
+  /**
+   * Handles successful task completion by resetting rejection state
+   */
+  private async handleSuccess(agentId: string): Promise<void> {
+    const currentState = this.rejectionStates.get(agentId);
+    if (currentState) {
+      // Reset consecutive failures on success
+      currentState.consecutiveFailures = 0;
+      currentState.isPaused = false;
+      currentState.pausedUntil = undefined;
+      
+      this.rejectionStates.set(agentId, currentState);
+      
+      this.logger.info('Agent rejection state reset after successful task', {
+        agentId
       });
     }
   }
 
   /**
-   * Gets the current rejection state for an agent
+   * Validates task quality without causing cascade rejections
+   * Marks only the specific failing task as rejected
+   */
+  async validateTaskQuality(taskId: string, agentId: string): Promise<QualityCheckResult> {
+    try {
+      // Check if agent is currently paused
+      const rejectionState = this.rejectionStates.get(agentId);
+      if (rejectionState?.isPaused && rejectionState.pausedUntil && new Date() < rejectionState.pausedUntil) {
+        return {
+          taskId,
+          passed: false,
+          reason: `Agent ${agentId} is paused until ${rejectionState.pausedUntil.toISOString()}`
+        };
+      }
+
+      // Perform quality validation logic here
+      // This is a placeholder for actual quality checks
+      const qualityScore = await this.calculateQualityScore(taskId);
+      
+      if (qualityScore < 70) {
+        return {
+          taskId,
+          passed: false,
+          reason: `Quality score ${qualityScore} below threshold of 70`
+        };
+      }
+
+      return {
+        taskId,
+        passed: true
+      };
+    } catch (error) {
+      this.logger.error('Quality validation failed', {
+        taskId,
+        agentId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      
+      return {
+        taskId,
+        passed: false,
+        reason: `Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
+  /**
+   * Calculates quality score for a task
+   * Placeholder implementation - should be replaced with actual quality metrics
+   */
+  private async calculateQualityScore(taskId: string): Promise<number> {
+    // Placeholder implementation
+    // In a real system, this would analyze code quality, test coverage, etc.
+    return Math.floor(Math.random() * 100);
+  }
+
+  /**
+   * Checks if an agent is currently paused
+   */
+  isAgentPaused(agentId: string): boolean {
+    const state = this.rejectionStates.get(agentId);
+    if (!state?.isPaused || !state.pausedUntil) {
+      return false;
+    }
+    
+    // Check if pause period has expired
+    if (new Date() >= state.pausedUntil) {
+      state.isPaused = false;
+      state.pausedUntil = undefined;
+      this.rejectionStates.set(agentId, state);
+      return false;
+    }
+    
+    return true;
+  }
+
+  /**
+   * Gets rejection state for an agent
    */
   getAgentRejectionState(agentId: string): AgentRejectionState | undefined {
     return this.rejectionStates.get(agentId);
   }
 
   /**
-   * Manually resets an agent's rejection state
-   * Useful for administrative intervention
+   * Manually unpause an agent (for administrative purposes)
    */
-  resetAgentState(agentId: string): void {
-    this.rejectionStates.delete(agentId);
-    this.logger.info('Agent state manually reset', { agentId });
+  unpauseAgent(agentId: string): void {
+    const state = this.rejectionStates.get(agentId);
+    if (state) {
+      state.isPaused = false;
+      state.pausedUntil = undefined;
+      this.rejectionStates.set(agentId, state);
+      
+      this.logger.info('Agent manually unpaused', { agentId });
+      this.emit('agentUnpaused', { agentId, reason: 'manual' });
+    }
   }
 }
