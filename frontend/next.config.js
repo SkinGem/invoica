@@ -27,6 +27,22 @@ const nextConfig = {
         source: '/v1/:path*',
         destination: `${backendOrigin}/v1/:path*`,
       },
+      {
+        source: '/.well-known/:path*',
+        destination: `${backendOrigin}/.well-known/:path*`,
+      },
+      {
+        source: '/aiax/:path*',
+        destination: `${backendOrigin}/aiax/:path*`,
+      },
+      {
+        source: '/aiax.json',
+        destination: `${backendOrigin}/aiax.json`,
+      },
+      {
+        source: '/llms.txt',
+        destination: `${backendOrigin}/llms.txt`,
+      },
     ];
   },
 };

@@ -37,8 +37,7 @@ router.get('/x402', (_req: Request, res: Response) => {
 });
 
 
-// AIAX v0.1 manifest — canonical discovery URL for agent auto-discovery
-router.get('/aiax.json', (req: Request, res: Response) => {
+function serveManifest(req: Request, res: Response): void {
   const filePath = path.join(__dirname, '../../public/.well-known/aiax.json');
   if (!fs.existsSync(filePath)) {
     res.status(404).json({ error: 'not_found' });
@@ -51,6 +50,12 @@ router.get('/aiax.json', (req: Request, res: Response) => {
   res.set('ETag', etag);
   res.set('Content-Type', 'application/json');
   res.send(content);
-});
+}
+
+// AIAX v0.1 manifest — canonical discovery URL
+router.get('/aiax.json', serveManifest);
+
+// agent.json — OpenAI-compatible agent plugin discovery alias
+router.get('/agent.json', serveManifest);
 
 export default router;

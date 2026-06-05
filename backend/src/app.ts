@@ -38,6 +38,7 @@ import publicMandatesRoutes from './routes/public-mandates';
 import aiaxStaticRouter from './aiax/static-server';
 import { createAiaxMcpRouter } from './aiax/mcp-server';
 import aiaxBenchmarkPublishRoute from './routes/aiax-benchmark-publish';
+import discoveryRoutes from './routes/discovery';
 import { authenticate } from './middleware/auth';
 
 const app = express();
@@ -85,6 +86,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Public routes (no authentication required)
 app.use('/health', healthRoutes);
 app.use('/.well-known', wellKnownRoutes);
+app.use('/', discoveryRoutes);
 
 // AIAX static server - public routes for agent discovery
 app.use('/aiax', aiaxStaticRouter);

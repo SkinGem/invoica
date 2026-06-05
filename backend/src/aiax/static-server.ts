@@ -33,7 +33,10 @@ function serveJson(filePath: string, req: Request, res: Response): void {
   res.send(content);
 }
 
-// Tier 0 manifest
+// Tier 0 manifest — /aiax/ and /aiax/manifest.json both serve the root manifest
+router.get('/', (req, res) => {
+  serveJson(path.join(PUBLIC_DIR, '.well-known', 'aiax.json'), req, res);
+});
 router.get('/manifest.json', (req, res) => {
   serveJson(path.join(PUBLIC_DIR, '.well-known', 'aiax.json'), req, res);
 });
