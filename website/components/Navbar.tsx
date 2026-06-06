@@ -9,8 +9,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-10">
           <a href="/" className="flex items-center">
-            <Image src="/logo.png" alt="Invoica" width={432} height={115} className="h-[38px] w-auto dark:hidden" priority />
-            <Image src="/logo-dark.png" alt="Invoica" width={432} height={115} className="h-[38px] w-auto hidden dark:block" priority />
+            <Image src="/logo.png" alt="Invoica" width={432} height={115} className="h-[52px] w-auto dark:hidden" priority />
+            <Image src="/logo-dark.png" alt="Invoica" width={432} height={115} className="h-[52px] w-auto hidden dark:block" priority />
           </a>
           <div className="hidden md:flex items-center gap-8">
             <a href="https://invoica.mintlify.app" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue dark:text-gray-400 dark:hover:text-white transition-colors duration-200">
