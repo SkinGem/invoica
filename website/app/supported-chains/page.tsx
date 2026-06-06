@@ -103,7 +103,7 @@ const CHAINS: Chain[] = [
 ];
 
 function StatusBadge({ status }: { status: Chain['status'] }) {
-  const color = status === 'live' ? 'bg-green-500/10 text-green-700 ring-green-500/20' : 'bg-amber-500/10 text-amber-700 ring-amber-500/20';
+  const color = status === 'live' ? 'bg-green-500/10 text-green-700 dark:text-green-400 ring-green-500/20' : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-amber-500/20';
   return (
     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ring-1 ${color}`}>
       <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${status === 'live' ? 'bg-green-500' : 'bg-amber-500'}`} />
@@ -114,30 +114,30 @@ function StatusBadge({ status }: { status: Chain['status'] }) {
 
 function ChainCard({ chain, featured }: { chain: Chain; featured?: boolean }) {
   return (
-    <div className={`p-6 rounded-2xl border bg-white transition-all hover:-translate-y-0.5 ${featured ? 'border-invoica-purple/40 shadow-lg shadow-invoica-purple/10' : 'border-invoica-gray-200 hover:border-invoica-purple/30'}`}>
+    <div className={`p-6 rounded-2xl border bg-white dark:bg-gray-900 transition-all hover:-translate-y-0.5 ${featured ? 'border-invoica-purple/40 dark:border-invoica-purple/30 shadow-lg shadow-invoica-purple/10' : 'border-invoica-gray-200 dark:border-gray-800 hover:border-invoica-purple/30 dark:hover:border-invoica-purple/30'}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="text-xl font-bold text-invoica-blue tracking-tight">{chain.name}</h3>
-          <div className="text-xs font-mono text-invoica-gray-500 mt-1">
+          <h3 className="text-xl font-bold text-invoica-blue dark:text-white tracking-tight">{chain.name}</h3>
+          <div className="text-xs font-mono text-invoica-gray-500 dark:text-gray-400 mt-1">
             {chain.type === 'evm' ? `Chain ID ${chain.chainIdLabel}` : `Network: ${chain.chainIdLabel}`}
           </div>
         </div>
         <StatusBadge status={chain.status} />
       </div>
-      <p className="text-sm text-invoica-gray-500 leading-relaxed mb-4">{chain.description}</p>
+      <p className="text-sm text-invoica-gray-500 dark:text-gray-400 leading-relaxed mb-4">{chain.description}</p>
       <div className="space-y-2 text-xs font-mono">
         <div>
-          <span className="text-invoica-gray-400">USDC:</span>{' '}
-          <span className="text-invoica-gray-600 break-all">{chain.usdcAddress}</span>
+          <span className="text-invoica-gray-400 dark:text-gray-500">USDC:</span>{' '}
+          <span className="text-invoica-gray-600 dark:text-gray-300 break-all">{chain.usdcAddress}</span>
         </div>
         <div>
-          <span className="text-invoica-gray-400">Explorer:</span>{' '}
+          <span className="text-invoica-gray-400 dark:text-gray-500">Explorer:</span>{' '}
           <a href={chain.explorer} target="_blank" rel="noopener noreferrer" className="text-invoica-purple hover:underline break-all">{chain.explorer.replace(/^https?:\/\//, '')}</a>
         </div>
       </div>
-      <div className="mt-4 pt-4 border-t border-invoica-gray-200/60">
-        <div className="text-[10px] font-semibold text-invoica-gray-400 uppercase tracking-wider mb-2">Use it</div>
-        <pre className="text-[11px] font-mono text-invoica-blue bg-invoica-gray-50 rounded-md p-3 overflow-x-auto"><code>{`POST /v1/invoices
+      <div className="mt-4 pt-4 border-t border-invoica-gray-200/60 dark:border-gray-800">
+        <div className="text-[10px] font-semibold text-invoica-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Use it</div>
+        <pre className="text-[11px] font-mono text-invoica-blue dark:text-gray-200 bg-invoica-gray-50 dark:bg-gray-800 rounded-md p-3 overflow-x-auto"><code>{`POST /v1/invoices
 {
   "amount": 0.10,
   "currency": "USDC",
@@ -155,7 +155,7 @@ export default function SupportedChainsPage() {
       <Navbar />
       <main>
         {/* HERO */}
-        <section className="relative pt-32 pb-16 bg-white overflow-hidden">
+        <section className="relative pt-32 pb-16 bg-white dark:bg-gray-950 overflow-hidden">
           <div className="absolute inset-0">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-invoica-purple/5 rounded-full blur-3xl" />
             <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-invoica-purple-light/5 rounded-full blur-3xl" />
@@ -164,10 +164,10 @@ export default function SupportedChainsPage() {
             <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-invoica-purple/5 border border-invoica-purple/15 mb-6">
               <span className="text-xs font-medium text-invoica-purple tracking-wide uppercase">Multi-chain by default</span>
             </div>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-invoica-blue leading-[1.1] mb-6 tracking-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-invoica-blue dark:text-white leading-[1.1] mb-6 tracking-tight">
               Supported chains
             </h1>
-            <p className="text-lg md:text-xl text-invoica-gray-500 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-invoica-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
               Invoica settles agent payments on every major chain. Every invoice carries its chain context;
               settlement happens natively on the rail of your choice.
             </p>
@@ -175,7 +175,7 @@ export default function SupportedChainsPage() {
         </section>
 
         {/* FEATURED: LATEST CHAIN VIDEO */}
-        <section className="py-16 bg-invoica-gray-50/30">
+        <section className="py-16 bg-invoica-gray-50/30 dark:bg-gray-900">
           <div className="max-w-6xl mx-auto px-6">
             <div className="flex items-center gap-3 mb-6">
               <span className="inline-flex items-center px-3 py-1 rounded-full bg-invoica-purple text-white text-[10px] font-semibold uppercase tracking-wider">
@@ -188,7 +188,7 @@ export default function SupportedChainsPage() {
             <div className="grid md:grid-cols-5 gap-8 items-start">
               {/* Video — left 3/5 */}
               <div className="md:col-span-3">
-                <div className="rounded-2xl overflow-hidden border border-invoica-gray-200 bg-black aspect-video">
+                <div className="rounded-2xl overflow-hidden border border-invoica-gray-200 dark:border-gray-700 bg-black aspect-video">
                   <video
                     src="/videos/featured-chain-launch.mp4"
                     poster=""
@@ -205,16 +205,16 @@ export default function SupportedChainsPage() {
 
               {/* Description — right 2/5 */}
               <div className="md:col-span-2 flex flex-col gap-5">
-                <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue tracking-tight leading-tight">
+                <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white tracking-tight leading-tight">
                   Invoica on <span className="text-invoica-purple">{FEATURED.chain}</span>
                 </h2>
-                <p className="text-lg font-medium text-invoica-blue">{FEATURED.headline}</p>
-                <p className="text-base text-invoica-gray-500 leading-relaxed">{FEATURED.blurb}</p>
+                <p className="text-lg font-medium text-invoica-blue dark:text-gray-200">{FEATURED.headline}</p>
+                <p className="text-base text-invoica-gray-500 dark:text-gray-400 leading-relaxed">{FEATURED.blurb}</p>
                 <div className="grid grid-cols-3 gap-4 pt-2">
                   {FEATURED.highlights.map((h, i) => (
                     <div key={i}>
-                      <div className="text-2xl md:text-3xl font-bold text-invoica-blue tracking-tight">{h.label}</div>
-                      <div className="text-xs text-invoica-gray-500 mt-1">{h.sub}</div>
+                      <div className="text-2xl md:text-3xl font-bold text-invoica-blue dark:text-white tracking-tight">{h.label}</div>
+                      <div className="text-xs text-invoica-gray-500 dark:text-gray-400 mt-1">{h.sub}</div>
                     </div>
                   ))}
                 </div>
@@ -224,13 +224,13 @@ export default function SupportedChainsPage() {
         </section>
 
         {/* ALL CHAINS GRID */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-gray-950">
           <div className="max-w-6xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue tracking-tight mb-3">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white tracking-tight mb-3">
               All supported chains
             </h2>
-            <p className="text-base text-invoica-gray-500 mb-12 max-w-2xl">
-              Every chain below is live in production. Pick a chain by passing its identifier in the <code className="px-1.5 py-0.5 text-sm bg-invoica-gray-100 rounded font-mono text-invoica-blue">chain</code> field on invoice creation.
+            <p className="text-base text-invoica-gray-500 dark:text-gray-400 mb-12 max-w-2xl">
+              Every chain below is live in production. Pick a chain by passing its identifier in the <code className="px-1.5 py-0.5 text-sm bg-invoica-gray-100 dark:bg-gray-800 rounded font-mono text-invoica-blue dark:text-gray-200">chain</code> field on invoice creation.
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               {CHAINS.map(c => (
@@ -241,14 +241,14 @@ export default function SupportedChainsPage() {
         </section>
 
         {/* HOW TO SPECIFY */}
-        <section className="py-20 bg-invoica-gray-50/30">
+        <section className="py-20 bg-invoica-gray-50/30 dark:bg-gray-900">
           <div className="max-w-4xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue tracking-tight mb-3">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white tracking-tight mb-3">
               How to specify a chain
             </h2>
-            <p className="text-base text-invoica-gray-500 mb-8">
-              The <code className="px-1.5 py-0.5 text-sm bg-white border border-invoica-gray-200 rounded font-mono text-invoica-blue">chain</code> field at top level of the invoice body
-              determines which rail handles settlement. The response back fills in <code className="px-1.5 py-0.5 text-sm bg-white border border-invoica-gray-200 rounded font-mono text-invoica-blue">paymentAddress</code> and <code className="px-1.5 py-0.5 text-sm bg-white border border-invoica-gray-200 rounded font-mono text-invoica-blue">usdcAddress</code> so the caller knows where to send funds.
+            <p className="text-base text-invoica-gray-500 dark:text-gray-400 mb-8">
+              The <code className="px-1.5 py-0.5 text-sm bg-white dark:bg-gray-800 border border-invoica-gray-200 dark:border-gray-700 rounded font-mono text-invoica-blue dark:text-gray-200">chain</code> field at top level of the invoice body
+              determines which rail handles settlement. The response back fills in <code className="px-1.5 py-0.5 text-sm bg-white dark:bg-gray-800 border border-invoica-gray-200 dark:border-gray-700 rounded font-mono text-invoica-blue dark:text-gray-200">paymentAddress</code> and <code className="px-1.5 py-0.5 text-sm bg-white dark:bg-gray-800 border border-invoica-gray-200 dark:border-gray-700 rounded font-mono text-invoica-blue dark:text-gray-200">usdcAddress</code> so the caller knows where to send funds.
             </p>
             <pre className="text-sm font-mono text-white bg-invoica-blue rounded-2xl p-6 overflow-x-auto"><code>{`curl -sX POST https://api.invoica.ai/v1/invoices \\
   -H "x-api-key: $INVOICA_KEY" \\
@@ -261,15 +261,15 @@ export default function SupportedChainsPage() {
     "chain": "skale"
   }'`}</code></pre>
             <div className="mt-8 grid md:grid-cols-2 gap-6">
-              <div className="p-5 rounded-xl bg-white border border-invoica-gray-200">
+              <div className="p-5 rounded-xl bg-white dark:bg-gray-800 border border-invoica-gray-200 dark:border-gray-700">
                 <div className="text-xs font-semibold text-invoica-purple uppercase tracking-wider mb-2">Auto-populated</div>
-                <p className="text-sm text-invoica-gray-600 leading-relaxed">
+                <p className="text-sm text-invoica-gray-600 dark:text-gray-300 leading-relaxed">
                   Response includes <code className="text-xs font-mono">paymentDetails.paymentAddress</code> (the Invoica seller wallet on that chain) and <code className="text-xs font-mono">paymentDetails.usdcAddress</code> (the canonical USDC contract). No separate lookup needed.
                 </p>
               </div>
-              <div className="p-5 rounded-xl bg-white border border-invoica-gray-200">
+              <div className="p-5 rounded-xl bg-white dark:bg-gray-800 border border-invoica-gray-200 dark:border-gray-700">
                 <div className="text-xs font-semibold text-invoica-purple uppercase tracking-wider mb-2">Auto-settled</div>
-                <p className="text-sm text-invoica-gray-600 leading-relaxed">
+                <p className="text-sm text-invoica-gray-600 dark:text-gray-300 leading-relaxed">
                   The settlement watcher polls each chain for incoming USDC transfers and flips invoice status to <code className="text-xs font-mono">SETTLED</code> automatically — typical detection in 15-30 seconds. No manual PATCH needed.
                 </p>
               </div>
@@ -278,12 +278,12 @@ export default function SupportedChainsPage() {
         </section>
 
         {/* CTA */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-gray-950">
           <div className="max-w-3xl mx-auto px-6 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue mb-4 tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white mb-4 tracking-tight">
               Want a chain we don&apos;t support yet?
             </h2>
-            <p className="text-base md:text-lg text-invoica-gray-500 mb-10 max-w-xl mx-auto">
+            <p className="text-base md:text-lg text-invoica-gray-500 dark:text-gray-400 mb-10 max-w-xl mx-auto">
               We add chains based on real customer pull. Tell us your use case and we&apos;ll prioritize.
             </p>
             <a

@@ -41,7 +41,7 @@ const painPoints = [
 
 export default function Problem() {
   return (
-    <section className="py-24 bg-[#fafbff] relative overflow-hidden">
+    <section className="py-24 bg-[#fafbff] dark:bg-gray-900 relative overflow-hidden">
       {/* Subtle top divider */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-invoica-purple/20 to-transparent" />
 
@@ -52,14 +52,14 @@ export default function Problem() {
             <span className="mx-4 text-xs font-semibold text-invoica-purple uppercase tracking-widest">The Problem</span>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-invoica-purple" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue mb-6 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue dark:text-white mb-6 tracking-tight">
             AI agents can transact.
             <br />
             <span className="bg-gradient-to-r from-invoica-purple to-invoica-purple-light bg-clip-text text-transparent">
               Nobody tracks them.
             </span>
           </h2>
-          <p className="text-lg text-invoica-gray-500 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-invoica-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
             The x402 protocol unlocked autonomous agent payments — but left a $1T compliance gap.
             Every transaction is on-chain. None of it is invoiced, reconciled, or controlled.
           </p>
@@ -69,14 +69,14 @@ export default function Problem() {
           {painPoints.map((point, i) => (
             <div
               key={point.title}
-              className="relative p-6 rounded-2xl bg-white border border-red-100 hover:border-red-200 shadow-sm hover:shadow-md transition-all duration-300 group"
+              className="relative p-6 rounded-2xl bg-white dark:bg-gray-800 border border-red-100 dark:border-red-900/20 hover:border-red-200 dark:hover:border-red-800/40 shadow-sm hover:shadow-md transition-all duration-300 group"
               style={{ animationDelay: `${i * 80}ms` }}
             >
-              <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-red-50 text-red-400 mb-5 group-hover:bg-red-100 transition-colors duration-300">
+              <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/30 text-red-400 mb-5 group-hover:bg-red-100 dark:group-hover:bg-red-900/30 transition-colors duration-300">
                 {point.icon}
               </div>
-              <h3 className="text-base font-semibold text-invoica-blue mb-2">{point.title}</h3>
-              <p className="text-sm text-invoica-gray-500 leading-relaxed">{point.description}</p>
+              <h3 className="text-base font-semibold text-invoica-blue dark:text-white mb-2">{point.title}</h3>
+              <p className="text-sm text-invoica-gray-500 dark:text-gray-400 leading-relaxed">{point.description}</p>
             </div>
           ))}
         </div>
@@ -85,7 +85,7 @@ export default function Problem() {
         <div className="mt-16 text-center">
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-invoica-purple/5 border border-invoica-purple/15">
             <div className="w-2 h-2 rounded-full bg-invoica-purple animate-pulse" />
-            <span className="text-sm font-medium text-invoica-gray-600">
+            <span className="text-sm font-medium text-invoica-gray-600 dark:text-gray-300">
               Invoica closes the gap — automated invoicing, compliance, and control for every agent payment.
             </span>
           </div>

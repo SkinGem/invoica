@@ -29,16 +29,16 @@ const typeStyles: Record<NotificationType, string> = {
 export default function NotificationsPage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-2">Notifications</h1>
-      <p className="text-gray-600 mb-6">System alerts and notifications</p>
+      <h1 className="text-3xl font-bold mb-2 dark:text-white">Notifications</h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-6">System alerts and notifications</p>
       <div className="space-y-3">
         {notifications.map((n) => (
-          <div key={n.id} className={`p-4 border-l-4 bg-white shadow-sm ${typeStyles[n.type]} ${!n.read ? 'bg-blue-50' : ''}`}>
+          <div key={n.id} className={`p-4 border-l-4 bg-white dark:bg-gray-900 shadow-sm ${typeStyles[n.type]} ${!n.read ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`}>
             <div className="flex justify-between items-start">
-              <h3 className="font-bold">{n.title}</h3>
-              <span className="text-sm text-gray-500">{n.time}</span>
+              <h3 className="font-bold dark:text-white">{n.title}</h3>
+              <span className="text-sm text-gray-500 dark:text-gray-400">{n.time}</span>
             </div>
-            <p className="text-gray-600 mt-1">{n.message}</p>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">{n.message}</p>
           </div>
         ))}
       </div>

@@ -29,7 +29,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-16 bottom-0 w-16 md:w-56 bg-white border-r border-gray-100 z-40 overflow-y-auto">
+    <aside className="fixed left-0 top-16 bottom-0 w-16 md:w-56 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 z-40 overflow-y-auto">
       <nav className="py-4" aria-label="Sidebar navigation">
         <ul className="space-y-0.5 px-2">
           {visibleItems.map((item) => {
@@ -42,7 +42,7 @@ export function Sidebar() {
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                       active
                         ? 'bg-[#635BFF]/[0.08] text-[#635BFF] shadow-sm'
-                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                        : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                     }`}
                     aria-current={active ? 'page' : undefined}
                   >
@@ -52,7 +52,7 @@ export function Sidebar() {
                 </li>
                 {item.dividerAfter && (
                   <li role="separator" aria-hidden="true">
-                    <hr className="my-2 border-gray-100" />
+                    <hr className="my-2 border-gray-100 dark:border-gray-800" />
                   </li>
                 )}
               </Fragment>

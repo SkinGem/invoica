@@ -23,7 +23,7 @@ export function Tabs({ tabs, defaultTabId, className = '' }: TabsProps) {
 
   return (
     <div className={className}>
-      <nav className="flex border-b border-slate-200">
+      <nav className="flex border-b border-slate-200 dark:border-gray-800">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -32,8 +32,8 @@ export function Tabs({ tabs, defaultTabId, className = '' }: TabsProps) {
               px-4 py-2 text-sm font-medium
               ${
                 tab.id === activeTab
-                  ? 'border-b-2 border-sky-500 text-sky-600'
-                  : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
+                  ? 'border-b-2 border-sky-500 text-sky-600 dark:text-sky-400'
+                  : 'border-b-2 border-transparent text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200'
               }
             `}
           >

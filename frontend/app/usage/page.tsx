@@ -23,14 +23,14 @@ function UsageBar({ used, limit, label, color }: { used: number; limit: number; 
   const isNearLimit = pct > 80;
 
   return (
-    <div className="bg-white rounded-xl border shadow-sm p-6">
+    <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 shadow-sm p-6">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm text-gray-900">{label}</h3>
-        <span className={`text-sm font-mono ${isNearLimit ? 'text-red-600 font-bold' : 'text-gray-500'}`}>
+        <h3 className="font-semibold text-sm text-gray-900 dark:text-white">{label}</h3>
+        <span className={`text-sm font-mono ${isNearLimit ? 'text-red-600 font-bold' : 'text-gray-500 dark:text-gray-400'}`}>
           {used.toLocaleString()} / {isUnlimited ? 'Unlimited' : limit.toLocaleString()}
         </span>
       </div>
-      <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+      <div className="w-full h-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
             isNearLimit ? 'bg-red-500' : color
@@ -39,11 +39,11 @@ function UsageBar({ used, limit, label, color }: { used: number; limit: number; 
         />
       </div>
       <div className="flex justify-between mt-2">
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-gray-400 dark:text-gray-500">
           {isUnlimited ? 'Unlimited plan' : `${Math.round(pct)}% used`}
         </span>
         {!isUnlimited && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-gray-500">
             {(limit - used).toLocaleString()} remaining
           </span>
         )}
@@ -97,7 +97,7 @@ export default function UsagePage() {
       <div className="max-w-3xl mx-auto p-6">
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-28 bg-gray-100 rounded-xl animate-pulse" />
+            <div key={i} className="h-28 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
           ))}
         </div>
       </div>
@@ -113,8 +113,8 @@ export default function UsagePage() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Usage</h1>
-        <p className="text-sm text-gray-500 mt-1">Monitor your API usage and plan limits</p>
+        <h1 className="text-3xl font-bold dark:text-white">Usage</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Monitor your API usage and plan limits</p>
       </div>
 
       {/* Current Plan */}
@@ -155,45 +155,45 @@ export default function UsagePage() {
       </div>
 
       {/* Plan Comparison */}
-      <div className="bg-white rounded-xl border shadow-sm p-6">
-        <h3 className="font-semibold mb-4">Plan Limits</h3>
-        <div className="overflow-hidden rounded-lg border">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 shadow-sm p-6">
+        <h3 className="font-semibold mb-4 dark:text-white">Plan Limits</h3>
+        <div className="overflow-hidden rounded-lg border dark:border-gray-800">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Feature</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-500">Free</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-500">Pro</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-500">Enterprise</th>
+              <tr className="bg-gray-50 dark:bg-gray-800">
+                <th className="text-left px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Feature</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Free</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Pro</th>
+                <th className="text-center px-4 py-3 font-medium text-gray-500 dark:text-gray-400">Enterprise</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-t">
-                <td className="px-4 py-3">Invoices / month</td>
-                <td className="px-4 py-3 text-center">100</td>
-                <td className="px-4 py-3 text-center">10,000</td>
-                <td className="px-4 py-3 text-center">Unlimited</td>
+              <tr className="border-t dark:border-gray-800">
+                <td className="px-4 py-3 dark:text-gray-300">Invoices / month</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">100</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">10,000</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">Unlimited</td>
               </tr>
-              <tr className="border-t">
-                <td className="px-4 py-3">API calls / month</td>
-                <td className="px-4 py-3 text-center">1,000</td>
-                <td className="px-4 py-3 text-center">100,000</td>
-                <td className="px-4 py-3 text-center">Unlimited</td>
+              <tr className="border-t dark:border-gray-800">
+                <td className="px-4 py-3 dark:text-gray-300">API calls / month</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">1,000</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">100,000</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">Unlimited</td>
               </tr>
-              <tr className="border-t">
-                <td className="px-4 py-3">Webhooks</td>
-                <td className="px-4 py-3 text-center">3</td>
-                <td className="px-4 py-3 text-center">Unlimited</td>
-                <td className="px-4 py-3 text-center">Unlimited</td>
+              <tr className="border-t dark:border-gray-800">
+                <td className="px-4 py-3 dark:text-gray-300">Webhooks</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">3</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">Unlimited</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">Unlimited</td>
               </tr>
-              <tr className="border-t">
-                <td className="px-4 py-3">Support</td>
-                <td className="px-4 py-3 text-center">Community</td>
-                <td className="px-4 py-3 text-center">Priority</td>
-                <td className="px-4 py-3 text-center">Dedicated</td>
+              <tr className="border-t dark:border-gray-800">
+                <td className="px-4 py-3 dark:text-gray-300">Support</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">Community</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">Priority</td>
+                <td className="px-4 py-3 text-center dark:text-gray-300">Dedicated</td>
               </tr>
-              <tr className="border-t">
-                <td className="px-4 py-3">Price</td>
+              <tr className="border-t dark:border-gray-800">
+                <td className="px-4 py-3 dark:text-gray-300">Price</td>
                 <td className="px-4 py-3 text-center font-medium">$0</td>
                 <td className="px-4 py-3 text-center font-medium">$49/mo</td>
                 <td className="px-4 py-3 text-center font-medium">Custom</td>

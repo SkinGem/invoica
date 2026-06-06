@@ -129,8 +129,8 @@ export default function WebhooksPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Webhooks</h1>
-          <p className="text-sm text-gray-500 mt-1">Receive real-time event notifications at your endpoints</p>
+          <h1 className="text-3xl font-bold dark:text-white">Webhooks</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Receive real-time event notifications at your endpoints</p>
         </div>
         <button
           onClick={() => { setShowModal(true); setFormError(''); setNewSecret(null); }}
@@ -145,19 +145,19 @@ export default function WebhooksPage() {
 
       {/* New secret banner */}
       {newSecret && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-xl">
           <div className="flex items-start gap-3">
             <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-amber-800 mb-1">Save your webhook secret — it won&apos;t be shown again</p>
-              <code className="text-xs font-mono bg-white border border-amber-200 px-3 py-1.5 rounded-lg block break-all text-amber-900">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">Save your webhook secret — it won&apos;t be shown again</p>
+              <code className="text-xs font-mono bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800/30 px-3 py-1.5 rounded-lg block break-all text-amber-900 dark:text-amber-200">
                 {newSecret}
               </code>
-              <p className="text-xs text-amber-700 mt-2">Use this to verify webhook signatures from Invoica.</p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-2">Use this to verify webhook signatures from Invoica.</p>
             </div>
-            <button onClick={() => setNewSecret(null)} className="text-amber-500 hover:text-amber-700">
+            <button onClick={() => setNewSecret(null)} className="text-amber-500 dark:text-amber-400 hover:text-amber-700">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -169,17 +169,17 @@ export default function WebhooksPage() {
       {/* Webhook list */}
       {loading ? (
         <div className="space-y-3">
-          {[1, 2].map((i) => <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />)}
+          {[1, 2].map((i) => <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />)}
         </div>
       ) : webhooks.length === 0 ? (
-        <div className="bg-white rounded-xl border shadow-sm p-12 text-center">
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 shadow-sm p-12 text-center">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
             </svg>
           </div>
-          <p className="text-gray-600 font-medium mb-1">No webhooks yet</p>
-          <p className="text-sm text-gray-400 mb-6">Add an endpoint to start receiving event notifications</p>
+          <p className="text-gray-600 dark:text-gray-300 font-medium mb-1">No webhooks yet</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">Add an endpoint to start receiving event notifications</p>
           <button
             onClick={() => setShowModal(true)}
             className="px-5 py-2.5 bg-gradient-to-r from-[#635BFF] to-[#818CF8] text-white rounded-lg text-sm font-semibold hover:shadow-lg transition-all"
@@ -190,17 +190,17 @@ export default function WebhooksPage() {
       ) : (
         <div className="space-y-3">
           {webhooks.map((webhook) => (
-            <div key={webhook.id} className="bg-white rounded-xl border shadow-sm p-5">
+            <div key={webhook.id} className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 shadow-sm p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                      webhook.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                      webhook.status === 'active' ? 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
                     }`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${webhook.status === 'active' ? 'bg-green-500' : 'bg-gray-400'}`} />
                       {webhook.status === 'active' ? 'Active' : 'Inactive'}
                     </span>
-                    <code className="text-sm text-gray-800 font-mono truncate max-w-sm">{webhook.url}</code>
+                    <code className="text-sm text-gray-800 dark:text-gray-200 font-mono truncate max-w-sm">{webhook.url}</code>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {webhook.events.map((ev) => (
@@ -209,7 +209,7 @@ export default function WebhooksPage() {
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                     Added {new Date(webhook.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                   </p>
                 </div>
@@ -217,7 +217,7 @@ export default function WebhooksPage() {
                   <button
                     onClick={() => handleToggle(webhook)}
                     disabled={toggling === webhook.id}
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 border-gray-200 text-gray-600 hover:bg-gray-50"
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                   >
                     {toggling === webhook.id ? '...' : webhook.status === 'active' ? 'Disable' : 'Enable'}
                   </button>
@@ -238,10 +238,10 @@ export default function WebhooksPage() {
       {/* Add webhook modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-lg font-semibold">Add Webhook</h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b dark:border-gray-800">
+              <h2 className="text-lg font-semibold dark:text-white">Add Webhook</h2>
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -250,7 +250,7 @@ export default function WebhooksPage() {
 
             <form onSubmit={handleAdd} className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   Endpoint URL <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -258,14 +258,14 @@ export default function WebhooksPage() {
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="https://your-server.com/webhooks/invoica"
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-[#635BFF] focus:border-transparent outline-none"
+                  className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 rounded-lg text-sm font-mono focus:ring-2 focus:ring-[#635BFF] focus:border-transparent outline-none"
                   required
                 />
-                <p className="text-xs text-gray-400 mt-1">Must be HTTPS. Invoica will POST JSON events to this URL.</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Must be HTTPS. Invoica will POST JSON events to this URL.</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   Events to subscribe <span className="text-red-500">*</span>
                 </label>
                 <div className="space-y-2">
@@ -274,8 +274,8 @@ export default function WebhooksPage() {
                       key={event.value}
                       className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                         selectedEvents.includes(event.value)
-                          ? 'border-[#635BFF]/40 bg-[#635BFF]/5'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          ? 'border-[#635BFF]/40 bg-[#635BFF]/5 dark:bg-[#635BFF]/10'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
                       }`}
                     >
                       <input
@@ -285,8 +285,8 @@ export default function WebhooksPage() {
                         className="mt-0.5 accent-[#635BFF]"
                       />
                       <div>
-                        <p className="text-sm font-medium text-gray-800">{event.label}</p>
-                        <p className="text-xs text-gray-500">{event.desc}</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-white">{event.label}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{event.desc}</p>
                         <code className="text-xs text-[#635BFF] font-mono">{event.value}</code>
                       </div>
                     </label>
@@ -295,7 +295,7 @@ export default function WebhooksPage() {
               </div>
 
               {formError && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{formError}</p>
+                <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30 rounded-lg px-3 py-2">{formError}</p>
               )}
 
               <div className="flex gap-3 pt-2">
@@ -309,7 +309,7 @@ export default function WebhooksPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                  className="px-5 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   Cancel
                 </button>

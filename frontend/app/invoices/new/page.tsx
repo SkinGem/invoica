@@ -31,27 +31,27 @@ export default function NewInvoicePage() {
 
   return (
     <div className='p-8'>
-      <div className='bg-white rounded shadow p-6'>
-        <h1 className='text-xl font-bold mb-4'>New Invoice</h1>
-        {error && <div className='text-red-500 mb-4'>{error}</div>}
+      <div className='bg-white dark:bg-gray-900 rounded shadow p-6'>
+        <h1 className='text-xl font-bold mb-4 dark:text-white'>New Invoice</h1>
+        {error && <div className='text-red-500 dark:text-red-400 mb-4'>{error}</div>}
         <form onSubmit={handleSubmit} role='form'>
           <div className='mb-4'>
-            <label className='block mb-1'>Amount</label>
+            <label className='block mb-1 dark:text-gray-300'>Amount</label>
             <input
               type='number'
               step='0.01'
               value={formData.amount}
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className='w-full border p-2 rounded'
+              className='w-full border dark:border-gray-700 dark:bg-gray-800 dark:text-white p-2 rounded'
               required
             />
           </div>
           <div className='mb-4'>
-            <label className='block mb-1'>Currency</label>
+            <label className='block mb-1 dark:text-gray-300'>Currency</label>
             <select
               value={formData.currency}
               onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-              className='w-full border p-2 rounded'
+              className='w-full border dark:border-gray-700 dark:bg-gray-800 dark:text-white p-2 rounded'
             >
               <option value='USD'>USD</option>
               <option value='EUR'>EUR</option>
@@ -59,22 +59,22 @@ export default function NewInvoicePage() {
             </select>
           </div>
           <div className='mb-4'>
-            <label className='block mb-1'>Customer Email</label>
+            <label className='block mb-1 dark:text-gray-300'>Customer Email</label>
             <input
               type='email'
               value={formData.customerEmail}
               onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-              className='w-full border p-2 rounded'
+              className='w-full border dark:border-gray-700 dark:bg-gray-800 dark:text-white p-2 rounded'
               required
             />
           </div>
           <div className='mb-4'>
-            <label className='block mb-1'>Customer Name</label>
+            <label className='block mb-1 dark:text-gray-300'>Customer Name</label>
             <input
               type='text'
               value={formData.customerName}
               onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-              className='w-full border p-2 rounded'
+              className='w-full border dark:border-gray-700 dark:bg-gray-800 dark:text-white p-2 rounded'
               required
             />
           </div>

@@ -9,24 +9,24 @@ export default function LogsPage() {
   ];
 
   const getMethodColor = (method: string) => {
-    if (method === 'GET') return 'bg-green-100 text-green-800';
-    if (method === 'POST') return 'bg-blue-100 text-blue-800';
-    return 'bg-red-100 text-red-800';
+    if (method === 'GET') return 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400';
+    if (method === 'POST') return 'bg-blue-100 dark:bg-blue-950/30 text-blue-800 dark:text-blue-400';
+    return 'bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400';
   };
 
   const getStatusColor = (status: number) => {
-    if (status >= 200 && status < 300) return 'text-green-600';
-    if (status >= 400 && status < 500) return 'text-yellow-600';
-    return 'text-red-600';
+    if (status >= 200 && status < 300) return 'text-green-600 dark:text-green-400';
+    if (status >= 400 && status < 500) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
   };
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-2">API Logs</h1>
-      <p className="text-gray-500 mb-6">Recent API requests and responses</p>
+      <h1 className="text-2xl font-bold mb-2 dark:text-white">API Logs</h1>
+      <p className="text-gray-500 dark:text-gray-400 mb-6">Recent API requests and responses</p>
       <table className="w-full">
         <thead>
-          <tr className="border-b text-left text-sm text-gray-500">
+          <tr className="border-b dark:border-gray-800 text-left text-sm text-gray-500 dark:text-gray-400">
             <th className="pb-3 font-medium">Method</th>
             <th className="pb-3 font-medium">Path</th>
             <th className="pb-3 font-medium">Status</th>
@@ -36,12 +36,12 @@ export default function LogsPage() {
         </thead>
         <tbody>
           {logs.map((log) => (
-            <tr key={log.id} className="border-b">
+            <tr key={log.id} className="border-b dark:border-gray-800">
               <td className="py-3"><span className={`px-2 py-1 rounded text-xs font-medium ${getMethodColor(log.method)}`}>{log.method}</span></td>
-              <td className="py-3 font-mono text-sm">{log.path}</td>
+              <td className="py-3 font-mono text-sm dark:text-gray-300">{log.path}</td>
               <td className={`py-3 font-medium ${getStatusColor(log.status)}`}>{log.status}</td>
-              <td className="py-3 text-gray-500">{log.duration}</td>
-              <td className="py-3 text-gray-500">{log.timestamp}</td>
+              <td className="py-3 text-gray-500 dark:text-gray-400">{log.duration}</td>
+              <td className="py-3 text-gray-500 dark:text-gray-400">{log.timestamp}</td>
             </tr>
           ))}
         </tbody>

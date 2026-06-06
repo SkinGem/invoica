@@ -10,13 +10,13 @@ export default function DocumentationPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-2">Documentation</h1>
+      <h1 className="text-3xl font-bold mb-2 dark:text-white">Documentation</h1>
       <p className="text-muted-foreground mb-8">API reference and developer guides</p>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {sections.map((section) => (
-          <a key={section.id} href={section.href} className="block p-6 border rounded-lg hover:shadow-md transition-shadow">
+          <a key={section.id} href={section.href} className="block p-6 border dark:border-gray-800 rounded-lg hover:shadow-md dark:hover:bg-gray-800/30 transition-all dark:bg-gray-900">
             <div className="text-3xl mb-3">{section.icon}</div>
-            <h2 className="text-lg font-semibold mb-2">{section.title}</h2>
+            <h2 className="text-lg font-semibold mb-2 dark:text-white">{section.title}</h2>
             <p className="text-sm text-muted-foreground">{section.description}</p>
           </a>
         ))}

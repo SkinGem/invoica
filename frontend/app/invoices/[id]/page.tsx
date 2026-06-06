@@ -17,7 +17,7 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
       .then((data) => {
         setInvoice(data);
         setLoading(false);
-        
+
         // Fetch Helixa reputation score for the payer agent
         fetch(`/v1/reputation/${data.payerAgentId}`)
           .then((res) => res.ok ? res.json() : Promise.reject())
@@ -44,8 +44,8 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
   if (!invoice) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <p className="mb-4 text-gray-600">Invoice not found</p>
-        <Link href="/invoices" className="text-blue-600 hover:underline">
+        <p className="mb-4 text-gray-600 dark:text-gray-400">Invoice not found</p>
+        <Link href="/invoices" className="text-blue-600 dark:text-blue-400 hover:underline">
           Back to Invoices
         </Link>
       </div>
@@ -54,7 +54,7 @@ export default function InvoiceDetailPage({ params }: { params: { id: string } }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <Link href="/invoices" className="text-blue-600 hover:underline mb-6 block">
+      <Link href="/invoices" className="text-blue-600 dark:text-blue-400 hover:underline mb-6 block">
         ← Back to Invoices
       </Link>
       <InvoiceDetail invoice={invoice} />

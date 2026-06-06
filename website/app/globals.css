@@ -21,3 +21,8 @@ code, pre {
   background-color: rgba(99, 91, 255, 0.15);
   color: #0A2540;
 }
+
+.dark ::selection {
+  background-color: rgba(99, 91, 255, 0.25);
+  color: #fff;
+}

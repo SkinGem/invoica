@@ -30,9 +30,9 @@ export default function ApiExplorer() {
 
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-4">
-      <h1 className="text-xl font-bold">API Explorer</h1>
+      <h1 className="text-xl font-bold dark:text-white">API Explorer</h1>
       <select
-        className="w-full p-2 border rounded"
+        className="w-full p-2 border dark:border-gray-700 rounded bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200"
         value={selected}
         onChange={(e) => setSelected(Number(e.target.value))}
       >
@@ -43,11 +43,11 @@ export default function ApiExplorer() {
       <div className="space-y-2">
         <div>
           <p className="font-semibold text-sm">Request Body</p>
-          <pre className="bg-slate-100 p-2 rounded text-xs overflow-auto">{ep.body ? JSON.stringify(ep.body, null, 2) : "—"}</pre>
+          <pre className="bg-slate-100 dark:bg-gray-800 text-gray-900 dark:text-gray-200 p-2 rounded text-xs overflow-auto">{ep.body ? JSON.stringify(ep.body, null, 2) : "—"}</pre>
         </div>
         <div>
-          <p className="font-semibold text-sm">Sample Response</p>
-          <pre className="bg-slate-100 p-2 rounded text-xs overflow-auto">{JSON.stringify(ep.response, null, 2)}</pre>
+          <p className="font-semibold text-sm dark:text-gray-200">Sample Response</p>
+          <pre className="bg-slate-100 dark:bg-gray-800 text-gray-900 dark:text-gray-200 p-2 rounded text-xs overflow-auto">{JSON.stringify(ep.response, null, 2)}</pre>
         </div>
       </div>
       <button className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800" onClick={() => alert("Connect your API key in Settings to try live requests")}>Try It</button>

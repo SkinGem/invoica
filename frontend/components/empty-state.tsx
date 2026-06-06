@@ -4,11 +4,14 @@ import React from 'react';
 
 export function EmptyState({ title, description, message, actionLabel, onAction }: { title?: string; description?: string; message?: string; actionLabel?: string; onAction?: () => void }) {
   return (
-    <div style={{ textAlign: 'center', padding: '48px 24px', backgroundColor: '#f9fafb', borderRadius: 12, border: '1px dashed #d1d5db' }}>
-      <h3 style={{ fontSize: 18, fontWeight: 600, color: "#111827", marginBottom: 8 }}>{title || message || "No data"}</h3>
-      {description && <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 20 }}>{description}</p>}
+    <div className="text-center px-6 py-12 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{title || message || "No data"}</h3>
+      {description && <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">{description}</p>}
       {actionLabel && onAction && (
-        <button style={{ padding: '8px 20px', backgroundColor: '#0ea5e9', color: 'white', border: 'none', borderRadius: 6, fontSize: 14, cursor: 'pointer', fontWeight: 500 }} onClick={onAction}>
+        <button
+          onClick={onAction}
+          className="px-5 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-md text-sm font-medium transition-colors"
+        >
           {actionLabel}
         </button>
       )}

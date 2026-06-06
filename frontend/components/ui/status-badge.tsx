@@ -1,31 +1,29 @@
 import React from "react";
 
-type Status = "completed" | "pending" | "failed" | "processing" | "settled" | "paid" | "overdue" | "cancelled";
-
 interface StatusBadgeProps {
   status: string;
   className?: string;
 }
 
-const statusStyles: Record<string, { bg: string; text: string }> = {
-  completed: { bg: "bg-green-100", text: "text-green-800" },
-  settled: { bg: "bg-green-100", text: "text-green-800" },
-  paid: { bg: "bg-green-100", text: "text-green-800" },
-  pending: { bg: "bg-yellow-100", text: "text-yellow-800" },
-  processing: { bg: "bg-blue-100", text: "text-blue-800" },
-  failed: { bg: "bg-red-100", text: "text-red-800" },
-  overdue: { bg: "bg-red-100", text: "text-red-800" },
-  cancelled: { bg: "bg-gray-100", text: "text-gray-800" },
+const statusStyles: Record<string, string> = {
+  completed: "bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400",
+  settled: "bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400",
+  paid: "bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400",
+  pending: "bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-400",
+  processing: "bg-blue-100 dark:bg-blue-950/30 text-blue-800 dark:text-blue-400",
+  failed: "bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400",
+  overdue: "bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400",
+  cancelled: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400",
 };
 
-const defaultStyle = { bg: "bg-gray-100", text: "text-gray-800" };
+const defaultStyle = "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400";
 
 export function StatusBadge({ status, className = "" }: StatusBadgeProps) {
   const styles = statusStyles[status.toLowerCase()] || defaultStyle;
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-medium ${styles.bg} ${styles.text} ${className}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-medium ${styles} ${className}`}
     >
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>

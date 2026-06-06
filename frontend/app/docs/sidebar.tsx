@@ -50,14 +50,14 @@ const navigation: NavGroup[] = [
 
 export default function DocsSidebar() {
   return (
-    <nav className="w-64 border-r border-gray-200 py-6 px-4">
+    <nav className="w-64 min-w-[16rem] border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 py-6 px-4">
       {navigation.map((group) => (
         <div key={group.title} className="mb-6">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">{group.title}</h3>
+          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">{group.title}</h3>
           <ul className="space-y-1">
             {group.items.map((item) => (
               <li key={item.href}>
-                <a href={item.href} className="block px-3 py-1.5 text-sm text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors">
+                <a href={item.href} className="block px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-800 rounded-md transition-colors">
                   {item.label}
                 </a>
               </li>

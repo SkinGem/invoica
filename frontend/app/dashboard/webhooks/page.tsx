@@ -20,20 +20,20 @@ export default function DashboardWebhooksPage() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Webhooks</h1>
+        <h1 className="text-2xl font-bold dark:text-white">Webhooks</h1>
         <button className="bg-blue-600 text-white px-4 py-2 rounded-lg">+ Add Endpoint</button>
       </div>
       <div>
         {webhooks.map((wh) => (
-          <div key={wh.id} className="bg-white rounded-lg shadow p-6 mb-4">
+          <div key={wh.id} className="bg-white dark:bg-gray-900 rounded-lg shadow p-6 mb-4">
             <div className="flex justify-between">
               <div>
-                <h3 className="text-sm font-mono">{wh.url}</h3>
-                <p className="text-xs text-gray-500 mt-1">{wh.events}</p>
+                <h3 className="text-sm font-mono dark:text-gray-300">{wh.url}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{wh.events}</p>
               </div>
-              <span className={`px-2 py-1 rounded text-xs ${wh.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{wh.status}</span>
+              <span className={`px-2 py-1 rounded text-xs ${wh.status === 'Active' ? 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400' : 'bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-400'}`}>{wh.status}</span>
             </div>
-            <p className="text-xs text-gray-400 mt-2">Last delivery: {wh.lastDelivery}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">Last delivery: {wh.lastDelivery}</p>
           </div>
         ))}
       </div>

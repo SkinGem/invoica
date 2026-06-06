@@ -45,7 +45,7 @@ const betaColumns = [
 
 export default function Pricing() {
   return (
-    <section id="pricing" className="py-28 bg-invoica-gray-50 relative">
+    <section id="pricing" className="py-28 bg-invoica-gray-50 dark:bg-gray-900 relative">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-20">
@@ -54,10 +54,10 @@ export default function Pricing() {
             <span className="mx-4 text-xs font-semibold text-invoica-purple uppercase tracking-widest">Beta Program</span>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-invoica-purple" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue mb-6 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue dark:text-white mb-6 tracking-tight">
             Free During Beta
           </h2>
-          <p className="text-lg text-invoica-gray-500 max-w-2xl mx-auto">
+          <p className="text-lg text-invoica-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             No credit card. No commitment. Everything is free while we&apos;re in beta —
             except AI inference, which is pay-per-use on-chain.
           </p>
@@ -68,21 +68,21 @@ export default function Pricing() {
           {betaColumns.map((col) => (
             <div
               key={col.title}
-              className="relative rounded-2xl p-8 bg-white shadow-sm border border-invoica-gray-200 hover:shadow-lg hover:border-invoica-gray-300 transition-all duration-300"
+              className="relative rounded-2xl p-8 bg-white dark:bg-gray-800 shadow-sm border border-invoica-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-invoica-gray-300 dark:hover:border-gray-600 transition-all duration-300"
             >
               {/* Gradient accent bar */}
               <div className={`h-1 w-12 rounded-full bg-gradient-to-r ${col.gradient} mb-6`} />
 
-              <h3 className="text-lg font-semibold text-invoica-blue mb-4">{col.title}</h3>
+              <h3 className="text-lg font-semibold text-invoica-blue dark:text-white mb-4">{col.title}</h3>
 
               <div className="flex items-baseline gap-1.5 mb-6">
-                <span className="text-4xl font-bold text-invoica-blue tracking-tight">{col.price}</span>
-                <span className="text-invoica-gray-400 text-sm">{col.priceDetail}</span>
+                <span className="text-4xl font-bold text-invoica-blue dark:text-white tracking-tight">{col.price}</span>
+                <span className="text-invoica-gray-400 dark:text-gray-500 text-sm">{col.priceDetail}</span>
               </div>
 
               <ul className="space-y-3">
                 {col.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3 text-sm text-invoica-gray-600">
+                  <li key={feature} className="flex items-start gap-3 text-sm text-invoica-gray-600 dark:text-gray-300">
                     <svg className="w-4 h-4 text-invoica-purple flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
@@ -103,7 +103,7 @@ export default function Pricing() {
             Get API Keys — Free Beta
             <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
           </a>
-          <p className="text-sm text-invoica-gray-400 mt-4">
+          <p className="text-sm text-invoica-gray-400 dark:text-gray-500 mt-4">
             Sign up with email or Google / GitHub OAuth.{' '}
             <a href="https://invoica.mintlify.app" className="text-invoica-purple hover:underline">Read the docs →</a>
           </p>

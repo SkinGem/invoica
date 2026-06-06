@@ -25,7 +25,7 @@ export function UserMenu() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors"
       >
         <div className="w-8 h-8 rounded-full bg-[#635BFF] flex items-center justify-center text-white text-sm font-semibold">
           {user.user_metadata?.avatar_url ? (
@@ -34,17 +34,17 @@ export function UserMenu() {
             initials
           )}
         </div>
-        <span className="text-sm text-slate-700 hidden md:inline">{displayName}</span>
+        <span className="text-sm text-slate-700 dark:text-gray-300 hidden md:inline">{displayName}</span>
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
-          <div className="px-4 py-3 border-b border-slate-100">
-            <p className="text-sm font-medium text-slate-900">{displayName}</p>
-            <p className="text-xs text-slate-500">{user.email}</p>
+        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-slate-200 dark:border-gray-700 py-1 z-50">
+          <div className="px-4 py-3 border-b border-slate-100 dark:border-gray-800">
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{displayName}</p>
+            <p className="text-xs text-slate-500 dark:text-gray-400">{user.email}</p>
           </div>
           <button
             onClick={() => { setOpen(false); signOut(); }}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
           >
             Sign out
           </button>

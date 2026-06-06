@@ -1,38 +1,40 @@
 'use client';
 
 import Image from 'next/image';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function Navbar() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100/50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 dark:bg-gray-950/80 backdrop-blur-xl border-b border-gray-100/50 dark:border-white/10">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-10">
           <a href="/" className="flex items-center">
             <Image src="/logo.png" alt="Invoica" width={432} height={115} className="h-[67px] w-auto" priority />
           </a>
           <div className="hidden md:flex items-center gap-8">
-            <a href="https://invoica.mintlify.app" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
+            <a href="https://invoica.mintlify.app" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue dark:text-gray-400 dark:hover:text-white transition-colors duration-200">
               Docs
             </a>
-            <a href="/clinpay" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
+            <a href="/clinpay" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue dark:text-gray-400 dark:hover:text-white transition-colors duration-200">
               ClinPay
             </a>
-            <a href="/supported-chains" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
+            <a href="/supported-chains" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue dark:text-gray-400 dark:hover:text-white transition-colors duration-200">
               Chains
             </a>
-            <a href="/swarm" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
+            <a href="/swarm" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue dark:text-gray-400 dark:hover:text-white transition-colors duration-200">
               Swarm
             </a>
-            <a href="#features" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
+            <a href="#features" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue dark:text-gray-400 dark:hover:text-white transition-colors duration-200">
               Features
             </a>
-            <a href="https://github.com/SkinGem/invoica" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
+            <a href="https://github.com/SkinGem/invoica" className="text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue dark:text-gray-400 dark:hover:text-white transition-colors duration-200">
               GitHub
             </a>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <a href="https://app.invoica.ai" className="hidden sm:inline text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue transition-colors duration-200">
+          <ThemeToggle />
+          <a href="https://app.invoica.ai" className="hidden sm:inline text-sm font-medium text-invoica-gray-500 hover:text-invoica-blue dark:text-gray-400 dark:hover:text-white transition-colors duration-200">
             Dashboard
           </a>
           <a

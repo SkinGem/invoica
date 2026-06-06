@@ -73,25 +73,25 @@ export function ConfirmDialog({
       aria-describedby="confirm-dialog-message"
     >
       <div
-        className="mt-[20vh] w-full max-w-md rounded-xl bg-white p-6 shadow-lg animate-in fade-in zoom-in-95 duration-200"
+        className="mt-[20vh] w-full max-w-md rounded-xl bg-white dark:bg-gray-900 p-6 shadow-lg animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <h3
           id="confirm-dialog-title"
-          className="mb-2 text-lg font-semibold text-slate-900"
+          className="mb-2 text-lg font-semibold text-slate-900 dark:text-white"
         >
           {title}
         </h3>
         <p
           id="confirm-dialog-message"
-          className="mb-6 text-sm text-slate-600"
+          className="mb-6 text-sm text-slate-600 dark:text-gray-400"
         >
           {message}
         </p>
         <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
           <button
             onClick={onClose}
-            className="inline-flex h-10 w-full items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
+            className="inline-flex h-10 w-full items-center justify-center rounded-md border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-gray-300 transition-colors hover:bg-slate-100 dark:hover:bg-gray-700 hover:text-slate-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
           >
             {cancelLabel}
           </button>

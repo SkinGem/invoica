@@ -99,7 +99,7 @@ const features: FeatureItem[] = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-28 bg-white relative">
+    <section id="features" className="py-28 bg-white dark:bg-gray-950 relative">
       {/* Subtle grid background */}
       <div className="absolute inset-0 opacity-[0.02]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, #0A2540 1px, transparent 0)',
@@ -113,10 +113,10 @@ export default function Features() {
             <span className="mx-4 text-xs font-semibold text-invoica-purple uppercase tracking-widest">Features</span>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-invoica-purple" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue mb-6 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue dark:text-white mb-6 tracking-tight">
             Everything your agents need
           </h2>
-          <p className="text-lg text-invoica-gray-500 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-invoica-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
             Financial infrastructure that works as autonomously as your AI agents.
             No manual intervention required.
           </p>
@@ -126,7 +126,7 @@ export default function Features() {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="group relative p-8 rounded-2xl border border-invoica-gray-100 hover:border-invoica-purple/20 bg-white hover:bg-gradient-to-b hover:from-white hover:to-invoica-purple/[0.02] transition-all duration-500 hover:shadow-xl hover:shadow-invoica-purple/5 hover:-translate-y-1"
+              className="group relative p-8 rounded-2xl border border-invoica-gray-100 dark:border-gray-800 hover:border-invoica-purple/20 bg-white dark:bg-gray-900 hover:bg-gradient-to-b hover:from-white hover:to-invoica-purple/[0.02] dark:hover:from-gray-900 dark:hover:to-invoica-purple/[0.05] transition-all duration-500 hover:shadow-xl hover:shadow-invoica-purple/5 hover:-translate-y-1"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Icon with per-feature color gradient */}
@@ -134,8 +134,8 @@ export default function Features() {
                 {feature.icon}
               </div>
 
-              <h3 className="text-lg font-semibold text-invoica-blue mb-3">{feature.title}</h3>
-              <p className="text-sm text-invoica-gray-500 leading-relaxed">{feature.description}</p>
+              <h3 className="text-lg font-semibold text-invoica-blue dark:text-white mb-3">{feature.title}</h3>
+              <p className="text-sm text-invoica-gray-500 dark:text-gray-400 leading-relaxed">{feature.description}</p>
             </div>
           ))}
         </div>

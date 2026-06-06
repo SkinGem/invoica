@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 export default function PactDemo() {
   return (
-    <section id="pact" className="py-28 bg-white relative">
+    <section id="pact" className="py-28 bg-white dark:bg-gray-950 relative">
       <div className="max-w-7xl mx-auto px-6">
         {/* Badge */}
         <div className="flex justify-center mb-8">
@@ -12,19 +12,19 @@ export default function PactDemo() {
         </div>
 
         {/* Heading */}
-        <h2 className="text-invoica-blue text-4xl md:text-5xl font-bold tracking-tight text-center mb-6 max-w-3xl mx-auto">
+        <h2 className="text-invoica-blue dark:text-white text-4xl md:text-5xl font-bold tracking-tight text-center mb-6 max-w-3xl mx-auto">
           Trust the spend, not just the agent
         </h2>
 
         {/* Subtext */}
-        <p className="text-invoica-gray-700 text-lg text-center mb-12 max-w-2xl mx-auto">
+        <p className="text-invoica-gray-700 dark:text-gray-300 text-lg text-center mb-12 max-w-2xl mx-auto">
           Every Invoica payment can be gated by a PACT mandate &mdash; cryptographic
           authorization with hard spend caps, expiry, and an audit trail back to
           the human principal. Watch the 40-second walkthrough.
         </p>
 
         {/* Video */}
-        <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl ring-1 ring-invoica-blue/10 bg-black">
+        <div className="max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-2xl ring-1 ring-invoica-blue/10 dark:ring-white/10 bg-black">
           <video
             controls
             playsInline

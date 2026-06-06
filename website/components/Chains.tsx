@@ -66,7 +66,7 @@ const chains = [
 
 export default function Chains() {
   return (
-    <section id="chains" className="py-28 bg-[#fafafa] relative overflow-hidden">
+    <section id="chains" className="py-28 bg-[#fafafa] dark:bg-gray-900 relative overflow-hidden">
       {/* Subtle grid background */}
       <div className="absolute inset-0 opacity-[0.025]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, #0A2540 1px, transparent 0)',
@@ -81,10 +81,10 @@ export default function Chains() {
             <span className="mx-4 text-xs font-semibold text-invoica-purple uppercase tracking-widest">Multi-Chain</span>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-invoica-purple" />
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue mb-4 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue dark:text-white mb-4 tracking-tight">
             Pay and settle across every major network
           </h2>
-          <p className="text-lg text-invoica-gray-500 max-w-xl mx-auto leading-relaxed">
+          <p className="text-lg text-invoica-gray-500 dark:text-gray-400 max-w-xl mx-auto leading-relaxed">
             One API. Four chains. USDC everywhere.
           </p>
         </div>
@@ -94,15 +94,15 @@ export default function Chains() {
           {chains.map((chain) => (
             <div
               key={chain.id}
-              className="group relative bg-white rounded-2xl border border-invoica-gray-100 hover:border-invoica-purple/20 hover:shadow-xl hover:shadow-invoica-purple/5 transition-all duration-300 hover:-translate-y-1 overflow-hidden p-6"
+              className="group relative bg-white dark:bg-gray-800 rounded-2xl border border-invoica-gray-100 dark:border-gray-700 hover:border-invoica-purple/20 hover:shadow-xl hover:shadow-invoica-purple/5 transition-all duration-300 hover:-translate-y-1 overflow-hidden p-6"
             >
               {/* Chain logo */}
               <div className="mb-4">{chain.icon}</div>
 
               {/* Name + status */}
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold text-invoica-blue">{chain.name}</h3>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 border border-green-200 text-green-700 text-xs font-semibold">
+                <h3 className="text-lg font-bold text-invoica-blue dark:text-white">{chain.name}</h3>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800/30 text-green-700 dark:text-green-400 text-xs font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                   {chain.status}
                 </span>
@@ -111,16 +111,16 @@ export default function Chains() {
               {/* Details */}
               <dl className="space-y-1.5 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-invoica-gray-400">Token</dt>
-                  <dd className="font-medium text-invoica-blue">{chain.token}</dd>
+                  <dt className="text-invoica-gray-400 dark:text-gray-500">Token</dt>
+                  <dd className="font-medium text-invoica-blue dark:text-gray-200">{chain.token}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-invoica-gray-400">Settlement</dt>
-                  <dd className="font-medium text-invoica-blue">{chain.speed}</dd>
+                  <dt className="text-invoica-gray-400 dark:text-gray-500">Settlement</dt>
+                  <dd className="font-medium text-invoica-blue dark:text-gray-200">{chain.speed}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-invoica-gray-400">Network</dt>
-                  <dd className="font-medium text-invoica-blue">Mainnet</dd>
+                  <dt className="text-invoica-gray-400 dark:text-gray-500">Network</dt>
+                  <dd className="font-medium text-invoica-blue dark:text-gray-200">Mainnet</dd>
                 </div>
               </dl>
 
@@ -138,7 +138,7 @@ export default function Chains() {
         </div>
 
         {/* CTA */}
-        <p className="text-center text-sm text-invoica-gray-400">
+        <p className="text-center text-sm text-invoica-gray-400 dark:text-gray-500">
           More chains on request —{' '}
           <a href="mailto:team@invoica.ai" className="text-invoica-purple hover:underline font-medium">
             contact us

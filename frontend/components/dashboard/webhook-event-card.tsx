@@ -38,12 +38,12 @@ export default function WebhookEventCard({
   status,
 }: WebhookEventCardProps) {
   return (
-    <div className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className="border dark:border-gray-800 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow bg-white dark:bg-gray-900">
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="font-bold text-gray-900">{eventType}</h3>
-          <p className="font-mono text-sm text-gray-500 mt-1">{eventId}</p>
-          <p className="text-sm text-gray-400 mt-2">{formatRelativeTime(timestamp)}</p>
+          <h3 className="font-bold text-gray-900 dark:text-white">{eventType}</h3>
+          <p className="font-mono text-sm text-gray-500 dark:text-gray-400 mt-1">{eventId}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">{formatRelativeTime(timestamp)}</p>
         </div>
         <div
           role="presentation"

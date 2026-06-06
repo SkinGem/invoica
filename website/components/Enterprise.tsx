@@ -41,7 +41,7 @@ const enterpriseFeatures = [
 
 export default function Enterprise() {
   return (
-    <section className="py-28 bg-white relative overflow-hidden">
+    <section className="py-28 bg-white dark:bg-gray-950 relative overflow-hidden">
       {/* Subtle grid background */}
       <div className="absolute inset-0 opacity-[0.02]" style={{
         backgroundImage: 'radial-gradient(circle at 1px 1px, #0A2540 1px, transparent 0)',
@@ -58,7 +58,7 @@ export default function Enterprise() {
               <div className="h-px w-12 bg-gradient-to-l from-transparent to-invoica-purple" />
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue mb-6 tracking-tight">
+            <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue dark:text-white mb-6 tracking-tight">
               Enterprise-grade
               <br />
               <span className="bg-gradient-to-r from-invoica-purple to-invoica-purple-light bg-clip-text text-transparent">
@@ -66,7 +66,7 @@ export default function Enterprise() {
               </span>
             </h2>
 
-            <p className="text-lg text-invoica-gray-500 mb-8 leading-relaxed">
+            <p className="text-lg text-invoica-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
               Finance, compliance, and legal teams at leading enterprises require more than an API.
               Invoica ships the controls, audit trails, and support that make enterprise AI deployments possible.
             </p>
@@ -79,9 +79,9 @@ export default function Enterprise() {
                 { value: '100%', label: 'On-chain audit trail' },
                 { value: 'VIES', label: 'VAT validation' },
               ].map((stat) => (
-                <div key={stat.label} className="p-4 rounded-xl border border-invoica-gray-100 bg-invoica-gray-50">
-                  <div className="text-3xl font-bold text-invoica-blue mb-1 tracking-tight">{stat.value}</div>
-                  <div className="text-xs text-invoica-gray-500">{stat.label}</div>
+                <div key={stat.label} className="p-4 rounded-xl border border-invoica-gray-100 dark:border-gray-800 bg-invoica-gray-50 dark:bg-gray-800">
+                  <div className="text-3xl font-bold text-invoica-blue dark:text-white mb-1 tracking-tight">{stat.value}</div>
+                  <div className="text-xs text-invoica-gray-500 dark:text-gray-400">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -100,14 +100,14 @@ export default function Enterprise() {
             {enterpriseFeatures.map((feature, i) => (
               <div
                 key={feature.title}
-                className="p-6 rounded-2xl border border-invoica-gray-100 hover:border-invoica-purple/20 hover:shadow-lg hover:shadow-invoica-purple/5 transition-all duration-300 group"
+                className="p-6 rounded-2xl border border-invoica-gray-100 dark:border-gray-800 hover:border-invoica-purple/20 hover:shadow-lg hover:shadow-invoica-purple/5 bg-white dark:bg-gray-900 transition-all duration-300 group"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
                 <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-invoica-purple/8 text-invoica-purple mb-4 group-hover:bg-invoica-purple group-hover:text-white transition-all duration-300">
                   {feature.icon}
                 </div>
-                <h3 className="text-sm font-semibold text-invoica-blue mb-2">{feature.title}</h3>
-                <p className="text-xs text-invoica-gray-500 leading-relaxed">{feature.description}</p>
+                <h3 className="text-sm font-semibold text-invoica-blue dark:text-white mb-2">{feature.title}</h3>
+                <p className="text-xs text-invoica-gray-500 dark:text-gray-400 leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>

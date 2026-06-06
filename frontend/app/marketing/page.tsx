@@ -22,27 +22,27 @@ const TWITTER_FN_URL = 'https://igspopoejhsxvwvxyhbh.supabase.co/functions/v1/tw
 const SUGGESTED_TEMPLATES = [
   {
     label: 'Product Launch',
-    text: "We just shipped something big at Invoica \u2014 the financial OS for AI agents.\n\nAutomate invoicing, tax compliance, and settlements with a single API call.\n\nBuilt on x402. Try it free \u2192 https://invoica-b89o.vercel.app",
+    text: "We just shipped something big at Invoica — the financial OS for AI agents.\n\nAutomate invoicing, tax compliance, and settlements with a single API call.\n\nBuilt on x402. Try it free → https://invoica-b89o.vercel.app",
   },
   {
     label: 'Developer Focus',
-    text: "Stop building payment infrastructure from scratch.\n\nInvoica gives your AI agents:\n\u2022 Invoice generation\n\u2022 Tax compliance\n\u2022 Settlement detection\n\u2022 Webhook notifications\n\nAll via REST API. Free tier available.\n\nhttps://invoica-b89o.vercel.app",
+    text: "Stop building payment infrastructure from scratch.\n\nInvoica gives your AI agents:\n• Invoice generation\n• Tax compliance\n• Settlement detection\n• Webhook notifications\n\nAll via REST API. Free tier available.\n\nhttps://invoica-b89o.vercel.app",
   },
   {
     label: 'Feature Highlight',
-    text: "Invoica now supports real-time webhook notifications for invoice events.\n\nGet notified when:\n\u2192 Invoice created\n\u2192 Payment settled\n\u2192 Status changes\n\nPerfect for autonomous AI agent workflows.\n\nhttps://invoica.mintlify.app/docs/webhooks",
+    text: "Invoica now supports real-time webhook notifications for invoice events.\n\nGet notified when:\n→ Invoice created\n→ Payment settled\n→ Status changes\n\nPerfect for autonomous AI agent workflows.\n\nhttps://invoica.mintlify.app/docs/webhooks",
   },
   {
     label: 'x402 Protocol',
-    text: "The x402 protocol is changing how machines pay each other.\n\nInvoica is the first financial OS built on x402 \u2014 enabling AI agents to handle invoicing, compliance, and settlements autonomously.\n\nLearn more \u2192 https://invoica-b89o.vercel.app",
+    text: "The x402 protocol is changing how machines pay each other.\n\nInvoica is the first financial OS built on x402 — enabling AI agents to handle invoicing, compliance, and settlements autonomously.\n\nLearn more → https://invoica-b89o.vercel.app",
   },
 ];
 
 const STATUS_STYLES: Record<string, string> = {
-  draft: 'bg-gray-100 text-gray-600',
-  scheduled: 'bg-blue-100 text-blue-700',
-  posted: 'bg-green-100 text-green-700',
-  failed: 'bg-red-100 text-red-700',
+  draft: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+  scheduled: 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
+  posted: 'bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400',
+  failed: 'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400',
 };
 
 export default function MarketingPage() {
@@ -127,19 +127,19 @@ export default function MarketingPage() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Marketing</h1>
-        <p className="text-sm text-gray-500 mt-1">Manage your social media presence</p>
+        <h1 className="text-3xl font-bold dark:text-white">Marketing</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your social media presence</p>
       </div>
 
       {/* Compose Tweet */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 shadow-sm p-6 mb-8">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-2 bg-black rounded-lg">
             <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold">Compose Post</h2>
+          <h2 className="text-lg font-semibold dark:text-white">Compose Post</h2>
         </div>
 
         <textarea
@@ -147,13 +147,13 @@ export default function MarketingPage() {
           onChange={(e) => setTweetText(e.target.value)}
           placeholder="What's happening with Invoica?"
           rows={4}
-          className={`w-full px-4 py-3 border rounded-lg text-sm resize-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent outline-none ${
-            isOverLimit ? 'border-red-300 bg-red-50' : 'border-gray-300'
+          className={`w-full px-4 py-3 border rounded-lg text-sm resize-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent outline-none dark:bg-gray-800 dark:text-white dark:placeholder-gray-500 ${
+            isOverLimit ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-950/20' : 'border-gray-300 dark:border-gray-700'
           }`}
         />
 
         <div className="flex items-center justify-between mt-3">
-          <span className={`text-sm font-mono ${isOverLimit ? 'text-red-500 font-bold' : charCount > 250 ? 'text-amber-500' : 'text-gray-400'}`}>
+          <span className={`text-sm font-mono ${isOverLimit ? 'text-red-500 font-bold' : charCount > 250 ? 'text-amber-500' : 'text-gray-400 dark:text-gray-500'}`}>
             {charCount}/280
           </span>
           <button
@@ -167,7 +167,9 @@ export default function MarketingPage() {
 
         {result && (
           <div className={`mt-3 p-3 rounded-lg text-sm ${
-            result.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+            result.type === 'success'
+              ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/30'
+              : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800/30'
           }`}>
             {result.message}
           </div>
@@ -176,16 +178,16 @@ export default function MarketingPage() {
 
       {/* Templates */}
       <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">Quick Templates</h2>
+        <h2 className="text-lg font-semibold mb-4 dark:text-white">Quick Templates</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {SUGGESTED_TEMPLATES.map((tmpl) => (
             <button
               key={tmpl.label}
               onClick={() => setTweetText(tmpl.text)}
-              className="bg-white rounded-xl border shadow-sm p-4 text-left hover:border-[#635BFF]/30 hover:shadow-md transition-all group"
+              className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 shadow-sm p-4 text-left hover:border-[#635BFF]/30 hover:shadow-md transition-all group"
             >
-              <h3 className="font-semibold text-sm mb-2 group-hover:text-[#635BFF] transition-colors">{tmpl.label}</h3>
-              <p className="text-xs text-gray-500 line-clamp-3">{tmpl.text}</p>
+              <h3 className="font-semibold text-sm mb-2 group-hover:text-[#635BFF] dark:text-white transition-colors">{tmpl.label}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3">{tmpl.text}</p>
             </button>
           ))}
         </div>
@@ -193,43 +195,43 @@ export default function MarketingPage() {
 
       {/* Post History */}
       <div>
-        <h2 className="text-lg font-semibold mb-4">Post History</h2>
+        <h2 className="text-lg font-semibold mb-4 dark:text-white">Post History</h2>
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />
+              <div key={i} className="h-20 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
             ))}
           </div>
         ) : posts.length === 0 ? (
-          <div className="bg-white rounded-xl border shadow-sm p-8 text-center">
-            <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 shadow-sm p-8 text-center">
+            <svg className="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
             </svg>
-            <p className="text-gray-500 mb-1">No posts yet</p>
-            <p className="text-sm text-gray-400">Compose your first tweet above to get started</p>
+            <p className="text-gray-500 dark:text-gray-400 mb-1">No posts yet</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">Compose your first tweet above to get started</p>
           </div>
         ) : (
           <div className="space-y-3">
             {posts.map((post) => (
-              <div key={post.id} className="bg-white rounded-xl border shadow-sm p-5">
+              <div key={post.id} className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 shadow-sm p-5">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <svg className="w-4 h-4 dark:text-gray-300" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                     </svg>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[post.status]}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[post.status] || STATUS_STYLES.draft}`}>
                       {post.status}
                     </span>
                   </div>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
                     {new Date(post.created_at).toLocaleDateString('en-US', {
                       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
                     })}
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{post.content}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{post.content}</p>
                 {post.error_message && (
-                  <p className="text-xs text-red-500 mt-2 bg-red-50 p-2 rounded">{post.error_message}</p>
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-2 bg-red-50 dark:bg-red-950/20 p-2 rounded">{post.error_message}</p>
                 )}
                 {post.platform_post_id && (
                   <a

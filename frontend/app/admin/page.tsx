@@ -23,21 +23,21 @@ function formatBytes(bytes: number): string {
 
 function StatusBadge({ status }: { status: string }) {
   const cfg: Record<string, { label: string; cls: string }> = {
-    online:     { label: 'online',      cls: 'bg-green-100 text-green-800' },
-    stopped:    { label: 'idle',        cls: 'bg-slate-100 text-slate-600' },
-    errored:    { label: 'errored',     cls: 'bg-red-100 text-red-700' },
-    launching:  { label: 'starting',    cls: 'bg-amber-100 text-amber-700' },
-    approved:   { label: 'approved',    cls: 'bg-green-100 text-green-800' },
-    rejected:   { label: 'rejected',    cls: 'bg-red-100 text-red-700' },
-    pending:    { label: 'pending',     cls: 'bg-amber-100 text-amber-700' },
-    running:    { label: 'running',     cls: 'bg-blue-100 text-blue-700' },
-    review:     { label: 'review',      cls: 'bg-purple-100 text-purple-700' },
-    COMPLETED:  { label: 'paid',        cls: 'bg-green-100 text-green-800' },
-    SETTLED:    { label: 'settled',     cls: 'bg-green-100 text-green-800' },
-    PENDING:    { label: 'pending',     cls: 'bg-amber-100 text-amber-700' },
-    PROCESSING: { label: 'processing',  cls: 'bg-blue-100 text-blue-700' },
+    online:     { label: 'online',      cls: 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400' },
+    stopped:    { label: 'idle',        cls: 'bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-400' },
+    errored:    { label: 'errored',     cls: 'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400' },
+    launching:  { label: 'starting',    cls: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400' },
+    approved:   { label: 'approved',    cls: 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400' },
+    rejected:   { label: 'rejected',    cls: 'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400' },
+    pending:    { label: 'pending',     cls: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400' },
+    running:    { label: 'running',     cls: 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' },
+    review:     { label: 'review',      cls: 'bg-purple-100 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400' },
+    COMPLETED:  { label: 'paid',        cls: 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400' },
+    SETTLED:    { label: 'settled',     cls: 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400' },
+    PENDING:    { label: 'pending',     cls: 'bg-amber-100 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400' },
+    PROCESSING: { label: 'processing',  cls: 'bg-blue-100 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400' },
   };
-  const c = cfg[status] ?? { label: status, cls: 'bg-slate-100 text-slate-500' };
+  const c = cfg[status] ?? { label: status, cls: 'bg-slate-100 dark:bg-gray-800 text-slate-500 dark:text-gray-400' };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${c.cls}`}>
       {c.label}
@@ -107,8 +107,8 @@ export default function AdminPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Admin Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Dashboard</h1>
+          <p className="text-sm text-slate-500 dark:text-gray-400 mt-0.5">
             {lastUpdated ? `Last updated ${lastUpdated.toLocaleTimeString()}` : 'Loading…'}
           </p>
         </div>
@@ -135,16 +135,16 @@ export default function AdminPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-700">
+        <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30 rounded-lg p-4 text-sm text-red-700 dark:text-red-400">
           {error}
         </div>
       )}
 
       {/* PM2 Process Monitor */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h2 className="text-base font-semibold text-slate-900">Process Monitor</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">Process Monitor</h2>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
             {system
               ? `${system.processes.length} processes — server time ${new Date(system.serverTime).toLocaleTimeString()}`
               : 'Loading…'}
@@ -153,12 +153,12 @@ export default function AdminPage() {
 
         {persistent.length > 0 && (
           <>
-            <div className="px-6 py-2 bg-slate-50 border-b border-slate-100">
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Always-on</p>
+            <div className="px-6 py-2 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800">
+              <p className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wide">Always-on</p>
             </div>
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-xs text-slate-500 border-b border-slate-100">
+                <tr className="text-left text-xs text-slate-500 dark:text-gray-400 border-b border-slate-100 dark:border-gray-800">
                   <th className="px-6 py-2 font-medium">Name</th>
                   <th className="px-4 py-2 font-medium">Status</th>
                   <th className="px-4 py-2 font-medium">PID</th>
@@ -169,13 +169,13 @@ export default function AdminPage() {
               </thead>
               <tbody>
                 {persistent.map(p => (
-                  <tr key={p.id} className="border-b border-slate-50 hover:bg-slate-50">
-                    <td className="px-6 py-3 font-medium text-slate-800">{p.name}</td>
+                  <tr key={p.id} className="border-b border-slate-50 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-800/50">
+                    <td className="px-6 py-3 font-medium text-slate-800 dark:text-gray-200">{p.name}</td>
                     <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                    <td className="px-4 py-3 text-slate-500 font-mono text-xs">{p.pid ?? '—'}</td>
-                    <td className="px-4 py-3 text-slate-600">{formatUptime(p.uptime)}</td>
-                    <td className="px-4 py-3 text-slate-600">{p.restarts}</td>
-                    <td className="px-4 py-3 text-slate-600">{formatBytes(p.memory)}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-gray-400 font-mono text-xs">{p.pid ?? '—'}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{formatUptime(p.uptime)}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{p.restarts}</td>
+                    <td className="px-4 py-3 text-slate-600 dark:text-gray-300">{formatBytes(p.memory)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -185,16 +185,16 @@ export default function AdminPage() {
 
         {cron.length > 0 && (
           <>
-            <div className="px-6 py-2 bg-slate-50 border-b border-slate-100 border-t">
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">Scheduled (cron)</p>
+            <div className="px-6 py-2 bg-slate-50 dark:bg-gray-800/50 border-b border-slate-100 dark:border-gray-800 border-t">
+              <p className="text-xs font-medium text-slate-500 dark:text-gray-400 uppercase tracking-wide">Scheduled (cron)</p>
             </div>
             <table className="w-full text-sm">
               <tbody>
                 {cron.map(p => (
-                  <tr key={p.id} className="border-b border-slate-50 hover:bg-slate-50">
-                    <td className="px-6 py-2.5 font-medium text-slate-700 w-48">{p.name}</td>
+                  <tr key={p.id} className="border-b border-slate-50 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-800/50">
+                    <td className="px-6 py-2.5 font-medium text-slate-700 dark:text-gray-300 w-48">{p.name}</td>
                     <td className="px-4 py-2.5"><StatusBadge status={p.status} /></td>
-                    <td className="px-4 py-2.5 text-slate-400 text-xs">restarts: {p.restarts}</td>
+                    <td className="px-4 py-2.5 text-slate-400 dark:text-gray-500 text-xs">restarts: {p.restarts}</td>
                   </tr>
                 ))}
               </tbody>
@@ -203,7 +203,7 @@ export default function AdminPage() {
         )}
 
         {!system && (
-          <div className="px-6 py-8 text-center text-sm text-slate-400">
+          <div className="px-6 py-8 text-center text-sm text-slate-400 dark:text-gray-500">
             Fetching process data…
           </div>
         )}
@@ -213,25 +213,25 @@ export default function AdminPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Sprint Status */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100">
-            <h2 className="text-base font-semibold text-slate-900">Sprint Status</h2>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Sprint Status</h2>
             {system?.sprint && (
-              <p className="text-xs text-slate-500 mt-0.5 font-mono truncate">{system.sprint.file}</p>
+              <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5 font-mono truncate">{system.sprint.file}</p>
             )}
           </div>
           {system?.sprint ? (
             <div className="p-6 space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-600">
+                  <span className="text-slate-600 dark:text-gray-300">
                     {system.sprint.approved}/{system.sprint.total} approved
                   </span>
-                  <span className="text-slate-500">
+                  <span className="text-slate-500 dark:text-gray-400">
                     {system.sprint.rejected} rejected · {system.sprint.pending} pending
                   </span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="w-full bg-slate-100 dark:bg-gray-800 rounded-full h-2">
                   <div
                     className="bg-[#635BFF] h-2 rounded-full transition-all"
                     style={{
@@ -246,11 +246,11 @@ export default function AdminPage() {
                 {system.sprint.tasks.map(t => (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0"
+                    className="flex items-center justify-between py-1.5 border-b border-slate-50 dark:border-gray-800 last:border-0"
                   >
                     <div className="flex-1 min-w-0 mr-3">
-                      <span className="text-xs font-mono text-slate-700 truncate block">{t.id}</span>
-                      <span className="text-xs text-slate-400">{t.agent} · {t.type}</span>
+                      <span className="text-xs font-mono text-slate-700 dark:text-gray-300 truncate block">{t.id}</span>
+                      <span className="text-xs text-slate-400 dark:text-gray-500">{t.agent} · {t.type}</span>
                     </div>
                     <StatusBadge status={t.status} />
                   </div>
@@ -258,34 +258,34 @@ export default function AdminPage() {
               </div>
             </div>
           ) : (
-            <div className="p-6 text-sm text-slate-400">
+            <div className="p-6 text-sm text-slate-400 dark:text-gray-500">
               {system ? 'No sprint data found' : 'Loading…'}
             </div>
           )}
         </div>
 
         {/* Git Activity */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100">
-            <h2 className="text-base font-semibold text-slate-900">Git Activity</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Last 20 commits</p>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
+            <h2 className="text-base font-semibold text-slate-900 dark:text-white">Git Activity</h2>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">Last 20 commits</p>
           </div>
           <div className="overflow-y-auto max-h-96">
             {system?.commits && system.commits.length > 0 ? (
-              <ul className="divide-y divide-slate-50">
+              <ul className="divide-y divide-slate-50 dark:divide-gray-800">
                 {system.commits.map((c, i) => {
                   const sha = c.slice(0, 7);
                   const msg = c.slice(8);
                   return (
-                    <li key={i} className="px-6 py-2.5 hover:bg-slate-50 flex gap-3 items-start">
+                    <li key={i} className="px-6 py-2.5 hover:bg-slate-50 dark:hover:bg-gray-800/50 flex gap-3 items-start">
                       <span className="font-mono text-xs text-[#635BFF] shrink-0 pt-0.5">{sha}</span>
-                      <span className="text-sm text-slate-700 leading-snug">{msg}</span>
+                      <span className="text-sm text-slate-700 dark:text-gray-300 leading-snug">{msg}</span>
                     </li>
                   );
                 })}
               </ul>
             ) : (
-              <p className="px-6 py-4 text-sm text-slate-400">
+              <p className="px-6 py-4 text-sm text-slate-400 dark:text-gray-500">
                 {system ? 'No commits' : 'Loading…'}
               </p>
             )}
@@ -295,17 +295,17 @@ export default function AdminPage() {
       </div>
 
       {/* Invoice Summary */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100">
-          <h2 className="text-base font-semibold text-slate-900">Invoices</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-slate-200 dark:border-gray-800 overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-gray-800">
+          <h2 className="text-base font-semibold text-slate-900 dark:text-white">Invoices</h2>
+          <p className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
             {invoices.length} invoice{invoices.length !== 1 ? 's' : ''}
           </p>
         </div>
         {invoices.length > 0 ? (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-slate-500 border-b border-slate-100">
+              <tr className="text-left text-xs text-slate-500 dark:text-gray-400 border-b border-slate-100 dark:border-gray-800">
                 <th className="px-6 py-2 font-medium">#</th>
                 <th className="px-4 py-2 font-medium">Customer</th>
                 <th className="px-4 py-2 font-medium">Amount</th>
@@ -315,16 +315,16 @@ export default function AdminPage() {
             </thead>
             <tbody>
               {invoices.map((inv: any) => (
-                <tr key={inv.id} className="border-b border-slate-50 hover:bg-slate-50">
-                  <td className="px-6 py-3 font-mono text-xs text-slate-500">#{inv.invoiceNumber}</td>
-                  <td className="px-4 py-3 text-slate-800 font-medium">
+                <tr key={inv.id} className="border-b border-slate-50 dark:border-gray-800 hover:bg-slate-50 dark:hover:bg-gray-800/50">
+                  <td className="px-6 py-3 font-mono text-xs text-slate-500 dark:text-gray-400">#{inv.invoiceNumber}</td>
+                  <td className="px-4 py-3 text-slate-800 dark:text-gray-200 font-medium">
                     {inv.customerName || inv.customerEmail || '—'}
                   </td>
-                  <td className="px-4 py-3 text-slate-700 font-medium">
+                  <td className="px-4 py-3 text-slate-700 dark:text-gray-300 font-medium">
                     {inv.amount} {inv.currency}
                   </td>
                   <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
-                  <td className="px-4 py-3 text-slate-500">
+                  <td className="px-4 py-3 text-slate-500 dark:text-gray-400">
                     {new Date(inv.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
@@ -332,7 +332,7 @@ export default function AdminPage() {
             </tbody>
           </table>
         ) : (
-          <p className="px-6 py-4 text-sm text-slate-400">
+          <p className="px-6 py-4 text-sm text-slate-400 dark:text-gray-500">
             {refreshing ? 'Loading…' : 'No invoices'}
           </p>
         )}
@@ -341,4 +341,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

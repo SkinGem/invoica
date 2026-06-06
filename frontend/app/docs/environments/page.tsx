@@ -1,28 +1,28 @@
 export default function EnvironmentsPage() {
   return (
-    <div style={{ maxWidth: '768px', margin: '0 auto', padding: '32px', fontFamily: 'system-ui' }}>
-      <h1 style={{ fontSize: '32px', marginBottom: '16px' }}>Environments</h1>
-      <p style={{ marginBottom: '24px' }}>
+    <div className="max-w-3xl mx-auto py-8 px-8">
+      <h1 className="text-3xl font-bold mb-4 dark:text-white">Environments</h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-6">
         The SDK automatically detects your runtime environment and configures defaults accordingly.
       </p>
 
-      <h2 style={{ fontSize: '24px', marginTop: '32px', marginBottom: '16px' }}>Supported Environments</h2>
-      <ul style={{ marginBottom: '24px', paddingLeft: '24px' }}>
+      <h2 className="text-2xl font-semibold mt-8 mb-4 dark:text-white">Supported Environments</h2>
+      <ul className="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400 mb-6">
         <li>Node.js (server-side)</li>
         <li>Browser (client-side)</li>
         <li>Edge Runtime (Vercel/Cloudflare Workers)</li>
         <li>Deno</li>
       </ul>
 
-      <h2 style={{ fontSize: '24px', marginTop: '32px', marginBottom: '16px' }}>Auto-Detection</h2>
-      <pre style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '8px', overflowX: 'auto', fontFamily: 'monospace' }}>
+      <h2 className="text-2xl font-semibold mt-8 mb-4 dark:text-white">Auto-Detection</h2>
+      <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto font-mono text-sm dark:text-gray-200 mb-6">
         <code>{`import { detectEnvironment, getDefaultBaseUrl } from '@invoica/sdk';
 const env = detectEnvironment();
 console.log(env); // 'node' | 'browser' | 'edge' | 'deno'`}</code>
       </pre>
 
-      <h2 style={{ fontSize: '24px', marginTop: '32px', marginBottom: '16px' }}>Custom Configuration</h2>
-      <pre style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '8px', overflowX: 'auto', fontFamily: 'monospace' }}>
+      <h2 className="text-2xl font-semibold mt-8 mb-4 dark:text-white">Custom Configuration</h2>
+      <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto font-mono text-sm dark:text-gray-200 mb-6">
         <code>{`const client = new CountableClient({
   apiKey: 'inv_...',
   baseUrl: 'https://api.staging.invoica.ai/v1',
@@ -30,11 +30,11 @@ console.log(env); // 'node' | 'browser' | 'edge' | 'deno'`}</code>
 });`}</code>
       </pre>
 
-      <h2 style={{ fontSize: '24px', marginTop: '32px', marginBottom: '16px' }}>Environment Variables</h2>
-      <ul style={{ marginBottom: '24px', paddingLeft: '24px' }}>
-        <li><strong>INVOICA_API_KEY</strong> — API key (auto-detected in Node.js)</li>
-        <li><strong>INVOICA_BASE_URL</strong> — Override base URL</li>
-        <li><strong>INVOICA_DEBUG</strong> — Enable debug logging</li>
+      <h2 className="text-2xl font-semibold mt-8 mb-4 dark:text-white">Environment Variables</h2>
+      <ul className="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400">
+        <li><strong className="dark:text-gray-300">INVOICA_API_KEY</strong> — API key (auto-detected in Node.js)</li>
+        <li><strong className="dark:text-gray-300">INVOICA_BASE_URL</strong> — Override base URL</li>
+        <li><strong className="dark:text-gray-300">INVOICA_DEBUG</strong> — Enable debug logging</li>
       </ul>
     </div>
   );

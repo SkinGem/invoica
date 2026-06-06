@@ -52,7 +52,9 @@ const AGENTS: Omit<Agent, 'restartState'>[] = [
 function StatusBadge({ status }: { status: Agent['status'] }) {
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-      status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+      status === 'Active'
+        ? 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400'
+        : 'bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-400'
     }`}>
       <span className={`w-1.5 h-1.5 rounded-full ${status === 'Active' ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
       {status}
@@ -92,27 +94,27 @@ export default function AgentsPage() {
   return (
     <div className="max-w-5xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">AI Agents</h1>
-        <p className="mt-2 text-gray-500">
+        <h1 className="text-3xl font-bold tracking-tight dark:text-white">AI Agents</h1>
+        <p className="mt-2 text-gray-500 dark:text-gray-400">
           Monitor and manage the agents that automate your invoicing and payment workflows.
         </p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {agents.map((agent) => (
-          <div key={agent.id} className="rounded-xl border bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div key={agent.id} className="rounded-xl border dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-sm hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-3">
-              <h3 className="font-semibold text-gray-900 pr-2">{agent.name}</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white pr-2">{agent.name}</h3>
               <StatusBadge status={agent.status} />
             </div>
-            <p className="text-sm text-gray-500 leading-relaxed mb-5">{agent.role}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-5">{agent.role}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => toggleAgent(agent.id)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                   agent.status === 'Active'
-                    ? 'bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100'
-                    : 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                    ? 'bg-yellow-50 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800/30 hover:bg-yellow-100 dark:hover:bg-yellow-950/40'
+                    : 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/30 hover:bg-green-100 dark:hover:bg-green-950/40'
                 }`}
               >
                 {agent.status === 'Active' ? 'Pause' : 'Resume'}
@@ -122,8 +124,8 @@ export default function AgentsPage() {
                 disabled={agent.restartState === 'restarting'}
                 className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all flex items-center gap-1.5 ${
                   agent.restartState === 'done'
-                    ? 'bg-green-50 text-green-700 border border-green-200'
-                    : 'bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100'
+                    ? 'bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/30'
+                    : 'bg-slate-50 dark:bg-gray-800 text-slate-700 dark:text-gray-300 border border-slate-200 dark:border-gray-700 hover:bg-slate-100 dark:hover:bg-gray-700'
                 } disabled:opacity-60`}
               >
                 {agent.restartState === 'restarting' && (
@@ -144,7 +146,7 @@ export default function AgentsPage() {
         ))}
       </div>
 
-      <p className="mt-8 text-xs text-gray-400 text-center">
+      <p className="mt-8 text-xs text-gray-400 dark:text-gray-500 text-center">
         Agent state is session-based &mdash; changes persist until you reload the page.
         Persistent agent control is coming in a future update.
       </p>

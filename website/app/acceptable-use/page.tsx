@@ -11,19 +11,19 @@ export default function AcceptableUsePage() {
     <>
       <Navbar />
       <main className="max-w-3xl mx-auto px-6 py-24">
-        <h1 className="text-4xl font-bold text-invoica-blue mb-2">Acceptable Use Policy</h1>
-        <p className="text-sm text-invoica-gray-400 mb-12">Last updated: February 20, 2026</p>
+        <h1 className="text-4xl font-bold text-invoica-blue dark:text-white mb-2">Acceptable Use Policy</h1>
+        <p className="text-sm text-invoica-gray-400 dark:text-gray-500 mb-12">Last updated: February 20, 2026</p>
 
-        <div className="prose prose-slate max-w-none space-y-8 text-invoica-gray-600 leading-relaxed">
+        <div className="prose prose-slate max-w-none space-y-8 text-invoica-gray-600 dark:text-gray-300 leading-relaxed">
           <section>
-            <h2 className="text-xl font-semibold text-invoica-blue mt-8 mb-3">1. Purpose</h2>
+            <h2 className="text-xl font-semibold text-invoica-blue dark:text-gray-100 mt-8 mb-3">1. Purpose</h2>
             <p>
               This Acceptable Use Policy (&ldquo;AUP&rdquo;) defines the acceptable and prohibited uses of the Invoica platform operated by Nexus Collective. This policy applies to all users, including AI agents, human operators, and automated systems.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-invoica-blue mt-8 mb-3">2. Acceptable Uses</h2>
+            <h2 className="text-xl font-semibold text-invoica-blue dark:text-gray-100 mt-8 mb-3">2. Acceptable Uses</h2>
             <p>The Invoica platform is designed for:</p>
             <ul className="list-disc pl-6 space-y-2 mt-2">
               <li>Generating and managing invoices for legitimate commercial transactions</li>
@@ -36,10 +36,10 @@ export default function AcceptableUsePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-invoica-blue mt-8 mb-3">3. Prohibited Activities</h2>
+            <h2 className="text-xl font-semibold text-invoica-blue dark:text-gray-100 mt-8 mb-3">3. Prohibited Activities</h2>
             <p>You may not use the Service to:</p>
 
-            <h3 className="text-lg font-medium text-invoica-blue mt-4 mb-2">Financial Crimes</h3>
+            <h3 className="text-lg font-medium text-invoica-blue dark:text-gray-200 mt-4 mb-2">Financial Crimes</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>Launder money or facilitate the proceeds of criminal activity</li>
               <li>Finance terrorism or other illegal activities</li>
@@ -48,7 +48,7 @@ export default function AcceptableUsePage() {
               <li>Process payments for sanctioned individuals or entities</li>
             </ul>
 
-            <h3 className="text-lg font-medium text-invoica-blue mt-4 mb-2">Technical Abuse</h3>
+            <h3 className="text-lg font-medium text-invoica-blue dark:text-gray-200 mt-4 mb-2">Technical Abuse</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>Attempt to bypass rate limits, authentication, or access controls</li>
               <li>Conduct denial-of-service attacks or flood the API</li>
@@ -58,7 +58,7 @@ export default function AcceptableUsePage() {
               <li>Use the Service to attack or compromise other systems</li>
             </ul>
 
-            <h3 className="text-lg font-medium text-invoica-blue mt-4 mb-2">Illegal Content and Activities</h3>
+            <h3 className="text-lg font-medium text-invoica-blue dark:text-gray-200 mt-4 mb-2">Illegal Content and Activities</h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>Process transactions for illegal goods or services</li>
               <li>Store or transmit content that violates applicable laws</li>
@@ -68,7 +68,7 @@ export default function AcceptableUsePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-invoica-blue mt-8 mb-3">4. AI Agent Specific Rules</h2>
+            <h2 className="text-xl font-semibold text-invoica-blue dark:text-gray-100 mt-8 mb-3">4. AI Agent Specific Rules</h2>
             <p>AI agents using Invoica must:</p>
             <ul className="list-disc pl-6 space-y-2 mt-2">
               <li>Have a human operator responsible for their actions</li>
@@ -81,14 +81,14 @@ export default function AcceptableUsePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-invoica-blue mt-8 mb-3">5. Resource Usage</h2>
+            <h2 className="text-xl font-semibold text-invoica-blue dark:text-gray-100 mt-8 mb-3">5. Resource Usage</h2>
             <p>
               Users must operate within the limits of their subscription tier. Excessive usage that impacts Service availability for others may result in throttling or temporary suspension. We will attempt to contact you before taking action.
             </p>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-invoica-blue mt-8 mb-3">6. Enforcement</h2>
+            <h2 className="text-xl font-semibold text-invoica-blue dark:text-gray-100 mt-8 mb-3">6. Enforcement</h2>
             <p>Violations of this AUP may result in:</p>
             <ul className="list-disc pl-6 space-y-2 mt-2">
               <li><strong>Warning:</strong> First-time or minor violations may result in a warning</li>
@@ -100,7 +100,7 @@ export default function AcceptableUsePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-invoica-blue mt-8 mb-3">7. Reporting Violations</h2>
+            <h2 className="text-xl font-semibold text-invoica-blue dark:text-gray-100 mt-8 mb-3">7. Reporting Violations</h2>
             <p>
               If you become aware of any violation of this AUP, please report it to{' '}
               <a href="mailto:abuse@invoica.ai" className="text-invoica-purple hover:underline">abuse@invoica.ai</a>.
@@ -109,7 +109,7 @@ export default function AcceptableUsePage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-invoica-blue mt-8 mb-3">8. Changes</h2>
+            <h2 className="text-xl font-semibold text-invoica-blue dark:text-gray-100 mt-8 mb-3">8. Changes</h2>
             <p>
               We may update this AUP from time to time. Material changes will be communicated via email or dashboard notification. Continued use of the Service after changes constitutes acceptance.
             </p>

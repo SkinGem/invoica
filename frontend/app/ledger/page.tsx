@@ -36,14 +36,14 @@ interface AgentBalance {
 
 function statusBadge(status: string) {
   const styles: Record<string, string> = {
-    COMPLETED:  'bg-green-50 text-green-700',
-    SETTLED:    'bg-blue-50  text-blue-700',
-    PROCESSING: 'bg-yellow-50 text-yellow-700',
-    PENDING:    'bg-gray-50  text-gray-600',
-    REFUNDED:   'bg-red-50   text-red-700',
+    COMPLETED:  'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400',
+    SETTLED:    'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400',
+    PROCESSING: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400',
+    PENDING:    'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+    REFUNDED:   'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400',
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-50 text-gray-600'}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${styles[status] || 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400'}`}>
       {status}
     </span>
   );
@@ -217,7 +217,7 @@ export default function LedgerPage() {
           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-[#635BFF] text-white">BETA</span>
           <p className="text-sm text-[#635BFF] font-medium">You're using Invoica during our private beta. All features are free while we're in beta.</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 bg-[#635BFF]/10 rounded-xl flex items-center justify-center">
               <svg className="w-5 h-5 text-[#635BFF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -225,25 +225,25 @@ export default function LedgerPage() {
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Access Company Ledger</h1>
-              <p className="text-sm text-gray-500">Enter any company API key to begin</p>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Access Company Ledger</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Enter any company API key to begin</p>
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">API Key</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">API Key</label>
               <input
                 type="password"
                 value={apiKey}
                 onChange={e => { setApiKey(e.target.value); setError(''); }}
                 onKeyDown={e => e.key === 'Enter' && handleSendCode()}
                 placeholder="sk_..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#635BFF]/30 focus:border-[#635BFF]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#635BFF]/30 focus:border-[#635BFF]"
                 autoFocus
               />
-              <p className="mt-1.5 text-xs text-gray-400">Any active API key from your company will work.</p>
+              <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">Any active API key from your company will work.</p>
             </div>
-            {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+            {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-lg px-3 py-2">{error}</p>}
             <button
               onClick={handleSendCode}
               disabled={sending || !apiKey.trim()}
@@ -262,21 +262,21 @@ export default function LedgerPage() {
   if (step === 'enter-code') {
     return (
       <div className="max-w-md mx-auto mt-12">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
-              <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="w-10 h-10 bg-green-50 dark:bg-green-950/30 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">Check your email</h1>
-              <p className="text-sm text-gray-500">We sent a 6-digit code to <strong>{maskedEmail}</strong></p>
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Check your email</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">We sent a 6-digit code to <strong>{maskedEmail}</strong></p>
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Verification Code</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Verification Code</label>
               <input
                 type="text"
                 value={code}
@@ -284,12 +284,12 @@ export default function LedgerPage() {
                 onKeyDown={e => e.key === 'Enter' && handleVerifyCode()}
                 placeholder="123456"
                 maxLength={6}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-mono text-center text-xl tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-[#635BFF]/30 focus:border-[#635BFF]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white text-sm font-mono text-center text-xl tracking-[0.4em] focus:outline-none focus:ring-2 focus:ring-[#635BFF]/30 focus:border-[#635BFF]"
                 autoFocus
               />
-              <p className="mt-1.5 text-xs text-gray-400">Code expires in 10 minutes.</p>
+              <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500">Code expires in 10 minutes.</p>
             </div>
-            {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+            {error && <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 rounded-lg px-3 py-2">{error}</p>}
             <button
               onClick={handleVerifyCode}
               disabled={verifying || code.length !== 6}
@@ -300,7 +300,7 @@ export default function LedgerPage() {
                 : 'Confirm Access'}
             </button>
             <button onClick={() => { setStep('enter-key'); setCode(''); setError(''); }}
-              className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+              className="w-full py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
               Back to key entry
             </button>
           </div>
@@ -331,13 +331,13 @@ export default function LedgerPage() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Company Ledger</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Immutable record of all agent transactions</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Company Ledger</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Immutable record of all agent transactions</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={handleSwitchKey} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">Switch key</button>
+          <button onClick={handleSwitchKey} className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">Switch key</button>
           <button onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -352,45 +352,45 @@ export default function LedgerPage() {
           { label: 'Total Debits',  value: fmt(totalDebits),          sub: 'across all agents' },
           { label: 'Total Entries', value: meta.total.toString(),     sub: 'transaction records' },
         ].map(c => (
-          <div key={c.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <p className="text-sm text-gray-500 font-medium">{c.label}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{c.value}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{c.sub}</p>
+          <div key={c.label} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-5">
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{c.label}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{c.value}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{c.sub}</p>
           </div>
         ))}
       </div>
 
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1 w-fit">
         {(['ledger', 'balances'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t ? 'bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}>
             {t === 'ledger' ? 'Transaction Ledger' : 'Agent Balances'}
           </button>
         ))}
       </div>
 
       {tab === 'ledger' && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50">
+                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
                   {['Date', 'Invoice #', 'Agent', 'Description', 'Debit', 'Credit', 'Status', 'TxHash'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                 {entries.length === 0
-                  ? <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400 text-sm">No transactions found for this company.</td></tr>
+                  ? <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">No transactions found for this company.</td></tr>
                   : entries.map(e => (
-                    <tr key={e.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-xs">{new Date(e.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</td>
-                      <td className="px-4 py-3 font-mono text-gray-700">#{e.invoiceNumber}</td>
-                      <td className="px-4 py-3 text-gray-700 max-w-[120px] truncate" title={e.agentName}>{e.agentName}</td>
-                      <td className="px-4 py-3 text-gray-600 max-w-[200px] truncate" title={e.description}>{e.description || '—'}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{e.debit > 0 ? fmt(e.debit, e.currency) : '—'}</td>
-                      <td className="px-4 py-3 font-medium text-green-700">{e.credit > 0 ? fmt(e.credit, e.currency) : '—'}</td>
+                    <tr key={e.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                      <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap text-xs">{new Date(e.date).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}</td>
+                      <td className="px-4 py-3 font-mono text-gray-700 dark:text-gray-300">#{e.invoiceNumber}</td>
+                      <td className="px-4 py-3 text-gray-700 dark:text-gray-300 max-w-[120px] truncate" title={e.agentName}>{e.agentName}</td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-[200px] truncate" title={e.description}>{e.description || '—'}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{e.debit > 0 ? fmt(e.debit, e.currency) : '—'}</td>
+                      <td className="px-4 py-3 font-medium text-green-700 dark:text-green-400">{e.credit > 0 ? fmt(e.credit, e.currency) : '—'}</td>
                       <td className="px-4 py-3">{statusBadge(e.status)}</td>
                       <td className="px-4 py-3">
                         {e.txHash
@@ -402,10 +402,10 @@ export default function LedgerPage() {
               </tbody>
               {entries.length > 0 && (
                 <tfoot>
-                  <tr className="border-t-2 border-gray-100 bg-gray-50/50">
-                    <td colSpan={4} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Totals</td>
-                    <td className="px-4 py-3 font-bold text-gray-900">{fmt(totalDebits)}</td>
-                    <td className="px-4 py-3 font-bold text-green-700">{fmt(totalCredits)}</td>
+                  <tr className="border-t-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
+                    <td colSpan={4} className="px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Totals</td>
+                    <td className="px-4 py-3 font-bold text-gray-900 dark:text-white">{fmt(totalDebits)}</td>
+                    <td className="px-4 py-3 font-bold text-green-700 dark:text-green-400">{fmt(totalCredits)}</td>
                     <td colSpan={2} />
                   </tr>
                 </tfoot>
@@ -416,29 +416,29 @@ export default function LedgerPage() {
       )}
 
       {tab === 'balances' && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50">
+                <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/50">
                   {['Agent', 'Transactions', 'Total Debits', 'Total Credits', 'Net Balance'].map(h => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                 {agents.length === 0
-                  ? <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-400 text-sm">No agent data found.</td></tr>
+                  ? <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">No agent data found.</td></tr>
                   : agents.map(a => (
-                    <tr key={a.agentId} className="hover:bg-gray-50/50 transition-colors">
+                    <tr key={a.agentId} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{a.agentName}</div>
-                        <div className="text-xs text-gray-400 font-mono">{a.agentId}</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{a.agentName}</div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 font-mono">{a.agentId}</div>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{a.txCount}</td>
-                      <td className="px-4 py-3 font-medium text-gray-900">{fmt(a.debit, a.currency)}</td>
-                      <td className="px-4 py-3 font-medium text-green-700">{fmt(a.credit, a.currency)}</td>
-                      <td className={`px-4 py-3 font-bold ${a.net >= 0 ? 'text-gray-900' : 'text-green-700'}`}>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{a.txCount}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">{fmt(a.debit, a.currency)}</td>
+                      <td className="px-4 py-3 font-medium text-green-700 dark:text-green-400">{fmt(a.credit, a.currency)}</td>
+                      <td className={`px-4 py-3 font-bold ${a.net >= 0 ? 'text-gray-900 dark:text-white' : 'text-green-700 dark:text-green-400'}`}>
                         {fmt(Math.abs(a.net), a.currency)}{a.net < 0 ? ' CR' : ''}
                       </td>
                     </tr>

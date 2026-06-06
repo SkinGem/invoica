@@ -31,14 +31,14 @@ function StepIndicator({ current }: { current: number }) {
     <div className="flex items-center justify-center gap-2 mb-8">
       {steps.map((s, i) => (
         <div key={s.n} className="flex items-center gap-2">
-          <div className={`flex items-center gap-2 ${current >= s.n ? 'text-[#635BFF]' : 'text-slate-300'}`}>
+          <div className={`flex items-center gap-2 ${current >= s.n ? 'text-[#635BFF]' : 'text-slate-300 dark:text-gray-600'}`}>
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                 current > s.n
                   ? 'bg-[#635BFF] text-white'
                   : current === s.n
                   ? 'bg-[#635BFF]/10 text-[#635BFF] ring-2 ring-[#635BFF]'
-                  : 'bg-slate-100 text-slate-400'
+                  : 'bg-slate-100 dark:bg-gray-800 text-slate-400 dark:text-gray-500'
               }`}
             >
               {current > s.n ? (
@@ -49,12 +49,12 @@ function StepIndicator({ current }: { current: number }) {
                 s.n
               )}
             </div>
-            <span className={`text-xs font-medium hidden sm:inline ${current >= s.n ? 'text-slate-700' : 'text-slate-400'}`}>
+            <span className={`text-xs font-medium hidden sm:inline ${current >= s.n ? 'text-slate-700 dark:text-gray-300' : 'text-slate-400 dark:text-gray-500'}`}>
               {s.label}
             </span>
           </div>
           {i < steps.length - 1 && (
-            <div className={`w-8 sm:w-12 h-0.5 rounded-full transition-colors ${current > s.n ? 'bg-[#635BFF]' : 'bg-slate-200'}`} />
+            <div className={`w-8 sm:w-12 h-0.5 rounded-full transition-colors ${current > s.n ? 'bg-[#635BFF]' : 'bg-slate-200 dark:bg-gray-700'}`} />
           )}
         </div>
       ))}
@@ -216,17 +216,17 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.841m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Welcome to Invoica!</h1>
-        <p className="text-slate-500 text-sm mt-1">Let&apos;s get you set up in just a few steps.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome to Invoica!</h1>
+        <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">Let&apos;s get you set up in just a few steps.</p>
       </div>
 
       {/* Beta Banner */}
       <div className="mb-4 p-3 rounded-xl bg-gradient-to-r from-[#635BFF]/10 to-[#818CF8]/10 border border-[#635BFF]/20">
         <div className="flex items-center gap-2 mb-1">
           <span className="px-2 py-0.5 bg-[#635BFF] text-white text-[10px] font-bold rounded-full uppercase tracking-wider">Beta</span>
-          <span className="text-sm font-semibold text-slate-800">Free access to all features during beta</span>
+          <span className="text-sm font-semibold text-slate-800 dark:text-gray-200">Free access to all features during beta</span>
         </div>
-        <p className="text-xs text-slate-600 ml-[52px]">
+        <p className="text-xs text-slate-600 dark:text-gray-400 ml-[52px]">
           Sign up now to lock in your <strong className="text-[#635BFF]">Founding Agent</strong> discount — 20% off all paid plans for 24 months when billing starts (April 23).
         </p>
       </div>
@@ -237,10 +237,10 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
           STEP 1: Company Profile
           ═══════════════════════════════════════════════════ */}
       {step === 'profile' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-700 p-6 space-y-5">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Set up your company profile</h2>
-            <p className="text-sm text-slate-500 mt-0.5">This is required before you can generate API keys.</p>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Set up your company profile</h2>
+            <p className="text-sm text-slate-500 dark:text-gray-400 mt-0.5">This is required before you can generate API keys.</p>
           </div>
 
           {/* Type selector */}
@@ -251,18 +251,18 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
               className={`relative p-4 rounded-xl border-2 text-left transition-all ${
                 profileType === 'registered_company'
                   ? 'border-[#635BFF] bg-[#635BFF]/[0.04] shadow-sm'
-                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  : 'border-slate-200 dark:border-gray-700 hover:border-slate-300 dark:hover:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-800'
               }`}
             >
               <div className="flex items-center gap-3 mb-2">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${profileType === 'registered_company' ? 'bg-[#635BFF]/10' : 'bg-slate-100'}`}>
-                  <svg className={`w-5 h-5 ${profileType === 'registered_company' ? 'text-[#635BFF]' : 'text-slate-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${profileType === 'registered_company' ? 'bg-[#635BFF]/10' : 'bg-slate-100 dark:bg-gray-800'}`}>
+                  <svg className={`w-5 h-5 ${profileType === 'registered_company' ? 'text-[#635BFF]' : 'text-slate-500 dark:text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
-                <div className="font-semibold text-sm text-slate-900">Registered Company</div>
+                <div className="font-semibold text-sm text-slate-900 dark:text-white">Registered Company</div>
               </div>
-              <p className="text-xs text-slate-500">Traditional entity with tax, VAT, and compliance.</p>
+              <p className="text-xs text-slate-500 dark:text-gray-400">Traditional entity with tax, VAT, and compliance.</p>
               {profileType === 'registered_company' && (
                 <div className="absolute top-3 right-3">
                   <svg className="w-5 h-5 text-[#635BFF]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
@@ -276,18 +276,18 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
               className={`relative p-4 rounded-xl border-2 text-left transition-all ${
                 profileType === 'web3_project'
                   ? 'border-[#635BFF] bg-[#635BFF]/[0.04] shadow-sm'
-                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  : 'border-slate-200 dark:border-gray-700 hover:border-slate-300 dark:hover:border-gray-600 hover:bg-slate-50 dark:hover:bg-gray-800'
               }`}
             >
               <div className="flex items-center gap-3 mb-2">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${profileType === 'web3_project' ? 'bg-[#635BFF]/10' : 'bg-slate-100'}`}>
-                  <svg className={`w-5 h-5 ${profileType === 'web3_project' ? 'text-[#635BFF]' : 'text-slate-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${profileType === 'web3_project' ? 'bg-[#635BFF]/10' : 'bg-slate-100 dark:bg-gray-800'}`}>
+                  <svg className={`w-5 h-5 ${profileType === 'web3_project' ? 'text-[#635BFF]' : 'text-slate-500 dark:text-gray-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
-                <div className="font-semibold text-sm text-slate-900">Web3 Project</div>
+                <div className="font-semibold text-sm text-slate-900 dark:text-white">Web3 Project</div>
               </div>
-              <p className="text-xs text-slate-500">No country, no VAT, no tax — invoicing &amp; ledger only.</p>
+              <p className="text-xs text-slate-500 dark:text-gray-400">No country, no VAT, no tax — invoicing &amp; ledger only.</p>
               {profileType === 'web3_project' && (
                 <div className="absolute top-3 right-3">
                   <svg className="w-5 h-5 text-[#635BFF]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
@@ -300,43 +300,43 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
           {profileType === 'registered_company' && (
             <div className="space-y-4 pt-1">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Company Name</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Company Name</label>
                 <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)}
                   placeholder="Acme Corporation Ltd."
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent" />
+                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Country of Registration</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Country of Registration</label>
                 <select value={companyCountry} onChange={e => setCompanyCountry(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent bg-white">
+                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent bg-white dark:bg-gray-800 dark:text-white">
                   <option value="">Select a country...</option>
                   {countries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">
                   {selectedCountry?.regLabel || 'Registration Number'}
                 </label>
                 <input type="text" value={regNumber} onChange={e => setRegNumber(e.target.value)}
                   placeholder={selectedCountry?.regPlaceholder || 'Enter registration number'}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent" />
-                {selectedCountry && <p className="mt-1 text-xs text-slate-400">Format: {selectedCountry.regFormat}</p>}
+                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
+                {selectedCountry && <p className="mt-1 text-xs text-slate-400 dark:text-gray-500">Format: {selectedCountry.regFormat}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  VAT Number <span className="text-slate-400 font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">
+                  VAT Number <span className="text-slate-400 dark:text-gray-500 font-normal">(optional)</span>
                 </label>
                 <input type="text" value={vatNumber} onChange={e => setVatNumber(e.target.value)}
                   placeholder="e.g. DE123456789"
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent" />
+                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Registered Address <span className="text-slate-400 font-normal">(optional)</span>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">
+                  Registered Address <span className="text-slate-400 dark:text-gray-500 font-normal">(optional)</span>
                 </label>
                 <textarea value={address} onChange={e => setAddress(e.target.value)}
                   placeholder="123 Business Street, City, Country" rows={2}
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent resize-none" />
+                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent resize-none dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
               </div>
             </div>
           )}
@@ -345,12 +345,12 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
           {profileType === 'web3_project' && (
             <div className="space-y-4 pt-1">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Project Name</label>
+                <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-1">Project Name</label>
                 <input type="text" value={projectName} onChange={e => setProjectName(e.target.value)}
                   placeholder="My DeFi Protocol"
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent" />
+                  className="w-full px-3 py-2.5 border border-slate-300 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#635BFF] focus:border-transparent dark:bg-gray-800 dark:text-white dark:placeholder-gray-500" />
               </div>
-              <div className="p-3 rounded-lg bg-slate-50 text-sm text-slate-600">
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-gray-800 text-sm text-slate-600 dark:text-gray-400">
                 <div className="flex items-start gap-2">
                   <span className="mt-0.5">&#128161;</span>
                   <span>Web3 projects operate without country registration. No VAT, no tax — only invoicing and ledger entries.</span>
@@ -380,7 +380,7 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
           )}
 
           <div className="flex items-center justify-between pt-2">
-            <button onClick={onComplete} className="text-sm text-slate-400 hover:text-slate-600 transition-colors">
+            <button onClick={onComplete} className="text-sm text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-400 transition-colors">
               Skip for now
             </button>
             <button
@@ -400,20 +400,20 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
       {step === 'pricing' && (
         <div className="space-y-5">
           <div className="text-center">
-            <h2 className="text-lg font-semibold text-slate-900">Choose your plan</h2>
-            <p className="text-sm text-slate-500 mt-0.5">All plans are <strong className="text-[#635BFF]">free during beta</strong>. Pick the tier you want when billing starts.</p>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Choose your plan</h2>
+            <p className="text-sm text-slate-500 dark:text-gray-400 mt-0.5">All plans are <strong className="text-[#635BFF]">free during beta</strong>. Pick the tier you want when billing starts.</p>
           </div>
 
           {/* Founding Agent Badge */}
-          <div className="flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-amber-50 border border-amber-200/60">
+          <div className="flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/30">
             <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
               <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm4.707 3.707a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L8.414 9H10a3 3 0 013 3v1a1 1 0 102 0v-1a5 5 0 00-5-5H8.414l1.293-1.293z" clipRule="evenodd" />
               </svg>
             </div>
             <div>
-              <p className="text-sm font-semibold text-amber-900">Founding Agent — 20% off for 24 months</p>
-              <p className="text-xs text-amber-700">Your discount locks at signup and applies automatically when billing starts on Day 61 (April 23).</p>
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-300">Founding Agent — 20% off for 24 months</p>
+              <p className="text-xs text-amber-700 dark:text-amber-400">Your discount locks at signup and applies automatically when billing starts on Day 61 (April 23).</p>
             </div>
           </div>
 
@@ -421,15 +421,15 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
           {profileType === 'web3_project' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
               {/* Free Tier */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-col">
+              <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 flex flex-col">
                 <div className="mb-4">
-                  <h3 className="font-semibold text-slate-900">Free</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">Free</h3>
                   <div className="mt-2">
-                    <span className="text-3xl font-bold text-slate-900">$0</span>
-                    <span className="text-sm text-slate-500">/month</span>
+                    <span className="text-3xl font-bold text-slate-900 dark:text-white">$0</span>
+                    <span className="text-sm text-slate-500 dark:text-gray-400">/month</span>
                   </div>
                 </div>
-                <ul className="space-y-2.5 text-sm text-slate-600 flex-1 mb-5">
+                <ul className="space-y-2.5 text-sm text-slate-600 dark:text-gray-400 flex-1 mb-5">
                   <li className="flex items-start gap-2">
                     <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     100 invoices/month
@@ -449,27 +449,27 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
                 </ul>
                 <button
                   onClick={() => setStep('apiKey')}
-                  className="w-full py-2.5 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all"
+                  className="w-full py-2.5 border-2 border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-slate-50 dark:hover:bg-gray-800 hover:border-slate-300 dark:hover:border-gray-500 transition-all"
                 >
                   Get Started Free
                 </button>
               </div>
 
               {/* Growth Tier — Web3 highlighted */}
-              <div className="rounded-2xl border-2 border-[#635BFF] bg-white p-5 flex flex-col relative shadow-lg shadow-[#635BFF]/10">
+              <div className="rounded-2xl border-2 border-[#635BFF] bg-white dark:bg-gray-900 p-5 flex flex-col relative shadow-lg shadow-[#635BFF]/10">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="px-3 py-1 bg-gradient-to-r from-[#635BFF] to-[#818CF8] text-white text-xs font-bold rounded-full">
                     Recommended
                   </span>
                 </div>
                 <div className="mb-4 mt-1">
-                  <h3 className="font-semibold text-slate-900">Growth</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">Growth</h3>
                   <div className="mt-2">
-                    <span className="text-3xl font-bold text-slate-900">$24</span>
-                    <span className="text-sm text-slate-500">/month</span>
+                    <span className="text-3xl font-bold text-slate-900 dark:text-white">$24</span>
+                    <span className="text-sm text-slate-500 dark:text-gray-400">/month</span>
                   </div>
                 </div>
-                <ul className="space-y-2.5 text-sm text-slate-600 flex-1 mb-5">
+                <ul className="space-y-2.5 text-sm text-slate-600 dark:text-gray-400 flex-1 mb-5">
                   <li className="flex items-start gap-2">
                     <svg className="w-4 h-4 text-[#635BFF] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     5,000 invoices/month
@@ -503,15 +503,15 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
             /* ── Registered Company Pricing (3 tiers: Free + $49 Pro + Enterprise) ── */
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Free Tier */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-col">
+              <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 flex flex-col">
                 <div className="mb-4">
-                  <h3 className="font-semibold text-slate-900">Free</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">Free</h3>
                   <div className="mt-2">
-                    <span className="text-3xl font-bold text-slate-900">$0</span>
-                    <span className="text-sm text-slate-500">/month</span>
+                    <span className="text-3xl font-bold text-slate-900 dark:text-white">$0</span>
+                    <span className="text-sm text-slate-500 dark:text-gray-400">/month</span>
                   </div>
                 </div>
-                <ul className="space-y-2.5 text-sm text-slate-600 flex-1 mb-5">
+                <ul className="space-y-2.5 text-sm text-slate-600 dark:text-gray-400 flex-1 mb-5">
                   <li className="flex items-start gap-2">
                     <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     100 invoices/month
@@ -531,27 +531,27 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
                 </ul>
                 <button
                   onClick={() => setStep('apiKey')}
-                  className="w-full py-2.5 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all"
+                  className="w-full py-2.5 border-2 border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-slate-50 dark:hover:bg-gray-800 hover:border-slate-300 dark:hover:border-gray-500 transition-all"
                 >
                   Get Started Free
                 </button>
               </div>
 
               {/* Pro Tier — highlighted */}
-              <div className="rounded-2xl border-2 border-[#635BFF] bg-white p-5 flex flex-col relative shadow-lg shadow-[#635BFF]/10">
+              <div className="rounded-2xl border-2 border-[#635BFF] bg-white dark:bg-gray-900 p-5 flex flex-col relative shadow-lg shadow-[#635BFF]/10">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="px-3 py-1 bg-gradient-to-r from-[#635BFF] to-[#818CF8] text-white text-xs font-bold rounded-full">
                     Most Popular
                   </span>
                 </div>
                 <div className="mb-4 mt-1">
-                  <h3 className="font-semibold text-slate-900">Pro</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">Pro</h3>
                   <div className="mt-2">
-                    <span className="text-3xl font-bold text-slate-900">$49</span>
-                    <span className="text-sm text-slate-500">/month</span>
+                    <span className="text-3xl font-bold text-slate-900 dark:text-white">$49</span>
+                    <span className="text-sm text-slate-500 dark:text-gray-400">/month</span>
                   </div>
                 </div>
-                <ul className="space-y-2.5 text-sm text-slate-600 flex-1 mb-5">
+                <ul className="space-y-2.5 text-sm text-slate-600 dark:text-gray-400 flex-1 mb-5">
                   <li className="flex items-start gap-2">
                     <svg className="w-4 h-4 text-[#635BFF] mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     Unlimited invoices
@@ -582,14 +582,14 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
               </div>
 
               {/* Enterprise Tier */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 flex flex-col">
+              <div className="rounded-2xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-5 flex flex-col">
                 <div className="mb-4">
-                  <h3 className="font-semibold text-slate-900">Enterprise</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">Enterprise</h3>
                   <div className="mt-2">
-                    <span className="text-3xl font-bold text-slate-900">Custom</span>
+                    <span className="text-3xl font-bold text-slate-900 dark:text-white">Custom</span>
                   </div>
                 </div>
-                <ul className="space-y-2.5 text-sm text-slate-600 flex-1 mb-5">
+                <ul className="space-y-2.5 text-sm text-slate-600 dark:text-gray-400 flex-1 mb-5">
                   <li className="flex items-start gap-2">
                     <svg className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     Everything in Pro
@@ -613,7 +613,7 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
                 </ul>
                 <a
                   href="mailto:sales@invoica.ai"
-                  className="w-full py-2.5 border-2 border-slate-200 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all text-center block"
+                  className="w-full py-2.5 border-2 border-slate-200 dark:border-gray-600 text-slate-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-slate-50 dark:hover:bg-gray-800 hover:border-slate-300 dark:hover:border-gray-500 transition-all text-center block"
                 >
                   Contact Sales
                 </a>
@@ -637,15 +637,15 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
           STEP 3: Create API Key
           ═══════════════════════════════════════════════════ */}
       {step === 'apiKey' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200 dark:border-gray-700 p-8 text-center">
           <div className="w-14 h-14 bg-gradient-to-br from-blue-500/10 to-[#635BFF]/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
             <svg className="w-7 h-7 text-[#635BFF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
             </svg>
           </div>
 
-          <h2 className="text-lg font-semibold text-slate-900 mb-1">Create your API key</h2>
-          <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Create your API key</h2>
+          <p className="text-sm text-slate-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
             Your API key authenticates requests from your AI agents to the Invoica platform.
           </p>
 
@@ -668,7 +668,7 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
             ) : 'Create My API Key'}
           </button>
 
-          <button onClick={onComplete} className="block mx-auto mt-4 text-sm text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onComplete} className="block mx-auto mt-4 text-sm text-slate-400 dark:text-gray-500 hover:text-slate-600 dark:hover:text-gray-400 transition-colors">
             Skip for now
           </button>
         </div>
@@ -678,15 +678,15 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
           STEP 3b: Show API Key
           ═══════════════════════════════════════════════════ */}
       {step === 'showKey' && (
-        <div className="bg-white border border-emerald-200 rounded-2xl p-8">
+        <div className="bg-white dark:bg-gray-900 border border-emerald-200 dark:border-emerald-800/40 rounded-2xl p-8">
           <div className="text-center mb-6">
             <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">Your API Key is Ready!</h2>
-            <p className="text-sm text-gray-500">Copy it now — you won&apos;t be able to see it again.</p>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Your API Key is Ready!</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Copy it now — you won&apos;t be able to see it again.</p>
           </div>
 
           <div className="bg-gray-900 rounded-xl p-4 mb-4">
@@ -699,15 +699,15 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
             </div>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
-            <p className="text-xs text-amber-800">
+          <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30 rounded-lg p-3 mb-6">
+            <p className="text-xs text-amber-800 dark:text-amber-300">
               <strong>Important:</strong> Store this key securely. It provides full API access to your account. Never expose it in client-side code or public repositories.
             </p>
           </div>
 
-          <div className="bg-gray-50 rounded-xl p-4 mb-6">
-            <p className="text-xs font-semibold text-gray-700 mb-2">Quick start — create your first invoice:</p>
-            <pre className="text-xs text-gray-600 font-mono overflow-x-auto whitespace-pre">{`curl -X POST https://igspopoejhsxvwvxyhbh.supabase.co/functions/v1/api/v1/invoices \\
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-6">
+            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Quick start — create your first invoice:</p>
+            <pre className="text-xs text-gray-600 dark:text-gray-400 font-mono overflow-x-auto whitespace-pre">{`curl -X POST https://igspopoejhsxvwvxyhbh.supabase.co/functions/v1/api/v1/invoices \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"amount": 100, "currency": "USD", "customerName": "Acme Corp"}'`}</pre>
@@ -719,7 +719,7 @@ export function WelcomeOnboarding({ onComplete }: WelcomeOnboardingProps) {
               Go to Dashboard
             </button>
             <a href="https://invoica.mintlify.app" target="_blank" rel="noopener noreferrer"
-              className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-all">
+              className="px-6 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
               Read Docs
             </a>
           </div>

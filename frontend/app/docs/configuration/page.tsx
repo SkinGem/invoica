@@ -39,9 +39,9 @@ const configProperties: ConfigProperty[] = [
 export default function ConfigurationPage() {
   return (
     <div className="max-w-4xl mx-auto py-12 px-6">
-      <h1 className="text-4xl font-bold mb-6">Configuration</h1>
-      
-      <p className="text-lg text-gray-300 mb-8">
+      <h1 className="text-4xl font-bold mb-6 dark:text-white">Configuration</h1>
+
+      <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
         The Invoica SDK accepts an InvoicaClientConfig object with sensible defaults for all optional properties.
       </p>
 
@@ -69,14 +69,14 @@ export default function ConfigurationPage() {
       </div>
 
       <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4">Basic Configuration</h2>
+        <h2 className="text-2xl font-semibold mb-4 dark:text-white">Basic Configuration</h2>
         <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
           <code>{`const client = new CountableClient({ apiKey: 'inv_live_xxx' });`}</code>
         </pre>
       </section>
 
       <section className="mb-10">
-        <h2 className="text-2xl font-semibold mb-4">Custom Configuration</h2>
+        <h2 className="text-2xl font-semibold mb-4 dark:text-white">Custom Configuration</h2>
         <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
           <code>{`const client = new CountableClient({
   apiKey: 'inv_live_xxx',
@@ -88,8 +88,8 @@ export default function ConfigurationPage() {
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4">Environment Detection</h2>
-        <p className="text-gray-300 mb-4">
+        <h2 className="text-2xl font-semibold mb-4 dark:text-white">Environment Detection</h2>
+        <p className="text-gray-600 dark:text-gray-300 mb-4">
           The SDK automatically detects whether you are using test keys (inv_test_ prefix) 
           or live keys (inv_live_ prefix) to determine the environment.
         </p>

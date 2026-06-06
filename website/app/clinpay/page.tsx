@@ -41,7 +41,7 @@ export default function ClinPayPage() {
       <Navbar />
       <main>
         {/* HERO */}
-        <section className="relative pt-32 pb-20 bg-white overflow-hidden">
+        <section className="relative pt-32 pb-20 bg-white dark:bg-gray-950 overflow-hidden">
           <div className="absolute inset-0">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-invoica-purple/5 rounded-full blur-3xl" />
             <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-invoica-purple-light/5 rounded-full blur-3xl" />
@@ -58,10 +58,10 @@ export default function ClinPayPage() {
           <div className="relative max-w-5xl mx-auto px-6 text-center">
             <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-invoica-purple/5 border border-invoica-purple/15 mb-8">
               <div className="w-2 h-2 rounded-full bg-invoica-purple mr-3" />
-              <span className="text-xs font-medium text-invoica-gray-500 tracking-wide uppercase">An Invoica product · Live with research orgs</span>
+              <span className="text-xs font-medium text-invoica-gray-500 dark:text-gray-400 tracking-wide uppercase">An Invoica product · Live with research orgs</span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-invoica-blue leading-[1.1] mb-8 tracking-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-invoica-blue dark:text-white leading-[1.1] mb-8 tracking-tight">
               Audit-grade payouts
               <br />
               <span className="bg-gradient-to-r from-invoica-purple to-invoica-purple-light bg-clip-text text-transparent">
@@ -69,7 +69,7 @@ export default function ClinPayPage() {
               </span>
             </h1>
 
-            <p className="text-lg md:text-xl text-invoica-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-invoica-gray-500 dark:text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
               One consolidated record per study, per period. Every payment cryptographically signed,
               tax-compliant, GDPR-clean.
             </p>
@@ -78,11 +78,11 @@ export default function ClinPayPage() {
               <CTAButton />
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-invoica-gray-400">
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-invoica-gray-400 dark:text-gray-500">
               <span>Built on</span>
-              <a href="https://invoica.ai" className="font-semibold text-invoica-gray-600 hover:text-invoica-purple">Invoica</a>
+              <a href="https://invoica.ai" className="font-semibold text-invoica-gray-600 dark:text-gray-300 hover:text-invoica-purple dark:hover:text-invoica-purple-light">Invoica</a>
               <span className="text-invoica-gray-200">+</span>
-              <a href="https://asterpay.io" target="_blank" rel="noopener noreferrer" className="font-semibold text-invoica-gray-600 hover:text-invoica-purple">AsterPay</a>
+              <a href="https://asterpay.io" target="_blank" rel="noopener noreferrer" className="font-semibold text-invoica-gray-600 dark:text-gray-300 hover:text-invoica-purple dark:hover:text-invoica-purple-light">AsterPay</a>
               <span className="text-invoica-gray-200">•</span>
               <span>SEPA Instant · Faster Payments · USDC</span>
               <span className="text-invoica-gray-200">•</span>
@@ -92,20 +92,20 @@ export default function ClinPayPage() {
         </section>
 
         {/* PROBLEM */}
-        <section className="py-20 bg-invoica-gray-50/30">
+        <section className="py-20 bg-invoica-gray-50/30 dark:bg-gray-900">
           <div className="max-w-4xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue mb-4 tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white mb-4 tracking-tight">
               Your CFO doesn&apos;t have a payment problem.
             </h2>
             <p className="text-2xl md:text-3xl font-semibold text-invoica-purple mb-10">
               They have an audit problem dressed as one.
             </p>
 
-            <p className="text-base text-invoica-gray-500 mb-6 leading-relaxed">
+            <p className="text-base text-invoica-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
               Most research organizations run finance ops like this:
             </p>
 
-            <ul className="space-y-3 text-base text-invoica-gray-600">
+            <ul className="space-y-3 text-base text-invoica-gray-600 dark:text-gray-300">
               {[
                 'Hundreds of small panellist payouts per study × dozens of active studies',
                 'N small bank transfers reconciled against M payout obligations',
@@ -121,7 +121,7 @@ export default function ClinPayPage() {
               ))}
             </ul>
 
-            <p className="mt-10 text-lg text-invoica-blue font-medium leading-relaxed">
+            <p className="mt-10 text-lg text-invoica-blue dark:text-gray-100 font-medium leading-relaxed">
               You&apos;re not running a payment problem. You&apos;re running an audit and finance-ops problem
               dressed as a payment problem.
             </p>
@@ -129,17 +129,17 @@ export default function ClinPayPage() {
         </section>
 
         {/* WHAT CLINPAY DOES */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-gray-950">
           <div className="max-w-5xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue mb-4 tracking-tight text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white mb-4 tracking-tight text-center">
               One audit-ready record per study, per period.
             </h2>
-            <p className="text-base md:text-lg text-invoica-gray-500 mb-12 text-center max-w-3xl mx-auto">
+            <p className="text-base md:text-lg text-invoica-gray-500 dark:text-gray-400 mb-12 text-center max-w-3xl mx-auto">
               ClinPay replaces hundreds of fragmented payments with a single consolidated record — and lifts
               tax compliance and panellist anonymity into the same flow.
             </p>
 
-            <div className="overflow-hidden rounded-2xl border border-invoica-gray-200 mb-12">
+            <div className="overflow-hidden rounded-2xl border border-invoica-gray-200 dark:border-gray-800 mb-12">
               <table className="w-full text-sm md:text-base">
                 <tbody>
                   {[
@@ -148,9 +148,9 @@ export default function ClinPayPage() {
                     ['Each period produces', 'One reconciliation export + tax line per jurisdiction'],
                     ['Each payout produces', 'One cryptographic receipt, one audit-trace, one GDPR-clean bank wire'],
                   ].map(([k, v], i) => (
-                    <tr key={i} className={i % 2 === 0 ? 'bg-invoica-gray-50/40' : 'bg-white'}>
-                      <td className="px-6 py-4 font-medium text-invoica-gray-600 w-1/2 border-b border-invoica-gray-200/60">{k}</td>
-                      <td className="px-6 py-4 text-invoica-blue font-semibold border-b border-invoica-gray-200/60">{v}</td>
+                    <tr key={i} className={i % 2 === 0 ? 'bg-invoica-gray-50/40 dark:bg-gray-800/50' : 'bg-white dark:bg-gray-900'}>
+                      <td className="px-6 py-4 font-medium text-invoica-gray-600 dark:text-gray-300 w-1/2 border-b border-invoica-gray-200/60 dark:border-gray-800">{k}</td>
+                      <td className="px-6 py-4 text-invoica-blue dark:text-white font-semibold border-b border-invoica-gray-200/60 dark:border-gray-800">{v}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -176,9 +176,9 @@ export default function ClinPayPage() {
                   d: 'Panellist IBAN never touches your systems. Sponsor never sees panellist banking.',
                 },
               ].map((it, i) => (
-                <div key={i} className="p-6 rounded-2xl border border-invoica-gray-200 hover:border-invoica-purple/30 transition-colors">
-                  <h3 className="text-lg font-semibold text-invoica-blue mb-2">{it.t}</h3>
-                  <p className="text-sm text-invoica-gray-500 leading-relaxed">{it.d}</p>
+                <div key={i} className="p-6 rounded-2xl border border-invoica-gray-200 dark:border-gray-800 dark:bg-gray-900 hover:border-invoica-purple/30 dark:hover:border-invoica-purple/30 transition-colors">
+                  <h3 className="text-lg font-semibold text-invoica-blue dark:text-gray-100 mb-2">{it.t}</h3>
+                  <p className="text-sm text-invoica-gray-500 dark:text-gray-400 leading-relaxed">{it.d}</p>
                 </div>
               ))}
             </div>
@@ -186,9 +186,9 @@ export default function ClinPayPage() {
         </section>
 
         {/* HOW IT WORKS */}
-        <section className="py-20 bg-invoica-gray-50/30">
+        <section className="py-20 bg-invoica-gray-50/30 dark:bg-gray-900">
           <div className="max-w-5xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue mb-12 tracking-tight text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white mb-12 tracking-tight text-center">
               Four-step lifecycle per study
             </h2>
 
@@ -215,10 +215,10 @@ export default function ClinPayPage() {
                   d: 'Daily / weekly / monthly rollup with per-jurisdiction tax totals. CSV + PDF.',
                 },
               ].map(s => (
-                <div key={s.n} className="p-6 rounded-2xl bg-white border border-invoica-gray-200 relative">
+                <div key={s.n} className="p-6 rounded-2xl bg-white dark:bg-gray-900 border border-invoica-gray-200 dark:border-gray-800 relative">
                   <div className="text-3xl font-bold text-invoica-purple/30 mb-3">{s.n}</div>
-                  <h3 className="text-base font-semibold text-invoica-blue mb-2">{s.t}</h3>
-                  <p className="text-sm text-invoica-gray-500 leading-relaxed">{s.d}</p>
+                  <h3 className="text-base font-semibold text-invoica-blue dark:text-gray-100 mb-2">{s.t}</h3>
+                  <p className="text-sm text-invoica-gray-500 dark:text-gray-400 leading-relaxed">{s.d}</p>
                 </div>
               ))}
             </div>
@@ -226,17 +226,17 @@ export default function ClinPayPage() {
         </section>
 
         {/* TWO REGULATED RAILS */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-gray-950">
           <div className="max-w-5xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue mb-12 tracking-tight text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white mb-12 tracking-tight text-center">
               Built on two regulated rails
             </h2>
 
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="p-8 rounded-2xl border border-invoica-gray-200 bg-gradient-to-br from-white to-invoica-purple/5">
+              <div className="p-8 rounded-2xl border border-invoica-gray-200 dark:border-gray-800 bg-gradient-to-br from-white dark:from-gray-900 to-invoica-purple/5">
                 <div className="text-xs font-semibold text-invoica-purple uppercase tracking-wider mb-3">Audit layer</div>
-                <h3 className="text-2xl font-bold text-invoica-blue mb-3">Invoica</h3>
-                <p className="text-sm text-invoica-gray-500 leading-relaxed mb-4">
+                <h3 className="text-2xl font-bold text-invoica-blue dark:text-white mb-3">Invoica</h3>
+                <p className="text-sm text-invoica-gray-500 dark:text-gray-400 leading-relaxed mb-4">
                   Agent-native invoicing + tax compliance middleware. Every payout produces a cryptographically-signed mandate
                   hash and a Deal Receipt anchored on-chain. Audit-grade, regulator-defensible.
                 </p>
@@ -245,10 +245,10 @@ export default function ClinPayPage() {
                 </a>
               </div>
 
-              <div className="p-8 rounded-2xl border border-invoica-gray-200 bg-gradient-to-br from-white to-invoica-purple/5">
+              <div className="p-8 rounded-2xl border border-invoica-gray-200 dark:border-gray-800 bg-gradient-to-br from-white dark:from-gray-900 to-invoica-purple/5">
                 <div className="text-xs font-semibold text-invoica-purple uppercase tracking-wider mb-3">Payment rail</div>
-                <h3 className="text-2xl font-bold text-invoica-blue mb-3">AsterPay</h3>
-                <p className="text-sm text-invoica-gray-500 leading-relaxed mb-4">
+                <h3 className="text-2xl font-bold text-invoica-blue dark:text-white mb-3">AsterPay</h3>
+                <p className="text-sm text-invoica-gray-500 dark:text-gray-400 leading-relaxed mb-4">
                   MiCA-aligned EU payment infrastructure. SEPA Instant, Faster Payments, USDC rails. EU regulated.
                   Panellist anonymity by design.
                 </p>
@@ -258,28 +258,28 @@ export default function ClinPayPage() {
               </div>
             </div>
 
-            <p className="text-center mt-10 text-lg text-invoica-blue font-semibold">Together: ClinPay.</p>
+            <p className="text-center mt-10 text-lg text-invoica-blue dark:text-gray-100 font-semibold">Together: ClinPay.</p>
           </div>
         </section>
 
         {/* PRICING */}
-        <section className="py-20 bg-invoica-gray-50/30">
+        <section className="py-20 bg-invoica-gray-50/30 dark:bg-gray-900">
           <div className="max-w-4xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue mb-4 tracking-tight text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white mb-4 tracking-tight text-center">
               Transparent pricing
             </h2>
-            <p className="text-base md:text-lg text-invoica-gray-500 mb-12 text-center max-w-2xl mx-auto">
+            <p className="text-base md:text-lg text-invoica-gray-500 dark:text-gray-400 mb-12 text-center max-w-2xl mx-auto">
               ON-TOP model — sponsor pays the fee, panellist receives 100% of the honorarium. No surprises.
             </p>
 
-            <div className="overflow-hidden rounded-2xl border border-invoica-gray-200 bg-white">
+            <div className="overflow-hidden rounded-2xl border border-invoica-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
               <table className="w-full text-base">
-                <thead className="bg-invoica-gray-50/60">
+                <thead className="bg-invoica-gray-50/60 dark:bg-gray-800">
                   <tr>
-                    <th className="px-6 py-4 text-left font-semibold text-invoica-blue">Currency / Rail</th>
-                    <th className="px-6 py-4 text-center font-semibold text-invoica-blue">Rate</th>
-                    <th className="px-6 py-4 text-center font-semibold text-invoica-blue">Floor</th>
-                    <th className="px-6 py-4 text-center font-semibold text-invoica-blue">Cap</th>
+                    <th className="px-6 py-4 text-left font-semibold text-invoica-blue dark:text-white">Currency / Rail</th>
+                    <th className="px-6 py-4 text-center font-semibold text-invoica-blue dark:text-white">Rate</th>
+                    <th className="px-6 py-4 text-center font-semibold text-invoica-blue dark:text-white">Floor</th>
+                    <th className="px-6 py-4 text-center font-semibold text-invoica-blue dark:text-white">Cap</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -288,9 +288,9 @@ export default function ClinPayPage() {
                     ['USD · USDC + ACH', '2%', '$0.60', '$5.50'],
                     ['GBP · Faster Payments', '2%', '£0.50', '£4.50'],
                   ].map((row, i) => (
-                    <tr key={i} className="border-t border-invoica-gray-200/60">
+                    <tr key={i} className="border-t border-invoica-gray-200/60 dark:border-gray-800">
                       {row.map((cell, j) => (
-                        <td key={j} className={`px-6 py-4 ${j === 0 ? 'font-medium text-invoica-gray-600' : 'text-center font-mono text-invoica-blue'}`}>
+                        <td key={j} className={`px-6 py-4 ${j === 0 ? 'font-medium text-invoica-gray-600 dark:text-gray-300' : 'text-center font-mono text-invoica-blue dark:text-gray-200'}`}>
                           {cell}
                         </td>
                       ))}
@@ -300,13 +300,13 @@ export default function ClinPayPage() {
               </table>
             </div>
 
-            <div className="mt-8 grid md:grid-cols-2 gap-4 text-sm text-invoica-gray-500">
-              <div className="p-4 rounded-xl bg-white border border-invoica-gray-200">
-                <strong className="text-invoica-blue">Volume tier:</strong> at 50,000 payouts/month, wholesale settlement fee
+            <div className="mt-8 grid md:grid-cols-2 gap-4 text-sm text-invoica-gray-500 dark:text-gray-400">
+              <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-invoica-gray-200 dark:border-gray-800">
+                <strong className="text-invoica-blue dark:text-white">Volume tier:</strong> at 50,000 payouts/month, wholesale settlement fee
                 drops €0.05/payout — auto-applied, no renegotiation. Second tier at 200,000+.
               </div>
-              <div className="p-4 rounded-xl bg-white border border-invoica-gray-200">
-                <strong className="text-invoica-blue">Sub-€10 payouts</strong> batched daily per panellist (one wire per
+              <div className="p-4 rounded-xl bg-white dark:bg-gray-900 border border-invoica-gray-200 dark:border-gray-800">
+                <strong className="text-invoica-blue dark:text-white">Sub-€10 payouts</strong> batched daily per panellist (one wire per
                 recipient per day) — industry-standard Cint / Prolific pattern.
               </div>
             </div>
@@ -314,9 +314,9 @@ export default function ClinPayPage() {
         </section>
 
         {/* COMPLIANCE */}
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-gray-950">
           <div className="max-w-5xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue mb-12 tracking-tight text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white mb-12 tracking-tight text-center">
               Compliance built in
             </h2>
 
@@ -331,9 +331,9 @@ export default function ClinPayPage() {
                 'Audit-pack export — CSV + PDF for end-client deliverables',
                 'On-chain Deal Receipt anchoring (Base mainnet)',
               ].map((line, i) => (
-                <div key={i} className="flex gap-3 items-start p-4 rounded-xl bg-invoica-gray-50/40 border border-invoica-gray-200/60">
+                <div key={i} className="flex gap-3 items-start p-4 rounded-xl bg-invoica-gray-50/40 dark:bg-gray-800/50 border border-invoica-gray-200/60 dark:border-gray-700/50">
                   <span className="text-green-600 font-bold mt-0.5">✓</span>
-                  <span className="text-sm md:text-base text-invoica-gray-600">{line}</span>
+                  <span className="text-sm md:text-base text-invoica-gray-600 dark:text-gray-300">{line}</span>
                 </div>
               ))}
             </div>
@@ -341,19 +341,19 @@ export default function ClinPayPage() {
         </section>
 
         {/* PROOF */}
-        <section className="py-20 bg-invoica-gray-50/30">
+        <section className="py-20 bg-invoica-gray-50/30 dark:bg-gray-900">
           <div className="max-w-4xl mx-auto px-6">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue mb-12 tracking-tight text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white mb-12 tracking-tight text-center">
               Already running real money
             </h2>
 
-            <div className="rounded-2xl border border-invoica-gray-200 bg-white p-8 md:p-10">
+            <div className="rounded-2xl border border-invoica-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-8 md:p-10">
               <div className="text-xs font-semibold text-invoica-purple uppercase tracking-wider mb-3">2026-05-15</div>
-              <p className="text-lg md:text-xl text-invoica-blue font-medium leading-relaxed mb-4">
+              <p className="text-lg md:text-xl text-invoica-blue dark:text-gray-100 font-medium leading-relaxed mb-4">
                 Live €0.50 production cycle settled in real EUR to a real bank account in 90 seconds. Full
                 PACT mandate + Deal Receipt + UK VAT line generated automatically.
               </p>
-              <p className="text-sm text-invoica-gray-500">
+              <p className="text-sm text-invoica-gray-500 dark:text-gray-400">
                 Closed PoC with one clinical research organization. Production launch targeted for Q3 2026.
               </p>
             </div>
@@ -361,12 +361,12 @@ export default function ClinPayPage() {
         </section>
 
         {/* FINAL CTA */}
-        <section className="py-24 bg-white">
+        <section className="py-24 bg-white dark:bg-gray-950">
           <div className="max-w-3xl mx-auto px-6 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue mb-4 tracking-tight">
+            <h2 className="text-3xl md:text-4xl font-bold text-invoica-blue dark:text-white mb-4 tracking-tight">
               Ready to consolidate your panel payouts?
             </h2>
-            <p className="text-base md:text-lg text-invoica-gray-500 mb-10 max-w-xl mx-auto">
+            <p className="text-base md:text-lg text-invoica-gray-500 dark:text-gray-400 mb-10 max-w-xl mx-auto">
               20-minute walkthrough. Bring your highest-volume study — we&apos;ll show you the audit pack it would have
               generated.
             </p>

@@ -40,14 +40,14 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="rounded-lg border bg-white">
+    <div className="rounded-lg border dark:border-gray-800 bg-white dark:bg-gray-900">
       <table className="w-full">
         <thead>
-          <tr className="border-b">
+          <tr className="border-b dark:border-gray-800">
             {columns.map((column) => (
               <th
                 key={String(column.key)}
-                className="px-4 py-3 text-left text-sm font-medium text-gray-500"
+                className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400"
               >
                 {column.label}
               </th>
@@ -58,7 +58,7 @@ export function DataTable<T>({
           {data.map((row, rowIndex) => (
             <tr
               key={rowIndex}
-              className={`border-b ${onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+              className={`border-b dark:border-gray-800 ${onRowClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50' : ''}`}
               onClick={() => onRowClick?.(row)}
             >
               {columns.map((column) => {
@@ -66,7 +66,7 @@ export function DataTable<T>({
                 return (
                   <td
                     key={String(column.key)}
-                    className="px-4 py-3 text-sm text-gray-900"
+                    className="px-4 py-3 text-sm text-gray-900 dark:text-gray-300"
                   >
                     {column.render ? column.render(value, row) : String(value ?? '')}
                   </td>

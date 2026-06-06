@@ -61,7 +61,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Invoices */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-[#635BFF]/10 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 hover:shadow-md hover:border-[#635BFF]/10 transition-all duration-300">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-gradient-to-br from-[#635BFF]/10 to-[#818CF8]/10 rounded-xl">
               <svg className="w-6 h-6 text-[#635BFF]" viewBox="0 0 24 24" fill="none">
@@ -72,15 +72,15 @@ export default function DashboardPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total Invoices</p>
-              <p className="text-2xl font-bold text-gray-900">{stats?.totalInvoices ?? 0}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Total Invoices</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalInvoices ?? 0}</p>
             </div>
           </div>
         </div>
         {/* Pending */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-amber-200 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 hover:shadow-md hover:border-amber-200 transition-all duration-300">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl">
+            <div className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-xl">
               <svg className="w-6 h-6 text-amber-500" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
                 <circle cx="12" cy="12" r="9" fill="currentColor" opacity="0.08" />
@@ -95,9 +95,9 @@ export default function DashboardPage() {
           </div>
         </div>
         {/* Settled */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-emerald-200 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 hover:shadow-md hover:border-emerald-200 transition-all duration-300">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl">
+            <div className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 rounded-xl">
               <svg className="w-6 h-6 text-emerald-500" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
                 <circle cx="12" cy="12" r="9" fill="currentColor" opacity="0.08" />
@@ -111,9 +111,9 @@ export default function DashboardPage() {
           </div>
         </div>
         {/* Revenue */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-violet-200 transition-all duration-300">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 hover:shadow-md hover:border-violet-200 transition-all duration-300">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl">
+            <div className="p-3 bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 rounded-xl">
               <svg className="w-6 h-6 text-violet-500" viewBox="0 0 24 24" fill="none">
                 <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" strokeWidth="1.5" />
                 <rect x="2" y="4" width="20" height="16" rx="3" fill="currentColor" opacity="0.06" />
@@ -129,20 +129,20 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-6 border border-gray-100 dark:border-gray-800">
+        <h2 className="text-lg font-semibold dark:text-white mb-4">Recent Activity</h2>
         <div className="space-y-4">
           {activity.length === 0 ? (
-            <p className="text-center text-gray-400 py-6">No recent activity yet. Create your first invoice via the API.</p>
+            <p className="text-center text-gray-400 dark:text-gray-500 py-6">No recent activity yet. Create your first invoice via the API.</p>
           ) : (
             activity.map((item) => (
-              <div key={item.id} className="flex items-center gap-4 pb-4 border-b last:border-0">
+              <div key={item.id} className="flex items-center gap-4 pb-4 border-b dark:border-gray-800 last:border-0">
                 <div className={`w-2 h-2 rounded-full ${item.status === 'success' ? 'bg-green-500' : item.status === 'pending' ? 'bg-amber-500' : 'bg-red-500'}`} />
                 <div className="flex-1">
-                  <p className="font-medium">{item.title}</p>
-                  <p className="text-sm text-gray-500">{item.description}</p>
+                  <p className="font-medium dark:text-white">{item.title}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{item.description}</p>
                 </div>
-                <p className="text-sm text-gray-400">{item.timestamp}</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">{item.timestamp}</p>
               </div>
             ))
           )}

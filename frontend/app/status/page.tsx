@@ -27,10 +27,10 @@ async function checkService(url: string, timeout = 10000): Promise<{ ok: boolean
 
 function StatusBadge({ status }: { status: ServiceStatus['status'] }) {
   const styles: Record<string, string> = {
-    operational: 'bg-green-100 text-green-800',
-    degraded: 'bg-yellow-100 text-yellow-800',
-    down: 'bg-red-100 text-red-800',
-    checking: 'bg-gray-100 text-gray-500',
+    operational: 'bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-400',
+    degraded: 'bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-400',
+    down: 'bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400',
+    checking: 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400',
   };
   const labels: Record<string, string> = {
     operational: 'Operational',
@@ -84,7 +84,7 @@ export default function StatusPage() {
 
   const allOperational = services.every((s) => s.status === 'operational');
   const anyDown = services.some((s) => s.status === 'down');
-  const overallBg = allOperational ? 'bg-green-50 border-green-200' : anyDown ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200';
+  const overallBg = allOperational ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/30' : anyDown ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/30' : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700';
   const overallDot = allOperational ? 'bg-green-500' : anyDown ? 'bg-red-500' : 'bg-gray-400';
   const overallLabel = allOperational ? 'All Systems Operational' : anyDown ? 'Partial Outage Detected' : 'Checking...';
 
@@ -92,13 +92,13 @@ export default function StatusPage() {
     <div className="max-w-3xl mx-auto p-6">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">System Status</h1>
-          <p className="text-sm text-gray-500 mt-1">Real-time health of Invoica services</p>
+          <h1 className="text-3xl font-bold dark:text-white">System Status</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Real-time health of Invoica services</p>
         </div>
         <button
           onClick={runChecks}
           disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 dark:border-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
         >
           <svg className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -110,28 +110,28 @@ export default function StatusPage() {
       <div className={`rounded-xl border p-5 mb-8 ${overallBg}`}>
         <div className="flex items-center gap-3">
           <div className={`w-3 h-3 rounded-full ${overallDot} ${allOperational ? 'animate-pulse' : ''}`} />
-          <p className="text-lg font-semibold">{overallLabel}</p>
+          <p className="text-lg font-semibold dark:text-white">{overallLabel}</p>
         </div>
         {lastRefresh && (
-          <p className="text-xs text-gray-500 mt-2 ml-6">Last checked at {lastRefresh} &middot; Auto-refreshes every 60s</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-6">Last checked at {lastRefresh} &middot; Auto-refreshes every 60s</p>
         )}
       </div>
 
       <div className="space-y-3">
         {services.map((service) => (
-          <div key={service.name} className="bg-white rounded-xl border shadow-sm p-5">
+          <div key={service.name} className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 shadow-sm p-5">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <h3 className="font-semibold text-gray-900">{service.name}</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">{service.name}</h3>
                   <StatusBadge status={service.status} />
                 </div>
-                <p className="text-sm text-gray-500 mt-1">{service.description}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{service.description}</p>
               </div>
               {service.responseTime !== undefined && service.status !== 'checking' && service.responseTime > 0 && (
                 <div className="text-right ml-4">
-                  <p className="text-sm font-mono text-gray-600">{service.responseTime}ms</p>
-                  <p className="text-xs text-gray-400">response time</p>
+                  <p className="text-sm font-mono text-gray-600 dark:text-gray-300">{service.responseTime}ms</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">response time</p>
                 </div>
               )}
             </div>
@@ -140,8 +140,8 @@ export default function StatusPage() {
       </div>
 
       <div className="mt-8 text-center">
-        <p className="text-xs text-gray-400">Status checks run from your browser &middot; Response times vary by location.</p>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-gray-400 dark:text-gray-500">Status checks run from your browser &middot; Response times vary by location.</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
           For support: <a href="mailto:support@invoica.ai" className="text-[#635BFF] hover:underline">support@invoica.ai</a>
         </p>
       </div>

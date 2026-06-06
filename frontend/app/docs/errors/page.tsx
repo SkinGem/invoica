@@ -5,9 +5,9 @@ import React from 'react';
 export default function ErrorsDocPage() {
   return (
     <div className="max-w-4xl mx-auto py-12 px-6">
-      <h1 className="text-4xl font-bold mb-6">Error Handling</h1>
-      
-      <p className="text-lg text-gray-300 mb-8">
+      <h1 className="text-4xl font-bold mb-6 dark:text-white">Error Handling</h1>
+
+      <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
         The Invoica SDK throws typed errors that extend the base InvoicaError class. 
         Each error includes a statusCode and error code for programmatic handling.
       </p>
@@ -15,43 +15,43 @@ export default function ErrorsDocPage() {
       <div className="overflow-x-auto mb-8">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-gray-700">
-              <th className="py-3 px-4 font-semibold">Name</th>
-              <th className="py-3 px-4 font-semibold">Status Code</th>
-              <th className="py-3 px-4 font-semibold">Code</th>
-              <th className="py-3 px-4 font-semibold">Description</th>
+            <tr className="border-b border-gray-200 dark:border-gray-700">
+              <th className="py-3 px-4 font-semibold dark:text-gray-300">Name</th>
+              <th className="py-3 px-4 font-semibold dark:text-gray-300">Status Code</th>
+              <th className="py-3 px-4 font-semibold dark:text-gray-300">Code</th>
+              <th className="py-3 px-4 font-semibold dark:text-gray-300">Description</th>
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-gray-800">
-              <td className="py-3 px-4">ValidationError</td>
-              <td className="py-3 px-4">400</td>
-              <td className="py-3 px-4">VALIDATION_ERROR</td>
-              <td className="py-3 px-4">Invalid request parameters</td>
+            <tr className="border-b border-gray-200 dark:border-gray-800">
+              <td className="py-3 px-4 dark:text-gray-300">ValidationError</td>
+              <td className="py-3 px-4 dark:text-gray-300">400</td>
+              <td className="py-3 px-4 dark:text-gray-300">VALIDATION_ERROR</td>
+              <td className="py-3 px-4 dark:text-gray-300">Invalid request parameters</td>
             </tr>
-            <tr className="border-b border-gray-800">
-              <td className="py-3 px-4">AuthenticationError</td>
-              <td className="py-3 px-4">401</td>
-              <td className="py-3 px-4">AUTH_ERROR</td>
-              <td className="py-3 px-4">Missing or invalid API key</td>
+            <tr className="border-b border-gray-200 dark:border-gray-800">
+              <td className="py-3 px-4 dark:text-gray-300">AuthenticationError</td>
+              <td className="py-3 px-4 dark:text-gray-300">401</td>
+              <td className="py-3 px-4 dark:text-gray-300">AUTH_ERROR</td>
+              <td className="py-3 px-4 dark:text-gray-300">Missing or invalid API key</td>
             </tr>
-            <tr className="border-b border-gray-800">
-              <td className="py-3 px-4">NotFoundError</td>
-              <td className="py-3 px-4">404</td>
-              <td className="py-3 px-4">NOT_FOUND</td>
-              <td className="py-3 px-4">Resource does not exist</td>
+            <tr className="border-b border-gray-200 dark:border-gray-800">
+              <td className="py-3 px-4 dark:text-gray-300">NotFoundError</td>
+              <td className="py-3 px-4 dark:text-gray-300">404</td>
+              <td className="py-3 px-4 dark:text-gray-300">NOT_FOUND</td>
+              <td className="py-3 px-4 dark:text-gray-300">Resource does not exist</td>
             </tr>
-            <tr className="border-b border-gray-800">
-              <td className="py-3 px-4">RateLimitError</td>
-              <td className="py-3 px-4">429</td>
-              <td className="py-3 px-4">RATE_LIMIT</td>
-              <td className="py-3 px-4">Too many requests</td>
+            <tr className="border-b border-gray-200 dark:border-gray-800">
+              <td className="py-3 px-4 dark:text-gray-300">RateLimitError</td>
+              <td className="py-3 px-4 dark:text-gray-300">429</td>
+              <td className="py-3 px-4 dark:text-gray-300">RATE_LIMIT</td>
+              <td className="py-3 px-4 dark:text-gray-300">Too many requests</td>
             </tr>
-            <tr className="border-b border-gray-800">
-              <td className="py-3 px-4">InvoicaError</td>
-              <td className="py-3 px-4">varies</td>
-              <td className="py-3 px-4">varies</td>
-              <td className="py-3 px-4">Base error class for all API errors</td>
+            <tr className="border-b border-gray-200 dark:border-gray-800">
+              <td className="py-3 px-4 dark:text-gray-300">InvoicaError</td>
+              <td className="py-3 px-4 dark:text-gray-300">varies</td>
+              <td className="py-3 px-4 dark:text-gray-300">varies</td>
+              <td className="py-3 px-4 dark:text-gray-300">Base error class for all API errors</td>
             </tr>
           </tbody>
         </table>
@@ -76,8 +76,8 @@ export default function ErrorsDocPage() {
 }`}</code></pre>
       </div>
 
-      <h2 className="text-2xl font-semibold mb-4">Retry Behavior</h2>
-      <p className="text-gray-300">
+      <h2 className="text-2xl font-semibold mb-4 dark:text-white">Retry Behavior</h2>
+      <p className="text-gray-600 dark:text-gray-300">
         HTTP status codes 429, 500, 502, 503, and 504 are automatically retried with exponential 
         backoff up to 3 attempts before propagating the error.
       </p>

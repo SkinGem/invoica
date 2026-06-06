@@ -18,10 +18,10 @@ export interface InvoiceTableProps {
 
 function getStatusColor(status: string): string {
   const s = status.toLowerCase();
-  if (s === 'pending') return 'text-amber-600';
-  if (s === 'paid' || s === 'completed') return 'text-emerald-600';
-  if (s === 'failed') return 'text-red-600';
-  return 'text-slate-600';
+  if (s === 'pending') return 'text-amber-600 dark:text-amber-400';
+  if (s === 'paid' || s === 'completed') return 'text-emerald-600 dark:text-emerald-400';
+  if (s === 'failed') return 'text-red-600 dark:text-red-400';
+  return 'text-slate-600 dark:text-slate-400';
 }
 
 export function InvoiceTable({ invoices, isLoading }: InvoiceTableProps): JSX.Element {

@@ -2,7 +2,7 @@
 
 export default function BetaBanner() {
   return (
-    <section id="beta" className="py-28 bg-invoica-gray-50 relative overflow-hidden">
+    <section id="beta" className="py-28 bg-invoica-gray-50 dark:bg-gray-900 relative overflow-hidden">
       {/* Background glow */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-invoica-purple/5 rounded-full blur-3xl" />
@@ -15,7 +15,7 @@ export default function BetaBanner() {
           <span className="text-xs font-semibold text-invoica-purple uppercase tracking-widest">Now in Beta</span>
         </div>
 
-        <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue mb-6 tracking-tight">
+        <h2 className="text-4xl md:text-5xl font-bold text-invoica-blue dark:text-white mb-6 tracking-tight">
           Be among the first to build
           <br />
           <span className="bg-gradient-to-r from-invoica-purple to-invoica-purple-light bg-clip-text text-transparent">
@@ -23,7 +23,7 @@ export default function BetaBanner() {
           </span>
         </h2>
 
-        <p className="text-lg text-invoica-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed">
+        <p className="text-lg text-invoica-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
           We&apos;re in private beta. Early access is free — get your API key, integrate in minutes,
           and help shape the future of autonomous agent payments.
         </p>
@@ -59,12 +59,12 @@ export default function BetaBanner() {
               desc: 'Chat directly with the team on Telegram. Your feedback shapes the roadmap.',
             },
           ].map((perk) => (
-            <div key={perk.title} className="bg-white rounded-2xl p-7 border border-invoica-gray-200 shadow-sm hover:shadow-md hover:border-invoica-purple/30 transition-all duration-300">
+            <div key={perk.title} className="bg-white dark:bg-gray-800 rounded-2xl p-7 border border-invoica-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-invoica-purple/30 transition-all duration-300">
               <div className="inline-flex p-3 bg-invoica-purple/5 rounded-xl mb-4">
                 {perk.icon}
               </div>
-              <h3 className="font-semibold text-invoica-blue mb-2">{perk.title}</h3>
-              <p className="text-sm text-invoica-gray-500 leading-relaxed" dangerouslySetInnerHTML={{ __html: perk.desc }} />
+              <h3 className="font-semibold text-invoica-blue dark:text-white mb-2">{perk.title}</h3>
+              <p className="text-sm text-invoica-gray-500 dark:text-gray-400 leading-relaxed" dangerouslySetInnerHTML={{ __html: perk.desc }} />
             </div>
           ))}
         </div>
@@ -82,13 +82,13 @@ export default function BetaBanner() {
           </a>
           <a
             href="https://invoica.mintlify.app"
-            className="inline-flex items-center px-8 py-4 text-sm font-semibold text-invoica-blue border-2 border-invoica-gray-200 rounded-full hover:bg-invoica-purple/5 hover:border-invoica-purple hover:text-invoica-purple transition-all duration-300"
+            className="inline-flex items-center px-8 py-4 text-sm font-semibold text-invoica-blue dark:text-white border-2 border-invoica-gray-200 dark:border-gray-700 rounded-full hover:bg-invoica-purple/5 hover:border-invoica-purple hover:text-invoica-purple dark:hover:border-invoica-purple dark:hover:text-invoica-purple-light transition-all duration-300"
           >
             Read the Docs
           </a>
         </div>
 
-        <p className="mt-8 text-sm text-invoica-gray-400">
+        <p className="mt-8 text-sm text-invoica-gray-400 dark:text-gray-500">
           No credit card required &middot; Pricing announced after beta
         </p>
       </div>

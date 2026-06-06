@@ -38,7 +38,7 @@ export default function Hero() {
   const chain = CHAINS[chainIdx];
 
   return (
-    <section className="relative pt-32 pb-24 overflow-hidden bg-white min-h-[90vh] flex items-center">
+    <section className="relative pt-32 pb-24 overflow-hidden bg-white dark:bg-gray-950 min-h-[90vh] flex items-center">
       {/* Subtle background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-invoica-purple/5 rounded-full blur-3xl animate-pulse-slow" />
@@ -61,7 +61,7 @@ export default function Hero() {
               <span className="text-xs font-medium text-invoica-gray-500 tracking-wide uppercase">Now in Public Beta</span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-invoica-blue leading-[1.1] mb-8 tracking-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-invoica-blue dark:text-white leading-[1.1] mb-8 tracking-tight">
               The Financial OS
               <br />
               <span className="bg-gradient-to-r from-invoica-purple to-invoica-purple-light bg-clip-text text-transparent">
@@ -69,7 +69,7 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p className="text-lg md:text-xl text-invoica-gray-500 mb-10 max-w-lg leading-relaxed">
+            <p className="text-lg md:text-xl text-invoica-gray-500 dark:text-gray-400 mb-10 max-w-lg leading-relaxed">
               Your agents can now pay, invoice, and settle autonomously. Built on x402 — the open protocol for agent payments.
             </p>
 
@@ -85,7 +85,7 @@ export default function Hero() {
                 href="https://invoica.mintlify.app/quickstart"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex items-center px-8 py-4 text-sm font-semibold text-invoica-gray-600 bg-white border border-invoica-gray-200 rounded-full hover:border-invoica-purple/30 hover:text-invoica-purple transition-all duration-300 hover:-translate-y-0.5"
+                className="group inline-flex items-center px-8 py-4 text-sm font-semibold text-invoica-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-invoica-gray-200 dark:border-gray-700 rounded-full hover:border-invoica-purple/30 dark:hover:border-invoica-purple/50 hover:text-invoica-purple dark:hover:text-white transition-all duration-300 hover:-translate-y-0.5"
               >
                 View Quickstart
                 <svg className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,14 +94,14 @@ export default function Hero() {
               </a>
             </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-invoica-gray-400">
+            <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-invoica-gray-400 dark:text-gray-500">
               <span>Built on x402</span>
-              <span className="text-invoica-gray-200">•</span>
+              <span className="text-invoica-gray-200 dark:text-gray-700">•</span>
               <span className="inline-flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 Settlements live on
               </span>
-              <span className="font-semibold text-invoica-gray-600">Base · Polygon · Arbitrum · Solana</span>
+              <span className="font-semibold text-invoica-gray-600 dark:text-gray-300">Base · Polygon · Arbitrum · Solana</span>
             </div>
           </div>
 

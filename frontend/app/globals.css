@@ -2,34 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
-/**
- * Base layer - Tailwind CSS directives
- * 
- * This file contains the core Tailwind directives that power
- * all the utility classes used throughout the application.
- */
 @layer base {
-  * {
-    @apply border-slate-200;
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 239 68% 74%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 243 75% 59%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 243 75% 59%;
+    --radius: 0.5rem;
   }
-  
+
+  .dark {
+    --background: 222 47% 5%;
+    --foreground: 213 31% 91%;
+    --card: 222 47% 8%;
+    --card-foreground: 213 31% 91%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 213 31% 91%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 239 68% 74%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 223 47% 11%;
+    --muted-foreground: 215 16% 57%;
+    --accent: 216 34% 17%;
+    --accent-foreground: 213 31% 91%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 213 31% 91%;
+    --border: 216 34% 17%;
+    --input: 216 34% 17%;
+    --ring: 243 75% 59%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-background text-foreground;
   }
 }
 
-/**
- * Custom utility classes
- */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
 }
 
-/**
- * Custom scrollbar styling
- */
+/* Custom scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -49,9 +83,19 @@
   background: #94a3b8;
 }
 
-/**
- * Clerk component customizations
- */
+.dark ::-webkit-scrollbar-track {
+  background: #1e2433;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Clerk component customizations */
 .clerk-modal {
   z-index: 9999 !important;
 }

@@ -39,9 +39,9 @@ function StatusDot({ status }: { status: ServiceStatus['status'] }) {
 
 function StatusLabel({ status }: { status: ServiceStatus['status'] }) {
   const styles: Record<string, string> = {
-    operational: 'text-emerald-600',
-    degraded: 'text-amber-600',
-    down: 'text-red-600',
+    operational: 'text-emerald-400',
+    degraded: 'text-amber-400',
+    down: 'text-red-400',
     checking: 'text-gray-400',
   };
   const labels: Record<string, string> = {

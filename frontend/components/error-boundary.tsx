@@ -29,19 +29,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '32px', textAlign: 'center' }}>
-          <h2>Something went wrong</h2>
-          <p style={{ color: 'gray' }}>{this.state.error?.message}</p>
+        <div className="p-8 text-center">
+          <h2 className="text-lg font-semibold dark:text-white mb-2">Something went wrong</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">{this.state.error?.message}</p>
           <button
-            style={{
-              marginTop: '16px',
-              padding: '8px 16px',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
             onClick={() => this.setState({ hasError: false, error: null })}
           >
             Try again

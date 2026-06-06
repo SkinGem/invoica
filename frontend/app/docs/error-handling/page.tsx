@@ -1,23 +1,23 @@
 export default function ErrorHandlingPage() {
   return (
-    <div style={{ maxWidth: '768px', margin: '0 auto', padding: '32px', fontFamily: 'system-ui' }}>
-      <h1 style={{ fontSize: '32px' }}>Error Handling</h1>
-      <p>
+    <div className="max-w-3xl mx-auto py-8 px-8">
+      <h1 className="text-3xl font-bold mb-6 dark:text-white">Error Handling</h1>
+      <p className="text-gray-600 dark:text-gray-400 mb-6">
         The SDK provides structured error responses to help you handle failures gracefully
         and take appropriate action based on the error type.
       </p>
 
-      <h2 style={{ fontSize: '24px', marginTop: '32px' }}>Error Types</h2>
-      <ul style={{ marginLeft: '24px', lineHeight: '1.8' }}>
-        <li><strong>InvoicaError</strong> — Base error class</li>
-        <li><strong>ValidationError</strong> — Invalid input (400)</li>
-        <li><strong>AuthenticationError</strong> — Invalid credentials (401)</li>
-        <li><strong>NotFoundError</strong> — Resource not found (404)</li>
-        <li><strong>RateLimitError</strong> — Too many requests (429)</li>
+      <h2 className="text-2xl font-semibold mt-8 mb-4 dark:text-white">Error Types</h2>
+      <ul className="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400 mb-8">
+        <li><strong className="dark:text-gray-300">InvoicaError</strong> — Base error class</li>
+        <li><strong className="dark:text-gray-300">ValidationError</strong> — Invalid input (400)</li>
+        <li><strong className="dark:text-gray-300">AuthenticationError</strong> — Invalid credentials (401)</li>
+        <li><strong className="dark:text-gray-300">NotFoundError</strong> — Resource not found (404)</li>
+        <li><strong className="dark:text-gray-300">RateLimitError</strong> — Too many requests (429)</li>
       </ul>
 
-      <h2 style={{ fontSize: '24px', marginTop: '32px' }}>Catching Errors</h2>
-      <pre style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '8px', overflowX: 'auto', fontFamily: 'monospace', fontSize: '14px' }}>
+      <h2 className="text-2xl font-semibold mt-8 mb-4 dark:text-white">Catching Errors</h2>
+      <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto font-mono text-sm dark:text-gray-200 mb-8">
 {`try {
   const invoice = await client.createInvoice({...});
 } catch (err) {
@@ -29,8 +29,8 @@ export default function ErrorHandlingPage() {
 }`}
       </pre>
 
-      <h2 style={{ fontSize: '24px', marginTop: '32px' }}>Error Response Format</h2>
-      <pre style={{ backgroundColor: '#f5f5f5', padding: '16px', borderRadius: '8px', overflowX: 'auto', fontFamily: 'monospace', fontSize: '14px' }}>
+      <h2 className="text-2xl font-semibold mt-8 mb-4 dark:text-white">Error Response Format</h2>
+      <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto font-mono text-sm dark:text-gray-200 mb-8">
 {`{
   success: false,
   error: {
@@ -41,8 +41,8 @@ export default function ErrorHandlingPage() {
 }`}
       </pre>
 
-      <h2 style={{ fontSize: '24px', marginTop: '32px' }}>Best Practices</h2>
-      <ul style={{ marginLeft: '24px', lineHeight: '1.8' }}>
+      <h2 className="text-2xl font-semibold mt-8 mb-4 dark:text-white">Best Practices</h2>
+      <ul className="list-disc pl-6 space-y-2 text-gray-600 dark:text-gray-400">
         <li>Always catch InvoicaError as the base class</li>
         <li>Check specific error types for targeted handling</li>
         <li>Use retryAfter from RateLimitError for backoff</li>
