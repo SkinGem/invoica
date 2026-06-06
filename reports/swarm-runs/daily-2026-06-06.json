@@ -1,0 +1,27 @@
+[
+  {
+    "schema_version": "2.0.0",
+    "run_id": "005e8e80-2d28-4a1a-a776-371969f5cc4f",
+    "project": "invoica",
+    "sprint_file": "/home/invoica/apps/Invoica/sprints/week-118.json",
+    "started_at": "2026-06-06T04:00:04.880Z",
+    "finished_at": "2026-06-06T04:00:08.409Z",
+    "duration_seconds": 4,
+    "git_branch": "main",
+    "git_head_before": "1b53e4fd8",
+    "git_head_after": "1b53e4fd8",
+    "daily_plan_loaded": null,
+    "pending_cto_proposals": 0,
+    "wallet": "Wallet: $0.0000 / $50 budget (0.0%) | 64 cloud calls this month",
+    "summary": {
+      "total_tasks": 8,
+      "done": 0,
+      "rejected": 2,
+      "skipped": 0,
+      "human_pending": 0,
+      "approval_rate": 0,
+      "total_tokens": 0
+    },
+    "tasks": []
+  }
+]
