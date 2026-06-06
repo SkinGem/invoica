@@ -23,13 +23,6 @@ export interface TaskValidationResult {
 const FORBIDDEN_SUFFIX_PATTERNS = [
   /-[A-Z]$/i,           // -A, -B, -C, etc.
   /[Pp]art\d+$/,        // Part1, Part2, part1, part2, etc.
-  /-[Pp]art\d+$/,       // -Part1, -part1, etc.
-  /[Ss]ection\d+$/,     // Section1, section1, etc.
-  /-[Ss]ection\d+$/,    // -Section1, -section1, etc.
-  /[Cc]hunk\d+$/,       // Chunk1, chunk1, etc.
-  /-[Cc]hunk\d+$/,      // -Chunk1, -chunk1, etc.
-  /[Ff]ragment\d+$/,    // Fragment1, fragment1, etc.
-  /-[Ff]ragment\d+$/,   // -Fragment1, -fragment1, etc.
 ];
 
 /**
@@ -51,8 +44,8 @@ function validateFilePath(filePath: string): TaskValidationError | null {
     if (pattern.test(filenameWithoutExt)) {
       return {
         code: 'DIR-011-VIOLATION',
-        message: `File "${filePath}" violates DIR-011 atomic file change requirement. Filename contains multi-part suffix pattern "${pattern.source}". Tasks must contain only single atomic file changes.`,
-        field: 'deliverableFiles',
+        message: `File "${filePath}" violates DIR-011 atomic file change requirement. Filename contains multi-part suffix pattern. Tasks must contain only single atomic file changes.`,
+        field: 'codeDeliverables',
         value: filePath
       };
     }
@@ -68,9 +61,7 @@ const TaskSchema = z.object({
   id: z.string().optional(),
   title: z.string(),
   description: z.string(),
-  deliverableFiles: z.array(z.string()).optional(),
   codeDeliverables: z.array(z.string()).optional(),
-  files: z.array(z.string()).optional(),
 });
 
 export type Task = z.infer<typeof TaskSchema>;
@@ -99,20 +90,15 @@ export function validateTask(task: unknown): TaskValidationResult {
     return { valid: false, errors };
   }
   
-  const validTask = parseResult.data;
+  const validatedTask = parseResult.data;
   
-  // Collect all file paths from various possible fields
-  const allFilePaths: string[] = [
-    ...(validTask.deliverableFiles || []),
-    ...(validTask.codeDeliverables || []),
-    ...(validTask.files || [])
-  ];
-  
-  // Validate each file path
-  for (const filePath of allFilePaths) {
-    const error = validateFilePath(filePath);
-    if (error) {
-      errors.push(error);
+  // Validate code deliverables for DIR-011 compliance
+  if (validatedTask.codeDeliverables) {
+    for (const filePath of validatedTask.codeDeliverables) {
+      const validationError = validateFilePath(filePath);
+      if (validationError) {
+        errors.push(validationError);
+      }
     }
   }
   
@@ -123,50 +109,16 @@ export function validateTask(task: unknown): TaskValidationResult {
 }
 
 /**
- * Validates and throws if task violates DIR-011 compliance
- * Use this for fail-fast validation in task loaders
- * 
- * @param task - Task object to validate
- * @throws Error with DIR-011 compliance message if validation fails
+ * Validates and throws error if task violates DIR-011
+ * Use this in orchestrator task loader for fail-fast behavior
  */
-export function validateTaskOrThrow(task: unknown): void {
+export function validateTaskOrThrow(task: unknown): Task {
   const result = validateTask(task);
   
   if (!result.valid) {
-    const errorMessages = result.errors.map(err => err.message).join('\n');
-    throw new Error(`Task validation failed - DIR-011 compliance violation:\n\n${errorMessages}`);
+    const errorMessages = result.errors.map(err => err.message).join('; ');
+    throw new Error(`Task validation failed: ${errorMessages}`);
   }
+  
+  return task as Task;
 }
-
-/**
- * Middleware function for Express-style task validation
- */
-export function taskValidationMiddleware(req: any, res: any, next: any): void {
-  try {
-    validateTaskOrThrow(req.body);
-    next();
-  } catch (error) {
-    res.status(400).json({
-      error: 'Task Validation Failed',
-      message: error instanceof Error ? error.message : 'Unknown validation error',
-      code: 'DIR-011-VIOLATION'
-    });
-  }
-}
-
-/**
- * Utility function to check if a filename has forbidden patterns
- * Useful for quick checks without full task validation
- */
-export function hasAtomicViolation(filename: string): boolean {
-  const filenameWithoutExt = getFilenameWithoutExtension(filename);
-  return FORBIDDEN_SUFFIX_PATTERNS.some(pattern => pattern.test(filenameWithoutExt));
-}
-
-export default {
-  validateTask,
-  validateTaskOrThrow,
-  taskValidationMiddleware,
-  hasAtomicViolation,
-  FORBIDDEN_SUFFIX_PATTERNS
-};
