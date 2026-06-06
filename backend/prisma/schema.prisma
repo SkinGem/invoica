@@ -91,10 +91,11 @@ model AgentReputation {
   totalValueSettled    Float    @default(0.0)
   /// Timestamp of last score recalculation
   lastUpdated          DateTime @default(now())
+  /// Timestamp when reputation record was created
   createdAt            DateTime @default(now())
+  /// Timestamp when reputation record was last updated
   updatedAt            DateTime @updatedAt
 
-  @@index([agentId])
-  @@index([tier])
   @@index([score])
+  @@index([tier])
 }
