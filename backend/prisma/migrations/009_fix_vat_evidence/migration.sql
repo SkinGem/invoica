@@ -1,41 +1,22 @@
--- Drop the old table with CASCADE to remove dependencies
-DROP TABLE IF EXISTS vat_evidence CASCADE;
-
--- Create the new VatEvidence table with proper structure
-CREATE TABLE "VatEvidence" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "invoiceId" UUID NOT NULL,
-    "evidenceType" TEXT NOT NULL,
-    "fileUrl" TEXT,
-    "metadata" JSONB,
-    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "VatEvidence_pkey" PRIMARY KEY ("id")
-);
-
--- Create foreign key constraint with CASCADE delete
-ALTER TABLE "VatEvidence" ADD CONSTRAINT "VatEvidence_invoiceId_fkey" 
-    FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- Create index on invoice_id for performance
-CREATE INDEX "VatEvidence_invoiceId_idx" ON "VatEvidence"("invoiceId");
-
--- Enable RLS
+-- Enable RLS on existing VatEvidence table
 ALTER TABLE "VatEvidence" ENABLE ROW LEVEL SECURITY;
 
--- RLS Policy: Users can only access VatEvidence for their own invoices
-CREATE POLICY "VatEvidence_user_access" ON "VatEvidence"
-    FOR ALL
+-- Create policy for merchants to read their own VAT evidence
+CREATE POLICY "merchant_read" ON "VatEvidence"
+    FOR SELECT
     USING (
-        EXISTS (
-            SELECT 1 FROM "Invoice" 
-            WHERE "Invoice"."id" = "VatEvidence"."invoiceId" 
-            AND "Invoice"."userId" = auth.uid()
+        invoice_id IN (
+            SELECT id FROM "Invoices" 
+            WHERE merchant_id = auth.uid()
         )
     );
 
--- RLS Policy: Service role can access all records
-CREATE POLICY "VatEvidence_service_access" ON "VatEvidence"
-    FOR ALL
-    TO service_role
-    USING (true);
+-- Create policy for merchants to insert VAT evidence for their own invoices
+CREATE POLICY "merchant_insert" ON "VatEvidence"
+    FOR INSERT
+    WITH CHECK (
+        invoice_id IN (
+            SELECT id FROM "Invoices" 
+            WHERE merchant_id = auth.uid()
+        )
+    );
