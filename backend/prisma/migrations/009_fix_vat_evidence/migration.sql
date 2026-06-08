@@ -1,25 +1,23 @@
--- Drop the old snake_case table
-DROP TABLE IF EXISTS vat_evidence;
+-- Drop the old table with CASCADE to remove dependencies
+DROP TABLE IF EXISTS vat_evidence CASCADE;
 
--- Create the new PascalCase VatEvidence table
+-- Create the new VatEvidence table with proper structure
 CREATE TABLE "VatEvidence" (
-    "id" TEXT NOT NULL,
-    "invoiceId" TEXT NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "invoiceId" UUID NOT NULL,
     "evidenceType" TEXT NOT NULL,
-    "evidenceData" JSONB NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "fileUrl" TEXT,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "VatEvidence_pkey" PRIMARY KEY ("id")
 );
 
 -- Create foreign key constraint with CASCADE delete
-ALTER TABLE "VatEvidence" ADD CONSTRAINT "VatEvidence_invoiceId_fkey" FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "VatEvidence" ADD CONSTRAINT "VatEvidence_invoiceId_fkey" 
+    FOREIGN KEY ("invoiceId") REFERENCES "Invoice"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- Create composite unique constraint
-ALTER TABLE "VatEvidence" ADD CONSTRAINT "VatEvidence_invoiceId_evidenceType_key" UNIQUE ("invoiceId", "evidenceType");
-
--- Create index for performance
+-- Create index on invoice_id for performance
 CREATE INDEX "VatEvidence_invoiceId_idx" ON "VatEvidence"("invoiceId");
 
 -- Enable RLS
