@@ -1,5 +1,8 @@
 import { app } from './app';
 import { prisma } from './lib/prisma';
+import * as cron from 'node-cron';
+import { generateDailyContinuityReport } from './services/dailyContinuityReportService';
+import { logger } from './lib/logger';
 
 process.on('uncaughtException', (err: Error) => {
   console.error('[FATAL] Uncaught exception:', err.message, err.stack);
@@ -26,6 +29,28 @@ const server = app.listen(PORT, () => {
   process.send?.('ready');
 });
 
+// ── Daily CEO Report Cron Job ────────────────────────────────────────────────
+// Runs at 23:59 UTC daily to generate CEO continuity reports
+cron.schedule('59 23 * * *', async () => {
+  const reportDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+  
+  try {
+    logger.info('Starting daily CEO report generation', { date: reportDate });
+    
+    await generateDailyContinuityReport(reportDate);
+    
+    logger.info('Daily CEO report generated successfully', { date: reportDate });
+  } catch (error) {
+    logger.error('Failed to generate daily CEO report', {
+      date: reportDate,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
+  }
+}, {
+  timezone: 'UTC'
+});
+
 server.on('error', (err: NodeJS.ErrnoException) => {
   if (err.code === 'EADDRINUSE') {
     console.error(`Port ${PORT} is already in use`);
@@ -34,7 +59,7 @@ server.on('error', (err: NodeJS.ErrnoException) => {
   throw err;
 });
 
-// ── Graceful shutdown ─────────────────────────────────────────────────────────
+// ── Graceful shutdown ──────────────────────────────────────────────────��──────
 // Handles PM2 SIGTERM (restart/stop) and Ctrl-C SIGINT cleanly.
 // Without this, PM2 sends SIGTERM → Node sits idle for 30s → PM2 force-kills → Prisma
 // connection leaked. With this: server drains → Prisma disconnects → clean exit in <10s.
