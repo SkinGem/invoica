@@ -1,13 +1,54 @@
 import { Router, Request, Response } from 'express';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { prisma } from '../lib/prisma';
 import { redis } from '../lib/redis';
+import packageJson from '../../package.json';
 
 const router = Router();
 
-router.get('/v1/health', async (_req: Request, res: Response) => {
+/**
+ * Check if memory protocol daily report exists and is recent
+ * @returns Object with status and last report date
+ */
+async function checkMemoryProtocol(): Promise<{
+  status: 'ok' | 'degraded';
+  last_report_date: string | null;
+}> {
+  try {
+    const memoryPath = path.join(process.cwd(), 'memory', 'daily-continuity.md');
+    const stats = await fs.stat(memoryPath);
+    const lastModified = stats.mtime;
+    const now = new Date();
+    const hoursSinceUpdate = (now.getTime() - lastModified.getTime()) / (1000 * 60 * 60);
+    
+    return {
+      status: hoursSinceUpdate <= 25 ? 'ok' : 'degraded',
+      last_report_date: lastModified.toISOString(),
+    };
+  } catch {
+    return {
+      status: 'degraded',
+      last_report_date: null,
+    };
+  }
+}
+
+/**
+ * Check service health status
+ * @returns Object with service statuses
+ */
+async function checkServices(): Promise<{
+  database: 'ok' | 'error';
+  redis: 'ok' | 'error' | 'not_configured';
+  openclaw?: 'ok' | 'error';
+  memory_protocol?: 'ok' | 'degraded';
+}> {
   const services: {
     database: 'ok' | 'error';
     redis: 'ok' | 'error' | 'not_configured';
+    openclaw?: 'ok' | 'error';
+    memory_protocol?: 'ok' | 'degraded';
   } = {
     database: 'error',
     redis: 'not_configured',
@@ -32,110 +73,78 @@ router.get('/v1/health', async (_req: Request, res: Response) => {
     }
   }
 
+  return services;
+}
+
+router.get('/v1/health', async (_req: Request, res: Response) => {
+  const services = await checkServices();
+  const memoryCheck = await checkMemoryProtocol();
+  
+  services.memory_protocol = memoryCheck.status;
+
   const status: 'ok' | 'error' = services.database === 'ok' ? 'ok' : 'error';
   const statusCode = services.database === 'ok' ? 200 : 503;
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { version } = require('../../package.json');
-
   res.status(statusCode).json({
     status,
-    version,
+    version: packageJson.version,
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     services,
+    last_report_date: memoryCheck.last_report_date,
   });
 });
 
 router.get('/v1/health/services', async (_req: Request, res: Response) => {
-  const services: {
-    database: 'ok' | 'error';
-    redis: 'ok' | 'error' | 'not_configured';
-  } = {
-    database: 'error',
-    redis: 'not_configured',
-  };
+  const services = await checkServices();
+  const memoryCheck = await checkMemoryProtocol();
+  
+  services.memory_protocol = memoryCheck.status;
 
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    services.database = 'ok';
-  } catch { /* stays error */ }
-
-  if (process.env.REDIS_URL) {
-    try {
-      await redis.ping();
-      services.redis = 'ok';
-    } catch {
-      services.redis = 'error';
-    }
-  }
-
-  res.json({ success: true, data: { ...services, uptime: process.uptime() } });
+  res.json({ 
+    success: true, 
+    data: { 
+      ...services, 
+      uptime: process.uptime(),
+      last_report_date: memoryCheck.last_report_date,
+    } 
+  });
 });
 
 router.get('/v1/health/detailed', async (_req: Request, res: Response) => {
-  const services: {
-    database: 'ok' | 'error';
-    redis: 'ok' | 'error' | 'not_configured';
-    openclaw: 'ok' | 'error';
-  } = {
-    database: 'error',
-    redis: 'not_configured',
-    openclaw: 'error',
-  };
+  const services = await checkServices();
+  const memoryCheck = await checkMemoryProtocol();
+  
+  services.memory_protocol = memoryCheck.status;
 
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    services.database = 'ok';
-  } catch { /* database stays error */ }
-
-  if (process.env.REDIS_URL) {
-    try {
-      await redis.ping();
-      services.redis = 'ok';
-    } catch {
-      services.redis = 'error';
-    }
-  }
-
+  // Check OpenClaw service
   try {
     const ctrl = await fetch('http://127.0.0.1:18791/', {
       signal: AbortSignal.timeout(1000),
     });
-    if (ctrl.status < 500) services.openclaw = 'ok';
-  } catch { /* openclaw stays error */ }
+    if (ctrl.status < 500) {
+      services.openclaw = 'ok';
+    } else {
+      services.openclaw = 'error';
+    }
+  } catch {
+    services.openclaw = 'error';
+  }
 
   const dbDown = services.database === 'error';
-  const anyDown = services.redis === 'error' || services.openclaw === 'error';
+  const anyDown = services.redis === 'error' || 
+                  services.openclaw === 'error' || 
+                  services.memory_protocol === 'degraded';
   const status: 'ok' | 'degraded' = dbDown || anyDown ? 'degraded' : 'ok';
   const statusCode = dbDown ? 503 : 200;
 
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { version } = require('../../package.json');
-
   res.status(statusCode).json({
     status,
-    version,
+    version: packageJson.version,
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
     services,
-  });
-});
-
-router.get('/v1/health/metrics', (_req: Request, res: Response) => {
-  const mem = process.memoryUsage();
-  res.json({
-    success: true,
-    data: {
-      uptimeSeconds: process.uptime(),
-      memoryMB: {
-        rss: Math.round(mem.rss / 1024 / 1024 * 100) / 100,
-        heapUsed: Math.round(mem.heapUsed / 1024 / 1024 * 100) / 100,
-        heapTotal: Math.round(mem.heapTotal / 1024 / 1024 * 100) / 100,
-      },
-      processId: process.pid,
-      nodeVersion: process.version,
-    },
+    last_report_date: memoryCheck.last_report_date,
   });
 });
 
