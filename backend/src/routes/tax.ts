@@ -43,6 +43,31 @@ router.post('/v1/tax/calculate', (req: Request, res: Response, next: NextFunctio
       },
     });
 
+    // Validate VAT evidence fields before database writes
+    if (result.vatEvidence) {
+      if (!result.vatEvidence.validationTimestamp || typeof result.vatEvidence.validationTimestamp !== 'string') {
+        res.status(500).json({
+          success: false,
+          error: { message: 'VAT evidence missing validation timestamp', code: 'INVALID_VAT_EVIDENCE' },
+        });
+        return;
+      }
+      if (!result.vatEvidence.viesResponse || typeof result.vatEvidence.viesResponse !== 'object') {
+        res.status(500).json({
+          success: false,
+          error: { message: 'VAT evidence missing VIES response', code: 'INVALID_VAT_EVIDENCE' },
+        });
+        return;
+      }
+      if (result.vatEvidence.vatNumber === null || result.vatEvidence.vatNumber === undefined || typeof result.vatEvidence.vatNumber !== 'string') {
+        res.status(500).json({
+          success: false,
+          error: { message: 'VAT evidence missing VAT number', code: 'INVALID_VAT_EVIDENCE' },
+        });
+        return;
+      }
+    }
+
     res.json({
       success: true,
       data: {
