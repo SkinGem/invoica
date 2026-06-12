@@ -7,6 +7,8 @@ import { verifyPactMandate } from '../lib/pact-verify';
 import { fetchHelixaCred, getHelixaTrustCeiling } from '../lib/helixa';
 import { recordPaymentEvent, DuplicatePaymentError } from '../services/settlement/payment-events';
 import { getChainConfig } from '../config/chains';
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 
@@ -72,565 +74,727 @@ const DESTRUCTIVE_STATUS_TRANSITIONS: Record<string, string[]> = {
 
 /**
  * Critical fields that should not be overwritten without explicit force
- * Overwriting these after settlement causes reconciliation failures
+ * Overwriting these can break payment reconciliation or audit trails
  */
-const PROTECTED_FIELDS = ['amount', 'currency', 'settledAt', 'completedAt', 'invoiceNumber'];
+const CRITICAL_FIELDS = ['amount', 'currency', 'paymentDetails', 'settledAt', 'completedAt'];
 
-/**
- * ValidationError - Thrown when destructive operations are attempted without force flag
- */
-export class ForceFlagRequiredError extends Error {
-  constructor(message: string, public readonly field?: string, public readonly requiresForce = true) {
-    super(message);
-    this.name = 'ForceFlagRequiredError';
-  }
-}
-
-/**
- * Extracts the force flag from query or body, normalizing variations
- */
-function extractForceFlag(source: Record<string, unknown>): boolean {
-  const forceValue = source.force ?? source.forceFlag ?? source._force;
-  if (typeof forceValue === 'boolean') return forceValue;
-  if (typeof forceValue === 'string') {
-    return ['true', '1', 'yes'].includes(forceValue.toLowerCase());
-  }
-  return false;
-}
-
-/**
- * Validates that destructive field modifications have explicit force flag
- * Protects against BE-163 style accidental overwrites
- */
-function validateNoDestructiveOverwrite(
-  currentInvoice: Record<string, unknown>,
-  updates: Record<string, unknown>,
-  forceFlag: boolean
-): void {
-  // Check protected fields being modified without force
-  for (const field of PROTECTED_FIELDS) {
-    if (field in updates && updates[field] !== currentInvoice[field]) {
-      if (!forceFlag) {
-        throw new ForceFlagRequiredError(
-          `Cannot overwrite protected field '${field}' without explicit --force flag. ` +
-          `Current value: ${currentInvoice[field]}. Proposed: ${updates[field]}. ` +
-          `Use ?force=true or pass force:true in body to acknowledge this destructive change.`,
-          field
-        );
-      }
+function validateDestructiveUpdate(req: Request, res: Response, next: NextFunction) {
+  const { status } = req.body;
+  const forceFlag = req.query.force === 'true' || req.headers['x-force-update'] === 'true';
+  
+  if (!forceFlag && status) {
+    // Check if this is a destructive status transition
+    const currentStatus = req.params.currentStatus; // Set by previous middleware
+    if (currentStatus && DESTRUCTIVE_STATUS_TRANSITIONS[currentStatus]?.includes(status)) {
+      return res.status(400).json({
+        error: 'Destructive status transition requires --force flag',
+        transition: `${currentStatus} → ${status}`,
+        hint: 'Add ?force=true or X-Force-Update: true header'
+      });
     }
   }
 
-  // Check amount modification specifically (most critical for reconciliation)
-  if ('amount' in updates && Number(updates.amount) !== Number(currentInvoice.amount)) {
-    if (!forceFlag) {
-      throw new ForceFlagRequiredError(
-        `Changing invoice amount from ${currentInvoice.amount} to ${updates.amount} ` +
-        `without --force may break payment reconciliation. Use --force to acknowledge.`,
-        'amount'
-      );
-    }
-  }
-}
-
-/**
- * Validates status transitions, blocking destructive ones without force flag
- */
-function validateStatusTransition(
-  currentStatus: string,
-  newStatus: string,
-  forceFlag: boolean
-): void {
-  // Allow any transition if target status is the same (no-op)
-  if (currentStatus === newStatus) return;
-
-  // Check if this is a destructive transition
-  const destructiveTargets = DESTRUCTIVE_STATUS_TRANSITIONS[currentStatus];
-  if (destructiveTargets?.includes(newStatus)) {
-    if (!forceFlag) {
-      throw new ForceFlagRequiredError(
-        `Destructive status transition from '${currentStatus}' to '${newStatus}' requires --force flag. ` +
-        `This transition may invalidate settled payments or cause reconciliation failures. ` +
-        `Use ?force=true or pass force:true in body to proceed anyway.`,
-        'status'
-      );
+  // Check for critical field overwrites
+  if (!forceFlag) {
+    const criticalFieldsInBody = CRITICAL_FIELDS.filter(field => req.body[field] !== undefined);
+    if (criticalFieldsInBody.length > 0) {
+      return res.status(400).json({
+        error: 'Critical field update requires --force flag',
+        fields: criticalFieldsInBody,
+        hint: 'Add ?force=true or X-Force-Update: true header'
+      });
     }
   }
 
-  // Additional safety: prevent cancellation of fully paid/completed invoices
-  if ((currentStatus === 'paid' || currentStatus === 'completed') && newStatus === 'cancelled') {
-    if (!forceFlag) {
-      throw new ForceFlagRequiredError(
-        `Cannot cancel invoice in '${currentStatus}' status without --force. ` +
-        `This will invalidate ${currentStatus === 'paid' ? 'payment' : 'completion'} records. ` +
-        `Contact finance team or use --force to acknowledge financial impact.`,
-        'status'
-      );
+  next();
+}
+
+// =============================================================================
+// VAT EVIDENCE UPLOAD HANDLER
+// =============================================================================
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow common document formats for VAT evidence
+    const allowedMimes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type for VAT evidence'));
     }
   }
-}
+});
 
-/**
- * Middleware: Validates destructive operation prevention
- * Parses the incoming request and validates force flags for risky operations
- */
-export function destructiveUpdateGuard(req: Request, res: Response, next: NextFunction) {
-  // Only apply to PUT/PATCH/PUT methods that modify invoices
-  if (!['PUT', 'PATCH', 'POST'].includes(req.method)) {
-    return next();
+async function uploadVatEvidence(req: Request, res: Response) {
+  try {
+    const { invoiceId } = req.params;
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    if (!invoiceId) {
+      return res.status(400).json({ error: 'Invoice ID required' });
+    }
+
+    const supabase = getSupabase();
+
+    // Verify invoice exists
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select('id')
+      .eq('id', invoiceId)
+      .single();
+
+    if (invoiceError || !invoice) {
+      return res.status(404).json({ error: 'Invoice not found' });
+    }
+
+    // Generate unique filename
+    const fileExtension = file.originalname.split('.').pop() || 'bin';
+    const fileName = `vat-evidence/${invoiceId}/${uuidv4()}.${fileExtension}`;
+
+    // Upload to Supabase storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('documents')
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Supabase storage upload error:', uploadError);
+      return res.status(500).json({ error: 'Failed to upload file' });
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('documents')
+      .getPublicUrl(fileName);
+
+    const fileUrl = urlData.publicUrl;
+
+    // Insert into vat_evidence table
+    const { data: evidenceData, error: evidenceError } = await supabase
+      .from('vat_evidence')
+      .insert({
+        invoice_id: invoiceId,
+        file_url: fileUrl,
+        uploaded_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (evidenceError) {
+      console.error('VAT evidence insert error:', evidenceError);
+      // Clean up uploaded file
+      await supabase.storage.from('documents').remove([fileName]);
+      return res.status(500).json({ error: 'Failed to record VAT evidence' });
+    }
+
+    res.status(201).json({
+      success: true,
+      evidence: evidenceData,
+      message: 'VAT evidence uploaded successfully'
+    });
+
+  } catch (error) {
+    console.error('VAT evidence upload error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  // Skip if this is a create operation (POST to collection)
-  const isUpdate = req.path.includes('/v1/invoices/') && !req.path.endsWith('/v1/invoices');
-  if (!isUpdate && req.method === 'POST') {
-    return next();
-  }
-
-  // Extract force flag from query params or body
-  const forceFlag = extractForceFlag({ ...(req.query as Record<string, unknown>), ...(req.body as Record<string, unknown>) });
-
-  // Store for later use in route handlers
-  (req as any).__forceFlag = forceFlag;
-
-  return next();
 }
-
-/**
- * Apply destructiveUpdateGuard to specific routes
- * Must be used before the route handlers below
- */
 
 // =============================================================================
 // ROUTES
 // =============================================================================
 
-/**
- * GET /v1/invoices/search/advanced
- * Multi-field search with filters. Must be before /search to avoid shadowing.
- */
-router.get('/v1/invoices/search/advanced', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const {
-      q, status, currency,
-      minAmount, maxAmount,
-      fromDate, toDate,
-    } = req.query as Record<string, string | undefined>;
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('invoices')
+      .select(SELECT_FIELDS)
+      .order('createdAt', { ascending: false });
 
-    const limit  = Math.min(parseInt((req.query.limit  as string) || '20', 10), 100);
-    const offset = Math.max(parseInt((req.query.offset as string) || '0',  10), 0);
-
-    const sb = getSupabase();
-    let query = sb.from('Invoice').select(SELECT_FIELDS);
-
-    if (status)    query = (query as any).eq('status', status);
-    if (currency) query = (query as any).eq('currency', currency);
-
-    if (minAmount) query = (query as any).gte('amount', minAmount);
-    if (maxAmount) query = (query as any).lte('amount', maxAmount);
-
-    if (fromDate) query = (query as any).gte('createdAt', fromDate);
-    if (toDate)   query = (query as any).lte('createdAt', toDate);
-
-    if (q) {
-      query = (query as any).or(`customerName.ilike.%${q}%,customerEmail.ilike.%${q}%,invoiceNumber.ilike.%${q}%`);
-    }
-
-    const { data, error } = await query.range(offset, offset + limit - 1);
     if (error) throw error;
-
-    const mapped = (data || []).map(mapInvoice);
-    const count = data?.length || 0;
-
-    res.json({
-      invoices: mapped,
-      pagination: { limit, offset, count, hasMore: count > offset + limit },
-    });
-  } catch (e) { next(e); }
+    res.json({ invoices: data?.map(mapInvoice) || [] });
+  } catch (error) {
+    console.error('Error fetching invoices:', error);
+    res.status(500).json({ error: 'Failed to fetch invoices' });
+  }
 });
 
-/**
- * GET /v1/invoices/search
- * Legacy single-field search wrapper.
- */
-router.get('/v1/invoices/search', async (req: Request, res: Response, next: NextFunction) => {
-  const { q, limit = '20', offset = '0' } = req.query as Record<string, string>;
-  const sb = getSupabase();
-
-  const query = q
-    ? (sb.from('Invoice').select(SELECT_FIELDS) as any)
-        .or(`invoiceNumber.ilike.%${q}%,customerName.ilike.%${q}%`)
-    : sb.from('Invoice').select(SELECT_FIELDS);
-
-  const { data, error } = await query.range(parseInt(offset, 10), parseInt(offset, 10) + parseInt(limit, 10) - 1);
-  if (error) throw error;
-
-  res.json({ invoices: (data || []).map(mapInvoice) });
-});
-
-/**
- * POST /v1/invoices
- * Create a new invoice.
- */
-router.post('/v1/invoices', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const { amount, currency = 'USD', customerEmail, customerName, companyId } = req.body as Record<string, string | number>;
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('invoices')
+      .select(SELECT_FIELDS)
+      .eq('id', req.params.id)
+      .single();
 
-    if (!amount || !customerEmail || !customerName) {
-      throw new Error('Missing required fields: amount, customerEmail, customerName');
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+      throw error;
     }
 
-    const sb = getSupabase();
+    res.json({ invoice: mapInvoice(data) });
+  } catch (error) {
+    console.error('Error fetching invoice:', error);
+    res.status(500).json({ error: 'Failed to fetch invoice' });
+  }
+});
 
-    // Get next invoice number atomically
-    const { data: configData } = await sb.from('Config').select('value').eq('key', 'invoiceSequence').single();
-    let seq = configData?.value ? parseInt(configData.value, 10) + 1 : 1;
-    const invoiceNumber = `INV-${String(seq).padStart(6, '0')}`;
-
-    const { data, error } = await sb.from('Invoice').insert({
+router.post('/', async (req: Request, res: Response) => {
+  try {
+    const supabase = getSupabase();
+    const {
       invoiceNumber,
       amount,
+      currency = 'USD',
+      customerEmail,
+      customerName,
+      companyId,
+      paymentDetails = {}
+    } = req.body;
+
+    if (!invoiceNumber || !amount || !customerEmail) {
+      return res.status(400).json({
+        error: 'Missing required fields: invoiceNumber, amount, customerEmail'
+      });
+    }
+
+    const invoiceData = {
+      invoiceNumber,
+      amount: parseFloat(amount),
       currency,
       customerEmail,
       customerName,
       companyId: companyId || null,
+      paymentDetails: JSON.stringify(paymentDetails),
       status: 'pending',
-    }).select().single();
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
 
-    if (error) {
-      // Rollback sequence on failure would require transaction - not trivial, ignoring.
-      throw error;
+    const { data, error } = await supabase
+      .from('invoices')
+      .insert(invoiceData)
+      .select(SELECT_FIELDS)
+      .single();
+
+    if (error) throw error;
+    res.status(201).json({ invoice: mapInvoice(data) });
+  } catch (error) {
+    console.error('Error creating invoice:', error);
+    res.status(500).json({ error: 'Failed to create invoice' });
+  }
+});
+
+router.put('/:id', validateDestructiveUpdate, async (req: Request, res: Response) => {
+  try {
+    const supabase = getSupabase();
+    const { id } = req.params;
+
+    // First get current invoice to check status
+    const { data: currentInvoice, error: fetchError } = await supabase
+      .from('invoices')
+      .select('status')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+      throw fetchError;
     }
 
-    // Update sequence
-    await sb.from('Config').upsert({ key: 'invoiceSequence', value: String(seq) }, { onConflict: 'key' });
+    // Set current status for validation middleware
+    req.params.currentStatus = currentInvoice.status;
 
-    res.status(201).json(mapInvoice(data));
-  } catch (e) { next(e); }
-});
+    const updateData = {
+      ...req.body,
+      updatedAt: new Date().toISOString()
+    };
 
-/**
- * GET /v1/invoices
- * List all invoices with optional filters.
- */
-router.get('/v1/invoices', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { status, currency, companyId, limit = '20', offset = '0' } = req.query as Record<string, string>;
-
-    const sb = getSupabase();
-    let query = sb.from('Invoice').select(SELECT_FIELDS);
-
-    if (status)    query = (query as any).eq('status', status);
-    if (currency) query = (query as any).eq('currency', currency);
-    if (companyId) query = (query as any).eq('companyId', companyId);
-
-    const { data, error } = await query.range(parseInt(offset, 10), parseInt(offset, 10) + parseInt(limit, 10) - 1);
-    if (error) throw error;
-
-    res.json({ invoices: (data || []).map(mapInvoice) });
-  } catch (e) { next(e); }
-});
-
-/**
- * GET /v1/invoices/:id
- * Fetch a single invoice by ID.
- */
-router.get('/v1/invoices/:id', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    const sb = getSupabase();
-
-    const { data, error } = await sb.from('Invoice').select(SELECT_FIELDS).eq('id', id).single();
-    if (error) throw error;
-    if (!data) { res.status(404).json({ error: 'not found' }); return; }
-
-    res.json(mapInvoice(data));
-  } catch (e) { next(e); }
-});
-
-/**
- * PATCH /v1/invoices/:id
- * Update an invoice with destructive change protection.
- */
-router.patch('/v1/invoices/:id', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body as Record<string, unknown>;
-
-    if (!updates || Object.keys(updates).length === 0) {
-      res.status(400).json({ error: 'No fields to update' });
-      return;
+    // Convert paymentDetails to JSON string if it's an object
+    if (updateData.paymentDetails && typeof updateData.paymentDetails === 'object') {
+      updateData.paymentDetails = JSON.stringify(updateData.paymentDetails);
     }
 
-    const sb = getSupabase();
+    const { data, error } = await supabase
+      .from('invoices')
+      .update(updateData)
+      .eq('id', id)
+      .select(SELECT_FIELDS)
+      .single();
 
-    // Fetch current state for validation
-    const { data: current, error: fetchError } = await sb
-      .from('Invoice')
+    if (error) throw error;
+    res.json({ invoice: mapInvoice(data) });
+  } catch (error) {
+    console.error('Error updating invoice:', error);
+    res.status(500).json({ error: 'Failed to update invoice' });
+  }
+});
+
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const supabase = getSupabase();
+    const { error } = await supabase
+      .from('invoices')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting invoice:', error);
+    res.status(500).json({ error: 'Failed to delete invoice' });
+  }
+});
+
+// VAT Evidence upload route
+router.post('/:invoiceId/vat-evidence', upload.single('vatEvidence'), uploadVatEvidence);
+
+// =============================================================================
+// PAYMENT PROCESSING ROUTES
+// =============================================================================
+
+router.post('/:id/verify-payment', checkTrustGate, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { txHash, network, paidBy } = req.body;
+
+    if (!txHash || !network) {
+      return res.status(400).json({
+        error: 'Missing required fields: txHash, network'
+      });
+    }
+
+    if (!SUPPORTED_CHAINS.includes(network as SupportedChain)) {
+      return res.status(400).json({
+        error: `Unsupported network: ${network}`,
+        supported: SUPPORTED_CHAINS
+      });
+    }
+
+    const supabase = getSupabase();
+
+    // Get invoice
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
       .select(SELECT_FIELDS)
       .eq('id', id)
       .single();
 
-    if (fetchError || !current) {
-      res.status(404).json({ error: 'Invoice not found' });
-      return;
+    if (invoiceError) {
+      if (invoiceError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+      throw invoiceError;
     }
 
-    const currentInvoice = mapInvoice(current);
-
-    // Extract force flag from stored middleware result or explicit parameter
-    const forceFlag = extractForceFlag({
-      ...(req.query as Record<string, unknown>),
-      ...(req.body as Record<string, unknown>),
-    });
-
-    // Validate protected fields cannot be overwritten without force
-    validateNoDestructiveOverwrite(currentInvoice, updates, forceFlag);
-
-    // Validate status transitions
-    if (updates.status) {
-      validateStatusTransition(currentInvoice.status, String(updates.status), forceFlag);
+    if (invoice.status === 'paid' || invoice.status === 'completed') {
+      return res.status(400).json({ error: 'Invoice already paid' });
     }
 
-    // Apply updates
-    const { data, error } = await sb
-      .from('Invoice')
+    // Validate addresses based on network
+    if (paidBy) {
+      const isValidAddress = network === 'solana' 
+        ? SOLANA_ADDRESS_RE.test(paidBy)
+        : EVM_ADDRESS_RE.test(paidBy);
+
+      if (!isValidAddress) {
+        return res.status(400).json({
+          error: `Invalid ${network} address format: ${paidBy}`
+        });
+      }
+    }
+
+    // Get chain config for verification
+    const chainConfig = getChainConfig(network);
+    if (!chainConfig) {
+      return res.status(400).json({ error: `Chain config not found for ${network}` });
+    }
+
+    // Record payment event (this will verify the transaction)
+    try {
+      await recordPaymentEvent({
+        invoiceId: id,
+        txHash,
+        network: network as SupportedChain,
+        amount: invoice.amount,
+        currency: invoice.currency,
+        paidBy: paidBy || null,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      if (error instanceof DuplicatePaymentError) {
+        return res.status(409).json({ error: 'Payment already recorded' });
+      }
+      throw error;
+    }
+
+    // Update invoice status and payment details
+    const paymentDetails = {
+      txHash,
+      network,
+      paidBy: paidBy || null,
+      verifiedAt: new Date().toISOString()
+    };
+
+    const { data: updatedInvoice, error: updateError } = await supabase
+      .from('invoices')
       .update({
-        ...updates,
-        updatedAt: new Date().toISOString(),
+        status: 'paid',
+        paymentDetails: JSON.stringify(paymentDetails),
+        settledAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       })
       .eq('id', id)
-      .select()
+      .select(SELECT_FIELDS)
       .single();
 
-    if (error) throw error;
-    res.json(mapInvoice(data));
-  } catch (e) {
-    if (e instanceof ForceFlagRequiredError) {
-      res.status(403).json({
-        error: e.name,
-        message: e.message,
-        requiresForce: e.requiresForce,
-        field: e.field,
-      });
-      return;
-    }
-    next(e);
+    if (updateError) throw updateError;
+
+    res.json({
+      success: true,
+      invoice: mapInvoice(updatedInvoice),
+      paymentVerified: true
+    });
+
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    res.status(500).json({ error: 'Failed to verify payment' });
   }
 });
 
-/**
- * DELETE /v1/invoices/:id
- * Soft-delete an invoice - requires force flag for established invoices.
- */
-router.delete('/v1/invoices/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:id/calculate-tax', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    const { customerCountry, customerType = 'individual', isEuBusiness = false } = req.body;
 
-    const forceFlag = extractForceFlag({
-      ...(req.query as Record<string, unknown>),
-      ...(req.body as Record<string, unknown>),
+    if (!customerCountry) {
+      return res.status(400).json({ error: 'customerCountry is required' });
+    }
+
+    const supabase = getSupabase();
+
+    // Get invoice
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select(SELECT_FIELDS)
+      .eq('id', id)
+      .single();
+
+    if (invoiceError) {
+      if (invoiceError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+      throw invoiceError;
+    }
+
+    // Calculate tax
+    const taxResult = await calculateTax({
+      amount: invoice.amount,
+      currency: invoice.currency,
+      customerCountry,
+      customerType,
+      isEuBusiness,
+      serviceType: 'digital_services'
     });
 
-    const sb = getSupabase();
-
-    // Fetch current state
-    const { data: current, error: fetchError } = await sb
-      .from('Invoice')
-      .select('id, status, settledAt')
-      .eq('id', id)
-      .single();
-
-    if (fetchError || !current) {
-      res.status(404).json({ error: 'Invoice not found' });
-      return;
-    }
-
-    // Soft-delete protection: require force for invoices with settlement history
-    if (current.settledAt && !forceFlag) {
-      res.status(403).json({
-        error: 'ForceFlagRequiredError',
-        message: `Invoice ${id} has settlement records (settledAt: ${current.settledAt}). ` +
-                 `Cannot soft-delete without --force flag. Use ?force=true to acknowledge deletion.`,
-        requiresForce: true,
-        field: 'softDelete',
-      });
-      return;
-    }
-
-    // Also protect already-paid or completed invoices
-    if ((current.status === 'paid' || current.status === 'completed') && !forceFlag) {
-      res.status(403).json({
-        error: 'ForceFlagRequiredError',
-        message: `Invoice ${id} is in '${current.status}' status. ` +
-                 `Soft-delete requires --force to acknowledge this destructive action.`,
-        requiresForce: true,
-        field: 'status',
-      });
-      return;
-    }
-
-    // Perform soft-delete by setting status to cancelled
-    const { error } = await sb
-      .from('Invoice')
-      .update({
-        status: 'cancelled',
-        updatedAt: new Date().toISOString(),
-      })
-      .eq('id', id);
-
-    if (error) throw error;
-
-    res.status(200).json({ message: 'Invoice soft-deleted', id });
-  } catch (e) { next(e); }
-});
-
-/**
- * POST v1/invoices/:id/settle
- * Mark invoice as settled (called from settlement detection worker).
- */
-router.post('/v1/invoices/:id/settle', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    const { txHash, network, paidBy } = req.body as Record<string, string>;
-
-    if (!txHash || !network || !paidBy) {
-      throw new Error('Missing required fields: txHash, network, paidBy');
-    }
-
-    const sb = getSupabase();
-    const { data: inv, error: fetchError } = await sb
-      .from('Invoice')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (fetchError || !inv) {
-      res.status(404).json({ error: 'invoice not found' });
-      return;
-    }
-
-    // Check current status - only settle pending or processing
-    if (inv.status !== 'pending' && inv.status !== 'processing') {
-      res.status(400).json({ error: `cannot settle invoice in ${inv.status} status` });
-      return;
-    }
-
-    // Parse existing payment details and merge
-    const pd = inv.paymentDetails
-      ? (typeof inv.paymentDetails === 'string' ? JSON.parse(inv.paymentDetails) : inv.paymentDetails)
+    // Update invoice with tax information
+    const currentPaymentDetails = invoice.paymentDetails 
+      ? (typeof invoice.paymentDetails === 'string' 
+          ? JSON.parse(invoice.paymentDetails) 
+          : invoice.paymentDetails)
       : {};
 
-    const newPd = { ...pd, txHash, network, paidBy };
+    const updatedPaymentDetails = {
+      ...currentPaymentDetails,
+      tax: taxResult
+    };
 
-    const { error } = await sb
-      .from('Invoice')
+    const { data: updatedInvoice, error: updateError } = await supabase
+      .from('invoices')
       .update({
-        status: 'paid',
-        settledAt: new Date().toISOString(),
-        paymentDetails: JSON.stringify(newPd),
-        updatedAt: new Date().toISOString(),
+        paymentDetails: JSON.stringify(updatedPaymentDetails),
+        updatedAt: new Date().toISOString()
       })
-      .eq('id', id);
+      .eq('id', id)
+      .select(SELECT_FIELDS)
+      .single();
 
-    if (error) throw error;
+    if (updateError) throw updateError;
 
-    // Emit settlement event
-    await recordPaymentEvent({
-      invoiceId: id,
-      txHash,
-      network,
-      amount: inv.amount,
+    res.json({
+      success: true,
+      invoice: mapInvoice(updatedInvoice),
+      tax: taxResult
     });
 
-    res.json({ status: 'paid', settledAt: new Date().toISOString() });
-  } catch (e) { next(e); }
+  } catch (error) {
+    console.error('Error calculating tax:', error);
+    res.status(500).json({ error: 'Failed to calculate tax' });
+  }
 });
 
-/**
- * POST /v1/invoices/:id/complete
- * Mark invoice as completed after processing.
- */
-router.post('/v1/invoices/:id/complete', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:id/calculate-agent-tax', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const sb = getSupabase();
+    const { agentId, transactionType } = req.body;
 
-    const { data: inv, error: fetchError } = await sb
-      .from('Invoice')
-      .select('*')
+    if (!agentId) {
+      return res.status(400).json({ error: 'agentId is required' });
+    }
+
+    const supabase = getSupabase();
+
+    // Get invoice
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select(SELECT_FIELDS)
       .eq('id', id)
       .single();
 
-    if (fetchError || !inv) {
-      res.status(404).json({ error: 'invoice not found' });
-      return;
+    if (invoiceError) {
+      if (invoiceError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+      throw invoiceError;
     }
 
-    if (inv.status !== 'paid') {
-      res.status(400).json({ error: `expected status 'paid', got '${inv.status}'` });
-      return;
-    }
+    // Resolve transaction type if not provided
+    const resolvedTransactionType = transactionType || await resolveTransactionType({
+      amount: invoice.amount,
+      currency: invoice.currency,
+      agentId,
+      invoiceId: id
+    });
 
-    // Complete the invoice
-    const { error } = await sb
-      .from('Invoice')
+    // Calculate agent tax
+    const agentTaxResult = await calculateAgentTax({
+      agentId,
+      amount: invoice.amount,
+      currency: invoice.currency,
+      transactionType: resolvedTransactionType
+    });
+
+    // Update invoice with agent tax information
+    const currentPaymentDetails = invoice.paymentDetails 
+      ? (typeof invoice.paymentDetails === 'string' 
+          ? JSON.parse(invoice.paymentDetails) 
+          : invoice.paymentDetails)
+      : {};
+
+    const updatedPaymentDetails = {
+      ...currentPaymentDetails,
+      agentTax: agentTaxResult,
+      agentId,
+      transactionType: resolvedTransactionType
+    };
+
+    const { data: updatedInvoice, error: updateError } = await supabase
+      .from('invoices')
       .update({
-        status: 'completed',
-        completedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        paymentDetails: JSON.stringify(updatedPaymentDetails),
+        updatedAt: new Date().toISOString()
       })
-      .eq('id', id);
+      .eq('id', id)
+      .select(SELECT_FIELDS)
+      .single();
 
-    if (error) throw error;
+    if (updateError) throw updateError;
 
-    res.json({ status: 'completed' });
-  } catch (e) { next(e); }
+    res.json({
+      success: true,
+      invoice: mapInvoice(updatedInvoice),
+      agentTax: agentTaxResult,
+      transactionType: resolvedTransactionType
+    });
+
+  } catch (error) {
+    console.error('Error calculating agent tax:', error);
+    res.status(500).json({ error: 'Failed to calculate agent tax' });
+  }
 });
 
-/**
- * GET /v1/invoices/:id/download
- * Generate downloadable PDF (placeholder - actual impl in workers).
- */
-router.get('/v1/invoices/:id/download', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:id/verify-pact', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const sb = getSupabase();
+    const { pactId, mandateHash } = req.body;
 
-    const { data, error } = await sb.from('Invoice').select(SELECT_FIELDS).eq('id', id).single();
-    if (error || !data) {
-      res.status(404).json({ error: 'not found' });
-      return;
+    if (!pactId || !mandateHash) {
+      return res.status(400).json({
+        error: 'Missing required fields: pactId, mandateHash'
+      });
     }
 
-    // Placeholder - real PDF generation happens asynchronously via Bull
-    res.json({ downloadUrl: `/api/v1/pdf/${id}`, expiresIn: 3600 });
-  } catch (e) { next(e); }
+    const supabase = getSupabase();
+
+    // Get invoice
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select(SELECT_FIELDS)
+      .eq('id', id)
+      .single();
+
+    if (invoiceError) {
+      if (invoiceError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+      throw invoiceError;
+    }
+
+    // Verify pact mandate
+    const pactVerification = await verifyPactMandate({
+      pactId,
+      mandateHash,
+      amount: invoice.amount,
+      currency: invoice.currency
+    });
+
+    if (!pactVerification.valid) {
+      return res.status(400).json({
+        error: 'Pact verification failed',
+        reason: pactVerification.reason
+      });
+    }
+
+    // Update invoice with pact information
+    const currentPaymentDetails = invoice.paymentDetails 
+      ? (typeof invoice.paymentDetails === 'string' 
+          ? JSON.parse(invoice.paymentDetails) 
+          : invoice.paymentDetails)
+      : {};
+
+    const updatedPaymentDetails = {
+      ...currentPaymentDetails,
+      pact: {
+        pactId,
+        mandateHash,
+        verifiedAt: new Date().toISOString(),
+        ...pactVerification
+      }
+    };
+
+    const { data: updatedInvoice, error: updateError } = await supabase
+      .from('invoices')
+      .update({
+        paymentDetails: JSON.stringify(updatedPaymentDetails),
+        updatedAt: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select(SELECT_FIELDS)
+      .single();
+
+    if (updateError) throw updateError;
+
+    res.json({
+      success: true,
+      invoice: mapInvoice(updatedInvoice),
+      pactVerification
+    });
+
+  } catch (error) {
+    console.error('Error verifying pact:', error);
+    res.status(500).json({ error: 'Failed to verify pact' });
+  }
 });
 
-/**
- * POST /v1/invoices/:id/events
- * Webhook endpoint for payment events.
- */
-router.post('/v1/invoices/:id/events', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:id/check-helixa-trust', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { type, payload } = req.body as Record<string, unknown>;
+    const { helixaAddress } = req.body;
 
-    if (!type || !payload) {
-      res.status(400).json({ error: 'missing type or payload' });
-      return;
+    if (!helixaAddress) {
+      return res.status(400).json({ error: 'helixaAddress is required' });
     }
 
-    // Handle specific event types
-    switch (type) {
-      case 'payment.settled':
-        // Settlement already handled via separate endpoint, just acknowledging here
-        res.status(200).json({ received: true });
-        break;
-      default:
-        res.status(400).json({ error: `unsupported event type: ${type}` });
+    const supabase = getSupabase();
+
+    // Get invoice
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select(SELECT_FIELDS)
+      .eq('id', id)
+      .single();
+
+    if (invoiceError) {
+      if (invoiceError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+      throw invoiceError;
     }
-  } catch (e) { next(e); }
+
+    // Fetch Helixa credentials and trust ceiling
+    const [helixaCred, trustCeiling] = await Promise.all([
+      fetchHelixaCred(helixaAddress),
+      getHelixaTrustCeiling(helixaAddress)
+    ]);
+
+    const trustCheck = {
+      address: helixaAddress,
+      credentials: helixaCred,
+      trustCeiling,
+      invoiceAmount: invoice.amount,
+      currency: invoice.currency,
+      trustSufficient: trustCeiling >= invoice.amount,
+      checkedAt: new Date().toISOString()
+    };
+
+    // Update invoice with Helixa trust information
+    const currentPaymentDetails = invoice.paymentDetails 
+      ? (typeof invoice.paymentDetails === 'string' 
+          ? JSON.parse(invoice.paymentDetails) 
+          : invoice.paymentDetails)
+      : {};
+
+    const updatedPaymentDetails = {
+      ...currentPaymentDetails,
+      helixaTrust: trustCheck
+    };
+
+    const { data: updatedInvoice, error: updateError } = await supabase
+      .from('invoices')
+      .update({
+        paymentDetails: JSON.stringify(updatedPaymentDetails),
+        updatedAt: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select(SELECT_FIELDS)
+      .single();
+
+    if (updateError) throw updateError;
+
+    res.json({
+      success: true,
+      invoice: mapInvoice(updatedInvoice),
+      helixaTrust: trustCheck
+    });
+
+  } catch (error) {
+    console.error('Error checking Helixa trust:', error);
+    res.status(500).json({ error: 'Failed to check Helixa trust' });
+  }
 });
 
 export default router;
