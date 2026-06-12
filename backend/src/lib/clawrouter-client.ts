@@ -102,58 +102,197 @@ function httpRequest(
  * The gateway handles all x402 payments transparently.
  */
 export async function callClawRouter(opts: ClawRouterOptions): Promise<ClawRouterResult> {
-  const { model, prompt, systemPrompt, maxTokens = 4096 } = opts;
-  const chatUrl = `${CLAWROUTER_URL}/chat/completions`;
-
-  const messages: Array<{ role: string; content: string }> = [];
-  if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-  messages.push({ role: 'user', content: prompt });
-
-  const requestBody = JSON.stringify({ model, messages, max_tokens: maxTokens });
-
-  const response = await httpRequest(chatUrl, requestBody);
-
-  if (response.status !== 200) {
-    throw new Error(
-      `ClawRouter returned ${response.status}: ${response.data.slice(0, 300)}`
-    );
+  const messages = [];
+  
+  if (opts.systemPrompt) {
+    messages.push({ role: 'system', content: opts.systemPrompt });
   }
+  
+  messages.push({ role: 'user', content: opts.prompt });
 
-  const json = JSON.parse(response.data);
+  const requestBody = {
+    model: opts.model,
+    messages,
+    max_tokens: opts.maxTokens || 4096,
+    stream: false,
+    // OpenClaw v2026.6.6 SDK - new chain config format
+    chain_config: {
+      network: 'base-mainnet',
+      settlement_mode: 'instant',
+      gas_optimization: true
+    },
+    // v2026.6.6 - thinking mode support
+    thinking: opts.think || false
+  };
 
-  // Extract cost from response if gateway reports it (X-Payment-Amount header or usage)
-  const costHeader = response.headers['x-payment-amount'] as string | undefined;
-  const costUsdc = costHeader
-    ? Number(costHeader) / 1_000_000
-    : 0;
+  try {
+    const response = await httpRequest(
+      `${CLAWROUTER_URL}/chat/completions`,
+      JSON.stringify(requestBody),
+      {
+        'X-OpenClaw-Version': '2026.6.6',
+        'X-Settlement-Preference': 'fast'
+      }
+    );
 
-  const result = parseOpenAIResponse(json, model, costUsdc);
+    if (response.status !== 200) {
+      throw new Error(`ClawRouter error ${response.status}: ${response.data}`);
+    }
 
-  // Log cost for CFO monitoring
-  costLog.push({
-    timestamp: new Date().toISOString(),
-    model,
-    costUsdc: result.costUsdc,
-    inputTokens: result.inputTokens,
-    outputTokens: result.outputTokens,
-  });
-  if (costLog.length > MAX_COST_LOG) costLog.shift();
+    const result = JSON.parse(response.data);
+    
+    // Handle OpenClaw v2026.6.6 response format
+    const choice = result.choices?.[0];
+    if (!choice) {
+      throw new Error('No choices in ClawRouter response');
+    }
 
-  return result;
+    const content = choice.message?.content || '';
+    const usage = result.usage || {};
+    
+    // v2026.6.6 - enhanced billing metadata
+    const billing = result.billing || {};
+    const costUsdc = billing.total_cost_usdc || 0;
+    const backend = billing.provider || 'unknown';
+
+    const costEntry: CostEntry = {
+      timestamp: new Date().toISOString(),
+      model: opts.model,
+      costUsdc,
+      inputTokens: usage.prompt_tokens || 0,
+      outputTokens: usage.completion_tokens || 0,
+    };
+
+    costLog.push(costEntry);
+    if (costLog.length > MAX_COST_LOG) {
+      costLog.shift();
+    }
+
+    return {
+      content,
+      model: opts.model,
+      costUsdc,
+      backend,
+      inputTokens: usage.prompt_tokens || 0,
+      outputTokens: usage.completion_tokens || 0,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`ClawRouter call failed: ${error.message}`);
+    }
+    throw new Error('ClawRouter call failed with unknown error');
+  }
 }
 
-function parseOpenAIResponse(
-  json: any,
-  requestedModel: string,
-  costUsdc: number
-): ClawRouterResult {
-  const choice = json.choices?.[0];
-  return {
-    content: choice?.message?.content || '',
-    model: json.model || requestedModel,
-    costUsdc,
-    backend: 'clawrouter',
-    inputTokens: json.usage?.prompt_tokens || 0,
-    outputTokens: json.usage?.completion_tokens || 0,
-  };
+// ── Health Check ─────────────────────────────────────────────────────────────
+
+/**
+ * Check if ClawRouter gateway is healthy and wallet is funded
+ */
+export async function checkClawRouterHealth(): Promise<{
+  healthy: boolean;
+  walletBalance?: number;
+  version?: string;
+  error?: string;
+}> {
+  try {
+    const response = await httpRequest(
+      `${CLAWROUTER_URL}/health`,
+      '',
+      { 'X-OpenClaw-Version': '2026.6.6' }
+    );
+
+    if (response.status !== 200) {
+      return {
+        healthy: false,
+        error: `Health check failed with status ${response.status}`
+      };
+    }
+
+    const health = JSON.parse(response.data);
+    
+    return {
+      healthy: health.status === 'healthy',
+      walletBalance: health.wallet?.balance_usdc,
+      version: health.version,
+      error: health.status !== 'healthy' ? health.error : undefined
+    };
+  } catch (error) {
+    return {
+      healthy: false,
+      error: error instanceof Error ? error.message : 'Unknown health check error'
+    };
+  }
+}
+
+// ── Settlement Status ────────────────────────────────────────────────────────
+
+/**
+ * Get settlement status for backward compatibility checks
+ */
+export async function getSettlementStatus(): Promise<{
+  pendingSettlements: number;
+  totalVolume24h: number;
+  lastSettlement?: string;
+}> {
+  try {
+    const response = await httpRequest(
+      `${CLAWROUTER_URL}/settlements/status`,
+      '',
+      { 'X-OpenClaw-Version': '2026.6.6' }
+    );
+
+    if (response.status !== 200) {
+      throw new Error(`Settlement status failed with status ${response.status}`);
+    }
+
+    const status = JSON.parse(response.data);
+    
+    return {
+      pendingSettlements: status.pending_count || 0,
+      totalVolume24h: status.volume_24h_usdc || 0,
+      lastSettlement: status.last_settlement_timestamp
+    };
+  } catch (error) {
+    throw new Error(`Failed to get settlement status: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// ── Smoke Test ───────────────────────────────────────────────────────────────
+
+/**
+ * Run smoke test against staging ClawRouter instance
+ */
+export async function runSmokeTest(): Promise<{
+  success: boolean;
+  latencyMs: number;
+  error?: string;
+}> {
+  const startTime = Date.now();
+  
+  try {
+    const result = await callClawRouter({
+      model: 'gpt-4o-mini',
+      prompt: 'Say "ClawRouter smoke test successful" and nothing else.',
+      maxTokens: 20
+    });
+
+    const latencyMs = Date.now() - startTime;
+    
+    if (result.content.includes('ClawRouter smoke test successful')) {
+      return { success: true, latencyMs };
+    } else {
+      return {
+        success: false,
+        latencyMs,
+        error: `Unexpected response: ${result.content}`
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      latencyMs: Date.now() - startTime,
+      error: error instanceof Error ? error.message : 'Unknown smoke test error'
+    };
+  }
 }
