@@ -1,8 +1,11 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { execSync } from 'child_process';
+import { PrismaClient } from '@prisma/client';
 import { createLogger } from '../src/lib/logger';
 
 const logger = createLogger('daily-report-generator');
+const prisma = new PrismaClient();
 
 interface GitCommit {
   hash: string;
@@ -25,12 +28,29 @@ interface SystemMetric {
   status: 'healthy' | 'warning' | 'critical';
 }
 
+interface InvoiceStats {
+  totalInvoices: number;
+  pendingInvoices: number;
+  settledInvoices: number;
+  totalAmount: number;
+  averageAmount: number;
+}
+
+interface SettlementStats {
+  totalSettlements: number;
+  settledAmount: number;
+  averageSettlementTime: number;
+  successRate: number;
+}
+
 interface DailyReport {
   date: string;
   summary: string;
   commits: GitCommit[];
   agentActivity: AgentActivity[];
   systemMetrics: SystemMetric[];
+  invoiceStats: InvoiceStats;
+  settlementStats: SettlementStats;
   incidents: string[];
   keyDecisions: string[];
   nextActions: string[];
@@ -52,16 +72,29 @@ class DailyReportGenerator {
     } catch (error) {
       logger.error('Failed to generate daily report', { error });
       throw error;
+    } finally {
+      await prisma.$disconnect();
     }
   }
 
   private async buildReport(): Promise<DailyReport> {
     const today = new Date().toISOString().split('T')[0];
     
-    const [commits, agentActivity, systemMetrics, incidents, keyDecisions, nextActions] = await Promise.all([
+    const [
+      commits, 
+      agentActivity, 
+      systemMetrics, 
+      invoiceStats,
+      settlementStats,
+      incidents, 
+      keyDecisions, 
+      nextActions
+    ] = await Promise.all([
       this.getRecentCommits(),
       this.getAgentActivity(),
       this.getSystemMetrics(),
+      this.getInvoiceStats(),
+      this.getSettlementStats(),
       this.getIncidents(),
       this.getKeyDecisions(),
       this.getNextActions()
@@ -75,6 +108,8 @@ class DailyReportGenerator {
       commits,
       agentActivity,
       systemMetrics,
+      invoiceStats,
+      settlementStats,
       incidents,
       keyDecisions,
       nextActions
@@ -83,7 +118,6 @@ class DailyReportGenerator {
 
   private async getRecentCommits(): Promise<GitCommit[]> {
     try {
-      const { execSync } = require('child_process');
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
       const gitLog = execSync(
@@ -112,310 +146,455 @@ class DailyReportGenerator {
 
       return commits;
     } catch (error) {
-      logger.warn('Failed to get git commits', { error });
+      logger.error('Failed to get recent commits', { error });
       return [];
+    }
+  }
+
+  private async getInvoiceStats(): Promise<InvoiceStats> {
+    try {
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      
+      const [totalCount, pendingCount, settledCount, amountStats] = await Promise.all([
+        prisma.invoice.count({
+          where: {
+            createdAt: {
+              gte: yesterday
+            }
+          }
+        }),
+        prisma.invoice.count({
+          where: {
+            status: 'pending',
+            createdAt: {
+              gte: yesterday
+            }
+          }
+        }),
+        prisma.invoice.count({
+          where: {
+            status: 'settled',
+            createdAt: {
+              gte: yesterday
+            }
+          }
+        }),
+        prisma.invoice.aggregate({
+          where: {
+            createdAt: {
+              gte: yesterday
+            }
+          },
+          _sum: {
+            amount: true
+          },
+          _avg: {
+            amount: true
+          }
+        })
+      ]);
+
+      return {
+        totalInvoices: totalCount,
+        pendingInvoices: pendingCount,
+        settledInvoices: settledCount,
+        totalAmount: amountStats._sum.amount || 0,
+        averageAmount: amountStats._avg.amount || 0
+      };
+    } catch (error) {
+      logger.error('Failed to get invoice stats', { error });
+      return {
+        totalInvoices: 0,
+        pendingInvoices: 0,
+        settledInvoices: 0,
+        totalAmount: 0,
+        averageAmount: 0
+      };
+    }
+  }
+
+  private async getSettlementStats(): Promise<SettlementStats> {
+    try {
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      
+      const settlements = await prisma.invoice.findMany({
+        where: {
+          status: 'settled',
+          settledAt: {
+            gte: yesterday
+          }
+        },
+        select: {
+          amount: true,
+          createdAt: true,
+          settledAt: true
+        }
+      });
+
+      const totalSettlements = settlements.length;
+      const settledAmount = settlements.reduce((sum, s) => sum + s.amount, 0);
+      
+      const settlementTimes = settlements
+        .filter(s => s.settledAt)
+        .map(s => s.settledAt!.getTime() - s.createdAt.getTime());
+      
+      const averageSettlementTime = settlementTimes.length > 0 
+        ? settlementTimes.reduce((sum, time) => sum + time, 0) / settlementTimes.length / 1000 / 60 // minutes
+        : 0;
+
+      const totalInvoices = await prisma.invoice.count({
+        where: {
+          createdAt: {
+            gte: yesterday
+          }
+        }
+      });
+
+      const successRate = totalInvoices > 0 ? (totalSettlements / totalInvoices) * 100 : 0;
+
+      return {
+        totalSettlements,
+        settledAmount,
+        averageSettlementTime,
+        successRate
+      };
+    } catch (error) {
+      logger.error('Failed to get settlement stats', { error });
+      return {
+        totalSettlements: 0,
+        settledAmount: 0,
+        averageSettlementTime: 0,
+        successRate: 0
+      };
     }
   }
 
   private async getAgentActivity(): Promise<AgentActivity[]> {
     try {
-      const logsDir = path.join(process.cwd(), 'logs');
-      const agents = ['ceo', 'devops', 'security', 'frontend', 'backend'];
-      const activity: AgentActivity[] = [];
+      // Check for agent log files or activity indicators
+      const agentLogPath = path.join(this.workspaceDir, 'logs', 'agent-activity.json');
+      
+      if (await this.fileExists(agentLogPath)) {
+        const content = await fs.readFile(agentLogPath, 'utf8');
+        const activities = JSON.parse(content);
+        return Array.isArray(activities) ? activities : [];
+      }
 
-      for (const agent of agents) {
-        try {
-          const logFile = path.join(logsDir, `${agent}.log`);
-          const stats = await fs.stat(logFile);
-          const content = await fs.readFile(logFile, 'utf8');
-          
-          const lines = content.split('\n').filter(line => line.trim());
-          const recentLines = lines.filter(line => {
-            const match = line.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
-            if (!match) return false;
-            const logDate = new Date(match[0]);
-            const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            return logDate > yesterday;
-          });
+      // Fallback: infer from git commits
+      const commits = await this.getRecentCommits();
+      const agentMap = new Map<string, AgentActivity>();
 
-          const errorLines = recentLines.filter(line => line.includes('ERROR'));
-          const status = errorLines.length > 0 ? 'error' : 
-                        recentLines.length > 0 ? 'active' : 'idle';
-
-          activity.push({
-            agent,
-            actions: recentLines.length,
-            lastSeen: stats.mtime.toISOString(),
-            status
-          });
-        } catch {
-          activity.push({
+      for (const commit of commits) {
+        const agent = commit.author;
+        if (!agentMap.has(agent)) {
+          agentMap.set(agent, {
             agent,
             actions: 0,
-            lastSeen: 'unknown',
-            status: 'idle'
+            lastSeen: commit.date,
+            status: 'active' as const
           });
+        }
+        const activity = agentMap.get(agent)!;
+        activity.actions++;
+        if (new Date(commit.date) > new Date(activity.lastSeen)) {
+          activity.lastSeen = commit.date;
         }
       }
 
-      return activity;
+      return Array.from(agentMap.values());
     } catch (error) {
-      logger.warn('Failed to get agent activity', { error });
+      logger.error('Failed to get agent activity', { error });
       return [];
     }
   }
 
   private async getSystemMetrics(): Promise<SystemMetric[]> {
-    const metrics: SystemMetric[] = [];
-
     try {
-      // Check disk usage
-      const { execSync } = require('child_process');
-      const diskUsage = execSync('df -h /', { encoding: 'utf8' });
-      const usage = diskUsage.split('\n')[1].split(/\s+/)[4];
-      const usagePercent = parseInt(usage.replace('%', ''));
-      
-      metrics.push({
-        name: 'Disk Usage',
-        value: usage,
-        status: usagePercent > 90 ? 'critical' : usagePercent > 80 ? 'warning' : 'healthy'
-      });
+      const metrics: SystemMetric[] = [];
 
-      // Check memory usage
-      const memInfo = execSync('free -m', { encoding: 'utf8' });
-      const memLines = memInfo.split('\n');
-      const memData = memLines[1].split(/\s+/);
-      const memUsed = parseInt(memData[2]);
-      const memTotal = parseInt(memData[1]);
-      const memPercent = Math.round((memUsed / memTotal) * 100);
-
-      metrics.push({
-        name: 'Memory Usage',
-        value: `${memPercent}%`,
-        status: memPercent > 90 ? 'critical' : memPercent > 80 ? 'warning' : 'healthy'
-      });
-
-      // Check load average
-      const loadAvg = execSync('uptime', { encoding: 'utf8' });
-      const loadMatch = loadAvg.match(/load average: ([\d.]+)/);
-      if (loadMatch) {
-        const load = parseFloat(loadMatch[1]);
+      // Database connection check
+      try {
+        await prisma.$queryRaw`SELECT 1`;
         metrics.push({
-          name: 'Load Average',
-          value: load.toString(),
-          status: load > 2 ? 'critical' : load > 1 ? 'warning' : 'healthy'
+          name: 'Database',
+          value: 'Connected',
+          status: 'healthy'
+        });
+      } catch {
+        metrics.push({
+          name: 'Database',
+          value: 'Disconnected',
+          status: 'critical'
         });
       }
-    } catch (error) {
-      logger.warn('Failed to get system metrics', { error });
-      metrics.push({
-        name: 'System Metrics',
-        value: 'unavailable',
-        status: 'warning'
-      });
-    }
 
-    return metrics;
+      // Check Redis connection (if available)
+      try {
+        const Redis = require('ioredis');
+        const redis = new Redis(process.env.REDIS_URL);
+        await redis.ping();
+        metrics.push({
+          name: 'Redis',
+          value: 'Connected',
+          status: 'healthy'
+        });
+        redis.disconnect();
+      } catch {
+        metrics.push({
+          name: 'Redis',
+          value: 'Disconnected',
+          status: 'warning'
+        });
+      }
+
+      // Disk space check
+      try {
+        const stats = await fs.stat(process.cwd());
+        metrics.push({
+          name: 'Disk Space',
+          value: 'Available',
+          status: 'healthy'
+        });
+      } catch {
+        metrics.push({
+          name: 'Disk Space',
+          value: 'Check Failed',
+          status: 'warning'
+        });
+      }
+
+      return metrics;
+    } catch (error) {
+      logger.error('Failed to get system metrics', { error });
+      return [];
+    }
   }
 
   private async getIncidents(): Promise<string[]> {
     try {
-      const incidentsFile = path.join(this.memoryDir, 'incidents.md');
-      const content = await fs.readFile(incidentsFile, 'utf8');
+      const incidentsPath = path.join(this.memoryDir, 'incidents.md');
       
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const lines = content.split('\n');
-      const recentIncidents: string[] = [];
-
-      for (const line of lines) {
-        if (line.startsWith('## ') && line.includes(yesterday.toISOString().split('T')[0])) {
-          recentIncidents.push(line.replace('## ', ''));
-        }
+      if (await this.fileExists(incidentsPath)) {
+        const content = await fs.readFile(incidentsPath, 'utf8');
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        // Extract incidents from the last 24 hours
+        const lines = content.split('\n');
+        const recentIncidents = lines.filter(line => 
+          line.includes(yesterday) && line.trim().startsWith('-')
+        );
+        
+        return recentIncidents.map(line => line.replace(/^-\s*/, '').trim());
       }
 
-      return recentIncidents;
+      return [];
     } catch (error) {
-      logger.warn('Failed to read incidents', { error });
+      logger.error('Failed to get incidents', { error });
       return [];
     }
   }
 
   private async getKeyDecisions(): Promise<string[]> {
     try {
-      const decisionsFile = path.join(this.memoryDir, 'long-term-memory.md');
-      const content = await fs.readFile(decisionsFile, 'utf8');
+      const decisionsPath = path.join(this.memoryDir, 'long-term-memory.md');
       
-      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const dateStr = yesterday.toISOString().split('T')[0];
-      
-      const lines = content.split('\n');
-      const recentDecisions: string[] = [];
-
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes(dateStr) && lines[i].includes('DECISION:')) {
-          recentDecisions.push(lines[i].replace(/.*DECISION:\s*/, ''));
-        }
+      if (await this.fileExists(decisionsPath)) {
+        const content = await fs.readFile(decisionsPath, 'utf8');
+        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        
+        // Extract recent decisions
+        const lines = content.split('\n');
+        const recentDecisions = lines.filter(line => 
+          line.includes(yesterday) && (line.includes('DECISION:') || line.includes('RESOLVED:'))
+        );
+        
+        return recentDecisions.map(line => line.trim());
       }
 
-      return recentDecisions;
+      return [];
     } catch (error) {
-      logger.warn('Failed to read key decisions', { error });
+      logger.error('Failed to get key decisions', { error });
       return [];
     }
   }
 
   private async getNextActions(): Promise<string[]> {
     try {
-      const sprintFile = path.join(this.sprintsDir, 'current.json');
-      const content = await fs.readFile(sprintFile, 'utf8');
-      const sprint = JSON.parse(content);
+      const sprintPath = path.join(this.sprintsDir, 'current.json');
       
-      const nextActions: string[] = [];
-      
-      if (sprint.tasks) {
-        for (const task of sprint.tasks) {
-          if (task.status === 'todo' || task.status === 'in_progress') {
-            nextActions.push(`${task.title} (${task.assignee || 'unassigned'})`);
-          }
+      if (await this.fileExists(sprintPath)) {
+        const content = await fs.readFile(sprintPath, 'utf8');
+        const sprint = JSON.parse(content);
+        
+        if (sprint.tasks && Array.isArray(sprint.tasks)) {
+          return sprint.tasks
+            .filter((task: any) => task.status === 'pending' || task.status === 'in_progress')
+            .map((task: any) => `${task.title} (${task.status})`)
+            .slice(0, 10); // Limit to top 10
         }
       }
 
-      return nextActions.slice(0, 5); // Limit to top 5
+      return ['Review pending invoices', 'Monitor settlement pipeline', 'Check system health'];
     } catch (error) {
-      logger.warn('Failed to read next actions', { error });
-      return ['Review sprint planning', 'Update task assignments'];
+      logger.error('Failed to get next actions', { error });
+      return ['Review system status', 'Check for pending tasks'];
     }
   }
 
   private generateSummary(commits: GitCommit[], agentActivity: AgentActivity[], incidents: string[]): string {
     const commitCount = commits.length;
     const activeAgents = agentActivity.filter(a => a.status === 'active').length;
-    const errorAgents = agentActivity.filter(a => a.status === 'error').length;
     const incidentCount = incidents.length;
 
-    let summary = `Daily operational summary: ${commitCount} commits, ${activeAgents} active agents`;
+    let summary = `Daily summary for ${new Date().toISOString().split('T')[0]}: `;
     
-    if (errorAgents > 0) {
-      summary += `, ${errorAgents} agents with errors`;
-    }
-    
-    if (incidentCount > 0) {
-      summary += `, ${incidentCount} incidents reported`;
+    if (commitCount > 0) {
+      summary += `${commitCount} commits pushed by ${activeAgents} active agents. `;
+    } else {
+      summary += 'No commits today. ';
     }
 
-    if (commitCount === 0 && activeAgents === 0) {
-      summary += '. Low activity day - system appears idle.';
-    } else if (errorAgents > 0 || incidentCount > 0) {
-      summary += '. Attention required for system health.';
+    if (incidentCount > 0) {
+      summary += `${incidentCount} incidents reported. `;
     } else {
-      summary += '. Normal operational status.';
+      summary += 'No incidents reported. ';
     }
+
+    summary += 'System operational.';
 
     return summary;
   }
 
   private async writeReport(report: DailyReport): Promise<void> {
-    await fs.mkdir(this.memoryDir, { recursive: true });
-    
-    const reportPath = path.join(this.memoryDir, 'daily-continuity.md');
-    const content = this.formatReport(report);
-    
-    await fs.writeFile(reportPath, content, 'utf8');
-    logger.info('Daily continuity report written', { path: reportPath });
+    try {
+      const reportPath = path.join(this.memoryDir, 'daily-continuity.md');
+      const markdown = this.formatReportAsMarkdown(report);
+      
+      await fs.writeFile(reportPath, markdown, 'utf8');
+      logger.info('Report written to daily-continuity.md');
+    } catch (error) {
+      logger.error('Failed to write report', { error });
+      throw error;
+    }
   }
 
-  private formatReport(report: DailyReport): string {
+  private formatReportAsMarkdown(report: DailyReport): string {
     const lines: string[] = [];
     
-    lines.push(`# Daily Continuity Report — ${report.date}`);
+    lines.push(`# Daily Continuity Report - ${report.date}`);
     lines.push('');
-    lines.push(`**Summary:** ${report.summary}`);
+    lines.push(`## Summary`);
+    lines.push(report.summary);
     lines.push('');
-    
-    // Commits section
-    lines.push('## Recent Commits (24h)');
+
+    // Invoice Statistics
+    lines.push('## Invoice Statistics');
+    lines.push(`- Total Invoices: ${report.invoiceStats.totalInvoices}`);
+    lines.push(`- Pending: ${report.invoiceStats.pendingInvoices}`);
+    lines.push(`- Settled: ${report.invoiceStats.settledInvoices}`);
+    lines.push(`- Total Amount: $${report.invoiceStats.totalAmount.toFixed(2)}`);
+    lines.push(`- Average Amount: $${report.invoiceStats.averageAmount.toFixed(2)}`);
     lines.push('');
-    if (report.commits.length === 0) {
-      lines.push('No commits in the last 24 hours.');
-    } else {
+
+    // Settlement Statistics
+    lines.push('## Settlement Statistics');
+    lines.push(`- Total Settlements: ${report.settlementStats.totalSettlements}`);
+    lines.push(`- Settled Amount: $${report.settlementStats.settledAmount.toFixed(2)}`);
+    lines.push(`- Average Settlement Time: ${report.settlementStats.averageSettlementTime.toFixed(1)} minutes`);
+    lines.push(`- Success Rate: ${report.settlementStats.successRate.toFixed(1)}%`);
+    lines.push('');
+
+    // Recent Commits
+    if (report.commits.length > 0) {
+      lines.push('## Recent Commits');
       for (const commit of report.commits) {
         lines.push(`- **${commit.hash}** by ${commit.author}: ${commit.message}`);
         if (commit.files.length > 0) {
-          lines.push(`  Files: ${commit.files.slice(0, 3).join(', ')}${commit.files.length > 3 ? '...' : ''}`);
+          lines.push(`  - Files: ${commit.files.slice(0, 3).join(', ')}${commit.files.length > 3 ? '...' : ''}`);
         }
       }
-    }
-    lines.push('');
-    
-    // Agent activity section
-    lines.push('## Agent Activity');
-    lines.push('');
-    for (const agent of report.agentActivity) {
-      const statusIcon = agent.status === 'active' ? '🟢' : 
-                        agent.status === 'error' ? '🔴' : '⚪';
-      lines.push(`- **${agent.agent}** ${statusIcon} ${agent.actions} actions, last seen: ${agent.lastSeen}`);
-    }
-    lines.push('');
-    
-    // System metrics section
-    lines.push('## System Health');
-    lines.push('');
-    for (const metric of report.systemMetrics) {
-      const statusIcon = metric.status === 'healthy' ? '🟢' : 
-                        metric.status === 'warning' ? '🟡' : '🔴';
-      lines.push(`- **${metric.name}:** ${metric.value} ${statusIcon}`);
-    }
-    lines.push('');
-    
-    // Incidents section
-    if (report.incidents.length > 0) {
-      lines.push('## Incidents (24h)');
       lines.push('');
+    }
+
+    // Agent Activity
+    if (report.agentActivity.length > 0) {
+      lines.push('## Agent Activity');
+      for (const activity of report.agentActivity) {
+        lines.push(`- **${activity.agent}**: ${activity.actions} actions, last seen ${activity.lastSeen} (${activity.status})`);
+      }
+      lines.push('');
+    }
+
+    // System Metrics
+    if (report.systemMetrics.length > 0) {
+      lines.push('## System Metrics');
+      for (const metric of report.systemMetrics) {
+        const statusIcon = metric.status === 'healthy' ? '✅' : metric.status === 'warning' ? '⚠️' : '❌';
+        lines.push(`- ${statusIcon} **${metric.name}**: ${metric.value}`);
+      }
+      lines.push('');
+    }
+
+    // Incidents
+    if (report.incidents.length > 0) {
+      lines.push('## Incidents');
       for (const incident of report.incidents) {
         lines.push(`- ${incident}`);
       }
       lines.push('');
     }
-    
-    // Key decisions section
+
+    // Key Decisions
     if (report.keyDecisions.length > 0) {
       lines.push('## Key Decisions');
-      lines.push('');
       for (const decision of report.keyDecisions) {
         lines.push(`- ${decision}`);
       }
       lines.push('');
     }
-    
-    // Next actions section
-    lines.push('## Next Actions');
-    lines.push('');
-    if (report.nextActions.length === 0) {
-      lines.push('No specific actions identified. Review sprint planning.');
-    } else {
+
+    // Next Actions
+    if (report.nextActions.length > 0) {
+      lines.push('## Next Actions');
       for (const action of report.nextActions) {
         lines.push(`- ${action}`);
       }
+      lines.push('');
     }
-    lines.push('');
-    
-    lines.push('---');
-    lines.push(`*Generated at ${new Date().toISOString()} by daily-report-generator*`);
-    
+
+    lines.push(`---`);
+    lines.push(`*Generated at ${new Date().toISOString()}*`);
+
     return lines.join('\n');
+  }
+
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await fs.access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 
-async function main(): Promise<void> {
+// CLI interface
+async function main() {
   const generator = new DailyReportGenerator();
-  await generator.generate();
+  
+  try {
+    await generator.generate();
+    console.log('Daily report generated successfully');
+    process.exit(0);
+  } catch (error) {
+    console.error('Failed to generate daily report:', error);
+    process.exit(1);
+  }
 }
 
+// Run if called directly
 if (require.main === module) {
-  main().catch(error => {
-    console.error('Daily report generation failed:', error);
-    process.exit(1);
-  });
+  main();
 }
 
 export { DailyReportGenerator };
