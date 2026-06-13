@@ -271,6 +271,8 @@ async function startAudio() {
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
   });
+  // iOS Safari starts the context suspended; must resume inside the user gesture.
+  if (ctx.state === 'suspended') await ctx.resume();
   const src = ctx.createMediaStreamSource(stream);
   const analyser = ctx.createAnalyser();
   analyser.fftSize = 1024;
