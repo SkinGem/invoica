@@ -3,6 +3,23 @@
 -- Purpose: Link vat_evidence_items to vat_evidence_transactions and invoices with proper cascading
 -- Fixed: DIR-011 audit findings - indexes, column types, NOT NULL constraints, timestamps
 
+-- DESIGN FLAW 1: Missing evidence_data column for storing actual evidence content
+-- VAT compliance requires storing the evidence itself, not just URLs
+-- Adding JSONB column for structured evidence data (IP geolocation, VIES responses, etc.)
+ALTER TABLE vat_evidence_items 
+ADD COLUMN IF NOT EXISTS evidence_data JSONB;
+
+-- DESIGN FLAW 2: Missing validation_status and validation_timestamp columns
+-- Tax authorities require proof of when evidence was validated and its status
+ALTER TABLE vat_evidence_items 
+ADD COLUMN IF NOT EXISTS validation_status VARCHAR(50) DEFAULT 'pending' NOT NULL,
+ADD COLUMN IF NOT EXISTS validation_timestamp TIMESTAMP WITH TIME ZONE;
+
+-- DESIGN FLAW 3: Missing retention_until column for compliance lifecycle
+-- EU VAT records must be retained for specific periods (typically 10 years)
+ALTER TABLE vat_evidence_items 
+ADD COLUMN IF NOT EXISTS retention_until DATE NOT NULL DEFAULT (CURRENT_DATE + INTERVAL '10 years');
+
 -- Fix column types: evidenceUrl should be TEXT for long URLs
 ALTER TABLE vat_evidence_items 
 ALTER COLUMN evidence_url TYPE TEXT;
@@ -56,12 +73,6 @@ FOREIGN KEY (invoice_id)
 REFERENCES invoices(id) 
 ON DELETE CASCADE;
 
--- Add missing index on transaction_id for performance
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_transaction_id ON vat_evidence_items(transaction_id);
-
--- Add missing index on invoice_id for performance (DIR-011 finding)
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_invoice_id ON vat_evidence_items(invoice_id);
-
 -- Add foreign key constraint from vat_evidence_transactions to invoices
 ALTER TABLE vat_evidence_transactions 
 ADD CONSTRAINT fk_vat_evidence_transactions_invoice_id 
@@ -69,22 +80,28 @@ FOREIGN KEY (invoice_id)
 REFERENCES invoices(id) 
 ON DELETE CASCADE;
 
--- Add index on invoice_id in vat_evidence_transactions for performance
+-- DESIGN FLAW 4: Missing critical performance indexes for tax queries
+-- Tax compliance queries frequently filter by validation_status, evidence_type, and retention_until
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_transaction_id ON vat_evidence_items(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_invoice_id ON vat_evidence_items(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_validation_status ON vat_evidence_items(validation_status);
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_evidence_type ON vat_evidence_items(evidence_type);
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_retention_until ON vat_evidence_items(retention_until);
 CREATE INDEX IF NOT EXISTS idx_vat_evidence_transactions_invoice_id ON vat_evidence_transactions(invoice_id);
-
--- Add composite index for common query patterns
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_invoice_type ON vat_evidence_items(invoice_id, evidence_type);
-
--- Add index on status for filtering transactions
 CREATE INDEX IF NOT EXISTS idx_vat_evidence_transactions_status ON vat_evidence_transactions(status);
 
--- Update existing records to have proper timestamps (backward compatibility)
-UPDATE vat_evidence_items SET 
-    created_at = COALESCE(created_at, NOW()),
-    updated_at = COALESCE(updated_at, NOW())
-WHERE created_at IS NULL OR updated_at IS NULL;
+-- Add composite index for common tax audit queries (invoice + evidence type)
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_invoice_type ON vat_evidence_items(invoice_id, evidence_type);
 
-UPDATE vat_evidence_transactions SET 
-    created_at = COALESCE(created_at, NOW()),
-    updated_at = COALESCE(updated_at, NOW())
-WHERE created_at IS NULL OR updated_at IS NULL;
+-- Add GIN index on evidence_data JSONB column for efficient JSON queries
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_evidence_data_gin ON vat_evidence_items USING GIN(evidence_data);
+
+-- Add check constraints for validation_status enum
+ALTER TABLE vat_evidence_items 
+ADD CONSTRAINT chk_validation_status 
+CHECK (validation_status IN ('pending', 'valid', 'invalid', 'expired', 'error'));
+
+-- Add check constraint for evidence_type to ensure only valid types
+ALTER TABLE vat_evidence_items 
+ADD CONSTRAINT chk_evidence_type 
+CHECK (evidence_type IN ('vat_number_validation', 'ip_geolocation', 'billing_address', 'payment_method', 'customer_declaration'));
