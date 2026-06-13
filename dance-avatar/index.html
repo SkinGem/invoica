@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mic Dancer — 3D Avatar that Dances to Your Music</title>
+<style>
+  :root { --accent: #6df2c1; --accent2: #7aa2ff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0d1a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #e7ecff; }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+
+  /* Start overlay */
+  #overlay {
+    position: fixed; inset: 0; z-index: 20;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(1200px 600px at 50% 30%, #1b2150 0%, #0b0d1a 70%);
+    text-align: center; padding: 24px;
+  }
+  #overlay h1 { font-size: clamp(28px, 5vw, 46px); margin: 0 0 8px; font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #overlay p { max-width: 540px; color: #aeb6d8; line-height: 1.5; margin: 0 0 28px; }
+  #startBtn {
+    border: none; cursor: pointer; font-size: 18px; font-weight: 700; color: #06121d;
+    padding: 16px 40px; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    box-shadow: 0 10px 40px rgba(109,242,193,0.35); transition: transform .12s ease, box-shadow .12s ease;
+  }
+  #startBtn:hover { transform: translateY(-2px); box-shadow: 0 14px 50px rgba(109,242,193,0.5); }
+  #startBtn:active { transform: translateY(0); }
+  #hint { margin-top: 18px; font-size: 13px; color: #6f78a3; }
+  #err { color: #ff8aa0; margin-top: 14px; min-height: 18px; font-size: 14px; }
+
+  /* HUD */
+  #hud {
+    position: fixed; left: 16px; bottom: 16px; z-index: 10;
+    background: rgba(13,16,34,0.6); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 12px 14px;
+    width: 230px; display: none;
+  }
+  #hud .row { display: flex; align-items: center; gap: 8px; margin: 7px 0; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: #9aa3cc; }
+  #hud .row .label { width: 46px; flex: none; }
+  #hud .bar { flex: 1; height: 8px; border-radius: 6px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  #hud .bar > i { display: block; height: 100%; width: 0%; border-radius: 6px; transition: width .06s linear; }
+  .b-bass > i { background: linear-gradient(90deg,#ff8a5b,#ff5b7f); }
+  .b-mid  > i { background: linear-gradient(90deg,#7aa2ff,#6df2c1); }
+  .b-treb > i { background: linear-gradient(90deg,#c77dff,#7aa2ff); }
+  #beat { width: 12px; height: 12px; border-radius: 50%; background: #333a5e; flex: none; transition: background .05s, box-shadow .05s; }
+  #beat.on { background: var(--accent); box-shadow: 0 0 14px var(--accent); }
+
+  #topbar { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
+    display: none; gap: 8px; }
+  #topbar button { background: rgba(13,16,34,0.6); backdrop-filter: blur(10px); color: #cdd4f5;
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+  #topbar button:hover { border-color: var(--accent); color: #fff; }
+  #status { position: fixed; top: 16px; right: 16px; z-index: 10; font-size: 12px; color: #6f78a3; display: none; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="topbar">
+  <button id="styleBtn">Style: Groove</button>
+  <button id="camBtn">Auto-Camera: On</button>
+</div>
+<div id="status">🎤 listening…</div>
+
+<div id="hud">
+  <div class="row"><span class="label">Bass</span><span class="bar b-bass"><i id="barBass"></i></span></div>
+  <div class="row"><span class="label">Mid</span><span class="bar b-mid"><i id="barMid"></i></span></div>
+  <div class="row"><span class="label">Treble</span><span class="bar b-treb"><i id="barTreb"></i></span></div>
+  <div class="row"><span class="label">Beat</span><span id="beat"></span><span style="font-size:10px;color:#6f78a3" id="bpm"></span></div>
+</div>
+
+<div id="overlay">
+  <h1>Mic Dancer</h1>
+  <p>A full-body 3D avatar that listens to your microphone and dances to the music in real time. Bass moves the hips and knees, mids swing the arms, treble bobs the head — and beats hit the accents.</p>
+  <button id="startBtn">▶  Start Listening</button>
+  <div id="hint">Click, then allow microphone access. Play some music nearby. 🎧 Headphones or speakers work great.</div>
+  <div id="err"></div>
+</div>
+
+<!-- Three.js is vendored locally (./vendor) so this app runs fully offline. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from './vendor/OrbitControls.js';
+
+/* ----------------------------------------------------------------------------
+ * Scene setup
+ * --------------------------------------------------------------------------*/
+const app = document.getElementById('app');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b0d1a);
+scene.fog = new THREE.Fog(0x0b0d1a, 14, 34);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 2.6, 8.5);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+app.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.9, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 4;
+controls.maxDistance = 16;
+controls.maxPolarAngle = Math.PI * 0.52;
+controls.update();
+
+/* ----------------------------------------------------------------------------
+ * Lighting + stage
+ * --------------------------------------------------------------------------*/
+scene.add(new THREE.HemisphereLight(0x9bb8ff, 0x14162e, 0.55));
+
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(5, 9, 6);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.near = 1; key.shadow.camera.far = 30;
+key.shadow.camera.left = -8; key.shadow.camera.right = 8;
+key.shadow.camera.top = 8; key.shadow.camera.bottom = -8;
+key.shadow.bias = -0.0004;
+scene.add(key);
+
+// Two colored stage lights that pulse with the music
+const spotL = new THREE.SpotLight(0x6df2c1, 0, 30, Math.PI / 7, 0.4, 1.2);
+spotL.position.set(-7, 8, 4);
+spotL.target.position.set(0, 1.5, 0);
+scene.add(spotL, spotL.target);
+
+const spotR = new THREE.SpotLight(0x7aa2ff, 0, 30, Math.PI / 7, 0.4, 1.2);
+spotR.position.set(7, 8, 4);
+spotR.target.position.set(0, 1.5, 0);
+scene.add(spotR, spotR.target);
+
+// Floor
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(16, 64),
+  new THREE.MeshStandardMaterial({ color: 0x12152e, roughness: 0.85, metalness: 0.1 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const grid = new THREE.GridHelper(32, 32, 0x2a2f5c, 0x1a1e3c);
+grid.position.y = 0.001;
+grid.material.opacity = 0.35; grid.material.transparent = true;
+scene.add(grid);
+
+/* ----------------------------------------------------------------------------
+ * Build the humanoid avatar
+ *   Joint hierarchy so rotations cascade naturally. Each limb has a pivot
+ *   group placed AT the joint; the mesh is offset downward so the segment
+ *   hangs from the pivot. We store rest rotations to animate as offsets.
+ * --------------------------------------------------------------------------*/
+const skin  = new THREE.MeshStandardMaterial({ color: 0x8a93ff, roughness: 0.5, metalness: 0.15 });
+const accent= new THREE.MeshStandardMaterial({ color: 0x6df2c1, roughness: 0.4, metalness: 0.25 });
+const dark  = new THREE.MeshStandardMaterial({ color: 0x2c2f57, roughness: 0.7, metalness: 0.1 });
+
+function limbMesh(geo, mat, dropY) {
+  // geo built centered at origin; shift so the top sits at the pivot.
+  const m = new THREE.Mesh(geo, mat);
+  m.position.y = dropY;
+  m.castShadow = true;
+  return m;
+}
+function joint(parent, x, y, z) {
+  const g = new THREE.Group();
+  g.position.set(x, y, z);
+  parent.add(g);
+  return g;
+}
+
+const avatar = new THREE.Group();
+scene.add(avatar);
+
+// Root / hips
+const root = joint(avatar, 0, 0, 0);           // whole-body bob lives here
+const hips = joint(root, 0, 1.05, 0);          // pelvis pivot
+
+// Pelvis block
+hips.add(limbMesh(new THREE.BoxGeometry(0.72, 0.42, 0.4), dark, 0));
+
+// Spine -> chest -> neck -> head
+const spine = joint(hips, 0, 0.18, 0);
+spine.add(limbMesh(new THREE.CapsuleGeometry(0.32, 0.5, 6, 12), skin, 0.42));
+const chest = joint(spine, 0, 0.78, 0);
+chest.add(limbMesh(new THREE.CapsuleGeometry(0.36, 0.32, 6, 12), skin, 0.18));
+const neck = joint(chest, 0, 0.42, 0);
+const head = joint(neck, 0, 0.0, 0);
+const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 24), skin);
+headMesh.position.y = 0.34; headMesh.castShadow = true;
+head.add(headMesh);
+// little visor/eyes band
+const visor = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.06), accent);
+visor.position.set(0, 0.36, 0.28);
+head.add(visor);
+
+// Arms: shoulder -> upperArm -> elbow -> forearm -> hand
+function buildArm(side) {
+  const s = side === 'L' ? 1 : -1;
+  const shoulder = joint(chest, 0.46 * s, 0.28, 0);
+  shoulder.add(limbMesh(new THREE.SphereGeometry(0.16, 16, 16), accent, 0));
+  const upper = joint(shoulder, 0, 0, 0);
+  upper.add(limbMesh(new THREE.CapsuleGeometry(0.13, 0.5, 6, 10), skin, -0.38));
+  const elbow = joint(upper, 0, -0.72, 0);
+  const fore = joint(elbow, 0, 0, 0);
+  fore.add(limbMesh(new THREE.CapsuleGeometry(0.11, 0.46, 6, 10), skin, -0.35));
+  const hand = joint(fore, 0, -0.66, 0);
+  const handMesh = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 14), accent);
+  handMesh.castShadow = true;
+  hand.add(handMesh);
+  // rest pose: arms slightly out
+  shoulder.rotation.z = -0.18 * s;
+  return { shoulder, upper, elbow, fore, hand, side: s };
+}
+const armL = buildArm('L');
+const armR = buildArm('R');
+
+// Legs: hip -> thigh -> knee -> shin -> foot
+function buildLeg(side) {
+  const s = side === 'L' ? 1 : -1;
+  const hip = joint(hips, 0.22 * s, -0.18, 0);
+  hip.add(limbMesh(new THREE.SphereGeometry(0.17, 16, 16), dark, 0));
+  const thigh = joint(hip, 0, 0, 0);
+  thigh.add(limbMesh(new THREE.CapsuleGeometry(0.17, 0.56, 6, 10), skin, -0.42));
+  const knee = joint(thigh, 0, -0.82, 0);
+  const shin = joint(knee, 0, 0, 0);
+  shin.add(limbMesh(new THREE.CapsuleGeometry(0.14, 0.52, 6, 10), skin, -0.4));
+  const ankle = joint(shin, 0, -0.78, 0);
+  const foot = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.14, 0.5), dark);
+  foot.position.set(0, -0.05, 0.12); foot.castShadow = true;
+  ankle.add(foot);
+  return { hip, thigh, knee, shin, ankle, side: s };
+}
+const legL = buildLeg('L');
+const legR = buildLeg('R');
+
+// Capture rest rotations so animation applies as deltas
+const restMap = new Map();
+avatar.traverse(o => { if (o.isGroup) restMap.set(o, o.rotation.clone()); });
+
+/* ----------------------------------------------------------------------------
+ * Audio analysis
+ * --------------------------------------------------------------------------*/
+const audio = {
+  ready: false, analyser: null, freq: null, ctx: null,
+  bass: 0, mid: 0, treble: 0, level: 0,
+  // smoothed
+  sBass: 0, sMid: 0, sTreb: 0, sLevel: 0,
+  // beat detection
+  energyHist: [], beat: 0, lastBeat: 0, beatTimes: [], bpm: 0,
+};
+
+async function startAudio() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+  });
+  // iOS Safari starts the context suspended; must resume inside the user gesture.
+  if (ctx.state === 'suspended') await ctx.resume();
+  const src = ctx.createMediaStreamSource(stream);
+  const analyser = ctx.createAnalyser();
+  analyser.fftSize = 1024;
+  analyser.smoothingTimeConstant = 0.75;
+  src.connect(analyser);
+  audio.ctx = ctx;
+  audio.analyser = analyser;
+  audio.freq = new Uint8Array(analyser.frequencyBinCount);
+  audio.ready = true;
+}
+
+function avgRange(arr, lo, hi) {
+  let s = 0; for (let i = lo; i < hi; i++) s += arr[i];
+  return s / (hi - lo) / 255; // 0..1
+}
+
+function analyze(now) {
+  if (!audio.ready) return;
+  audio.analyser.getByteFrequencyData(audio.freq);
+  const f = audio.freq, n = f.length; // 512 bins
+  // bin ranges (sampleRate ~44.1k, ~43Hz/bin): bass ~0-250Hz, mid, treble
+  audio.bass   = avgRange(f, 1, 6);
+  audio.mid    = avgRange(f, 6, 60);
+  audio.treble = avgRange(f, 60, 220);
+  audio.level  = avgRange(f, 1, 220);
+
+  // exponential smoothing for fluid motion
+  const k = 0.22;
+  audio.sBass  += (audio.bass   - audio.sBass)  * k;
+  audio.sMid   += (audio.mid    - audio.sMid)   * k;
+  audio.sTreb  += (audio.treble - audio.sTreb)  * k;
+  audio.sLevel += (audio.level  - audio.sLevel) * k;
+
+  // --- beat detection on bass energy vs local average ---
+  const e = audio.bass;
+  const hist = audio.energyHist;
+  hist.push(e); if (hist.length > 43) hist.shift();
+  const mean = hist.reduce((a, b) => a + b, 0) / hist.length;
+  const variance = hist.reduce((a, b) => a + (b - mean) ** 2, 0) / hist.length;
+  const threshold = mean + Math.max(0.04, Math.sqrt(variance) * 1.6);
+  audio.beat *= 0.85;
+  if (e > threshold && e > 0.12 && now - audio.lastBeat > 0.22) {
+    audio.beat = 1;
+    audio.beatTimes.push(now);
+    if (audio.beatTimes.length > 8) audio.beatTimes.shift();
+    if (audio.beatTimes.length > 3) {
+      const span = audio.beatTimes[audio.beatTimes.length - 1] - audio.beatTimes[0];
+      const guess = 60 * (audio.beatTimes.length - 1) / span;
+      audio.bpm = Math.round(THREE.MathUtils.clamp(guess, 60, 180));
+    }
+    audio.lastBeat = now;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+ * Dance animation — drive joints from smoothed audio bands + beat
+ * --------------------------------------------------------------------------*/
+let style = 0;                       // 0 groove, 1 bounce, 2 wave
+const styleNames = ['Groove', 'Bounce', 'Wave'];
+let phase = 0;                       // dance phase accumulator
+let autoCam = true;
+
+function setRot(g, x, y, z) {
+  const r = restMap.get(g);
+  g.rotation.set(r.x + x, r.y + y, r.z + z);
+}
+
+function dance(dt, t) {
+  const bass = audio.sBass, mid = audio.sMid, treb = audio.sTreb, lvl = audio.sLevel;
+  const beat = audio.beat;
+  // tempo of internal oscillation scales with energy; keeps moving gently when quiet
+  const energy = THREE.MathUtils.clamp(lvl * 1.6 + 0.12, 0, 1.4);
+  phase += dt * (2.6 + energy * 5.0 + (style === 1 ? 1.5 : 0));
+  const p = phase;
+  const intensity = 0.35 + energy * 1.1;
+
+  // Vertical bounce from bass + beat punch
+  const bob = Math.abs(Math.sin(p)) * (0.12 + bass * 0.5) + beat * 0.12;
+  root.position.y = bob;
+  // gentle side sway of whole body
+  setRot(root, 0, Math.sin(p * 0.5) * 0.18 * intensity, Math.sin(p) * 0.06 * intensity);
+
+  // Hip sway / weight shift
+  const hipSwing = Math.sin(p) * (0.12 + bass * 0.35);
+  setRot(hips, Math.sin(p * 2) * 0.04, hipSwing * 0.6, hipSwing);
+
+  // Spine & chest counter-rotation (groove)
+  setRot(spine, Math.sin(p + 0.4) * 0.05 * intensity, -hipSwing * 0.5, -hipSwing * 0.4);
+  setRot(chest, bass * 0.12, Math.sin(p * 1 + 0.8) * 0.12 * intensity, 0);
+
+  // Head bob driven by treble + beat
+  setRot(neck, Math.sin(p * 2 + 1) * (0.06 + treb * 0.5) + beat * 0.12,
+               Math.sin(p) * 0.12, Math.sin(p) * 0.05);
+
+  // Arms — swing driven by mids, raise with energy & beat
+  const armBase = -0.5 - mid * 1.6 - beat * 0.5;      // lift arms (neg z opens out via shoulder)
+  const swing = Math.sin(p) * (0.6 + mid * 1.4);
+  const styleLift = style === 2 ? 0.8 : 0;            // wave style raises arms
+  // Left arm
+  setRot(armL.shoulder, swing, 0, armBase - 0.2 - styleLift);
+  setRot(armL.elbow, -0.4 - Math.abs(Math.sin(p)) * (0.5 + mid), 0, 0);
+  setRot(armL.fore, Math.sin(p * 2) * 0.2, 0, 0);
+  setRot(armL.hand, Math.sin(p * 3) * (0.2 + treb * 0.6), 0, 0);
+  // Right arm (mirror, offset phase)
+  const pr = p + (style === 2 ? Math.PI / 2 : Math.PI);
+  const swingR = Math.sin(pr) * (0.6 + mid * 1.4);
+  setRot(armR.shoulder, swingR, 0, -(armBase - 0.2 - styleLift));
+  setRot(armR.elbow, -0.4 - Math.abs(Math.sin(pr)) * (0.5 + mid), 0, 0);
+  setRot(armR.fore, Math.sin(pr * 2) * 0.2, 0, 0);
+  setRot(armR.hand, Math.sin(pr * 3) * (0.2 + treb * 0.6), 0, 0);
+
+  // Legs — knee bend on bass / beat, weight shift steps
+  const bend = 0.25 + bass * 0.9 + beat * 0.35;
+  // Left leg bends as hips shift right and vice versa
+  const shiftL = Math.max(0, Math.sin(p));
+  const shiftR = Math.max(0, Math.sin(p + Math.PI));
+  setRot(legL.thigh, -bend * shiftL * 0.9 - 0.05, 0, 0.05 + hipSwing * 0.2);
+  setRot(legL.knee, bend * (0.7 + shiftL), 0, 0);
+  setRot(legL.ankle, -bend * 0.3, 0, 0);
+  setRot(legR.thigh, -bend * shiftR * 0.9 - 0.05, 0, -0.05 + hipSwing * 0.2);
+  setRot(legR.knee, bend * (0.7 + shiftR), 0, 0);
+  setRot(legR.ankle, -bend * 0.3, 0, 0);
+
+  // Stage lights pulse
+  spotL.intensity = 2 + bass * 30 + beat * 12;
+  spotR.intensity = 2 + treb * 26 + beat * 10;
+  const hue = (t * 0.03) % 1;
+  spotL.color.setHSL(hue, 0.7, 0.55);
+  spotR.color.setHSL((hue + 0.5) % 1, 0.7, 0.55);
+}
+
+/* ----------------------------------------------------------------------------
+ * HUD + render loop
+ * --------------------------------------------------------------------------*/
+const barBass = document.getElementById('barBass');
+const barMid  = document.getElementById('barMid');
+const barTreb = document.getElementById('barTreb');
+const beatDot = document.getElementById('beat');
+const bpmEl   = document.getElementById('bpm');
+
+function updateHud() {
+  barBass.style.width = Math.min(100, audio.sBass * 180) + '%';
+  barMid.style.width  = Math.min(100, audio.sMid  * 200) + '%';
+  barTreb.style.width = Math.min(100, audio.sTreb * 240) + '%';
+  if (audio.beat > 0.5) beatDot.classList.add('on'); else beatDot.classList.remove('on');
+  bpmEl.textContent = audio.bpm ? audio.bpm + ' bpm' : '';
+}
+
+const clock = new THREE.Clock();
+function loop() {
+  requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  analyze(t);
+  dance(dt, t);
+  updateHud();
+  if (autoCam) {
+    const r = 8.5, a = t * 0.12;
+    camera.position.x = Math.sin(a) * r;
+    camera.position.z = Math.cos(a) * r;
+    camera.position.y = 2.6 + Math.sin(t * 0.3) * 0.4;
+    camera.lookAt(0, 1.9, 0);
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+loop();
+
+/* ----------------------------------------------------------------------------
+ * UI wiring
+ * --------------------------------------------------------------------------*/
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+const startBtn = document.getElementById('startBtn');
+const overlay  = document.getElementById('overlay');
+const errEl    = document.getElementById('err');
+
+startBtn.addEventListener('click', async () => {
+  startBtn.disabled = true;
+  startBtn.textContent = 'Requesting mic…';
+  try {
+    await startAudio();
+    overlay.style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    document.getElementById('topbar').style.display = 'flex';
+    document.getElementById('status').style.display = 'block';
+  } catch (e) {
+    startBtn.disabled = false;
+    startBtn.textContent = '▶  Start Listening';
+    errEl.textContent = (e && e.name === 'NotAllowedError')
+      ? 'Microphone permission denied. Allow access and try again.'
+      : 'Could not access microphone: ' + (e && e.message ? e.message : e);
+  }
+});
+
+document.getElementById('styleBtn').addEventListener('click', (ev) => {
+  style = (style + 1) % styleNames.length;
+  ev.target.textContent = 'Style: ' + styleNames[style];
+});
+document.getElementById('camBtn').addEventListener('click', (ev) => {
+  autoCam = !autoCam;
+  ev.target.textContent = 'Auto-Camera: ' + (autoCam ? 'On' : 'Off');
+  controls.enabled = !autoCam;
+});
+controls.addEventListener('start', () => {
+  if (autoCam) {
+    autoCam = false;
+    document.getElementById('camBtn').textContent = 'Auto-Camera: Off';
+  }
+});
+</script>
+</body>
+</html>
