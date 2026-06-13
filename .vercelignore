@@ -1,0 +1,5 @@
+# Isolate the Vercel deploy to ONLY the dance-avatar app.
+# Ignore everything at the repo root, then re-include just what we serve.
+/*
+!dance-avatar
+!vercel.json
