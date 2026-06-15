@@ -61,47 +61,89 @@ END $$;
 
 -- Add foreign key constraint from vat_evidence_items to vat_evidence_transactions
 ALTER TABLE vat_evidence_items 
-ADD CONSTRAINT fk_vat_evidence_items_transaction_id 
-FOREIGN KEY (transaction_id) 
-REFERENCES vat_evidence_transactions(id) 
+ADD CONSTRAINT fk_vat_evidence_items_transaction 
+FOREIGN KEY (transaction_id) REFERENCES vat_evidence_transactions(id) 
 ON DELETE CASCADE;
 
 -- Add foreign key constraint from vat_evidence_items to invoices
 ALTER TABLE vat_evidence_items 
-ADD CONSTRAINT fk_vat_evidence_items_invoice_id 
-FOREIGN KEY (invoice_id) 
-REFERENCES invoices(id) 
+ADD CONSTRAINT fk_vat_evidence_items_invoice 
+FOREIGN KEY (invoice_id) REFERENCES invoices(id) 
 ON DELETE CASCADE;
 
 -- Add foreign key constraint from vat_evidence_transactions to invoices
 ALTER TABLE vat_evidence_transactions 
-ADD CONSTRAINT fk_vat_evidence_transactions_invoice_id 
-FOREIGN KEY (invoice_id) 
-REFERENCES invoices(id) 
+ADD CONSTRAINT fk_vat_evidence_transactions_invoice 
+FOREIGN KEY (invoice_id) REFERENCES invoices(id) 
 ON DELETE CASCADE;
 
--- DESIGN FLAW 4: Missing critical performance indexes for tax queries
--- Tax compliance queries frequently filter by validation_status, evidence_type, and retention_until
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_transaction_id ON vat_evidence_items(transaction_id);
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_invoice_id ON vat_evidence_items(invoice_id);
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_validation_status ON vat_evidence_items(validation_status);
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_evidence_type ON vat_evidence_items(evidence_type);
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_retention_until ON vat_evidence_items(retention_until);
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_transactions_invoice_id ON vat_evidence_transactions(invoice_id);
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_transactions_status ON vat_evidence_transactions(status);
+-- Add performance indexes for common queries
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_transaction_id 
+ON vat_evidence_items(transaction_id);
 
--- Add composite index for common tax audit queries (invoice + evidence type)
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_invoice_type ON vat_evidence_items(invoice_id, evidence_type);
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_invoice_id 
+ON vat_evidence_items(invoice_id);
 
--- Add GIN index on evidence_data JSONB column for efficient JSON queries
-CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_evidence_data_gin ON vat_evidence_items USING GIN(evidence_data);
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_evidence_type 
+ON vat_evidence_items(evidence_type);
 
--- Add check constraints for validation_status enum
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_validation_status 
+ON vat_evidence_items(validation_status);
+
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_retention_until 
+ON vat_evidence_items(retention_until);
+
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_transactions_invoice_id 
+ON vat_evidence_transactions(invoice_id);
+
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_transactions_status 
+ON vat_evidence_transactions(status);
+
+-- Add composite indexes for common query patterns
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_invoice_type 
+ON vat_evidence_items(invoice_id, evidence_type);
+
+CREATE INDEX IF NOT EXISTS idx_vat_evidence_items_transaction_status 
+ON vat_evidence_items(transaction_id, validation_status);
+
+-- Add updated_at trigger for automatic timestamp updates
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Apply trigger to both tables
+DROP TRIGGER IF EXISTS update_vat_evidence_items_updated_at ON vat_evidence_items;
+CREATE TRIGGER update_vat_evidence_items_updated_at 
+    BEFORE UPDATE ON vat_evidence_items 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_vat_evidence_transactions_updated_at ON vat_evidence_transactions;
+CREATE TRIGGER update_vat_evidence_transactions_updated_at 
+    BEFORE UPDATE ON vat_evidence_transactions 
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Add check constraints for data validation
 ALTER TABLE vat_evidence_items 
-ADD CONSTRAINT chk_validation_status 
+ADD CONSTRAINT chk_evidence_type_valid 
+CHECK (evidence_type IN ('ip_geolocation', 'vies_validation', 'billing_address', 'payment_method', 'customer_declaration', 'other'));
+
+ALTER TABLE vat_evidence_items 
+ADD CONSTRAINT chk_validation_status_valid 
 CHECK (validation_status IN ('pending', 'valid', 'invalid', 'expired', 'error'));
 
--- Add check constraint for evidence_type to ensure only valid types
-ALTER TABLE vat_evidence_items 
-ADD CONSTRAINT chk_evidence_type 
-CHECK (evidence_type IN ('vat_number_validation', 'ip_geolocation', 'billing_address', 'payment_method', 'customer_declaration'));
+ALTER TABLE vat_evidence_transactions 
+ADD CONSTRAINT chk_status_valid 
+CHECK (status IN ('pending', 'collecting', 'complete', 'failed', 'expired'));
+
+-- Add comments for documentation
+COMMENT ON TABLE vat_evidence_items IS 'Individual pieces of VAT evidence collected for tax compliance';
+COMMENT ON TABLE vat_evidence_transactions IS 'VAT evidence collection transactions linking to invoices';
+
+COMMENT ON COLUMN vat_evidence_items.evidence_data IS 'Structured evidence data (IP geolocation, VIES responses, etc.) in JSONB format';
+COMMENT ON COLUMN vat_evidence_items.validation_status IS 'Current validation status of this evidence item';
+COMMENT ON COLUMN vat_evidence_items.validation_timestamp IS 'When this evidence was last validated';
+COMMENT ON COLUMN vat_evidence_items.retention_until IS 'Date until which this evidence must be retained for compliance';
