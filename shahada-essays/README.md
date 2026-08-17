@@ -10,23 +10,29 @@ No build step, no dependencies, no external network requests. Open
 python3 -m http.server 8000 --directory shahada-essays
 ```
 
-## Two things to do before this goes live
+## One thing to do before this goes live
 
-### 1. Your portrait
+### The portrait — in place
 
-Drop a square image at **`assets/author.jpg`**. It is the only image on the
-site and it appears in exactly one place: the small circular colophon at the
-very bottom of `about.html`. Not the homepage, not the essay pages, not the
-header.
+**`assets/author.jpg`** (800×800) is the only image on the site, and it appears
+in exactly one place: the small circular colophon at the foot of `about.html`.
+Not the homepage, not the essay pages, not the header.
 
-- Square crop, 400×400 px or larger (it renders at 56 px, so this is for
-  retina density only)
-- If the file is missing, the circle degrades to a neutral placeholder — the
-  layout never breaks
-- To remove the portrait entirely, delete the `<section class="colophon">`
-  block from `about.html`
+It was prepared from the source photograph by: a headshot crop with the eye line
+on the upper third; a local tone lift inside the lens area so the eyes read
+through the tint; a softening pass on the left lens, whose reflection otherwise
+competes for attention; a radial falloff to settle the street behind the
+subject; and a restrained grade toward the site's palette. **EXIF was stripped**
+— the original carried camera and location metadata that should not ship with a
+public site.
 
-### 2. Your name
+- To swap it, overwrite the file with any square image, 400 px or larger
+- If the file is absent, the circle degrades to a neutral placeholder and the
+  layout holds
+- To drop the portrait entirely, delete the `<section class="colophon">` block
+  from `about.html`
+
+### Your name
 
 The author name is the literal placeholder `Author Name`, in `about.html`.
 
